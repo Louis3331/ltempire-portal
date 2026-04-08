@@ -41,8 +41,8 @@ export default async function handler(req, res) {
 
   console.log('Found Whop user:', whopUser.id, whopUser.email);
 
-  // Step 2: Try to get their memberships by user ID (may or may not work depending on permissions)
-  let memberships = [];
+  // Step 2: Check their memberships to enforce active-only access
+  let membershipsChecked = false;
   try {
     const mUrl = `https://api.whop.com/api/v2/memberships?user_id=${whopUser.id}&per_page=50`;
     const mRes = await fetch(mUrl, {
@@ -53,13 +53,29 @@ export default async function handler(req, res) {
     console.log('Memberships API response:', mText.slice(0, 1000));
     if (mRes.ok && mText) {
       const mData = JSON.parse(mText);
-      memberships = mData.data || [];
+      const allMemberships = mData.data || [];
+      membershipsChecked = true;
+      const productId = process.env.WHOP_PRODUCT_ID;
+      const relevant = productId
+        ? allMemberships.filter(m => m.product_id === productId)
+        : allMemberships;
+      const hasValid = (relevant.length > 0 ? relevant : allMemberships).some(m => m.valid);
+      if (!hasValid) {
+        console.log('No valid memberships — access denied for:', normalizedEmail);
+        return res.status(401).json({ error: 'Your LT Empire membership has expired or is inactive.' });
+      }
+      console.log('Valid membership confirmed for:', normalizedEmail);
     }
   } catch (err) {
     console.log('Memberships lookup failed (non-fatal):', err.message);
   }
 
-  // Create session — user is verified as a Whop member
+  // If membership check couldn't run (API permission issue), member existence is enough
+  if (!membershipsChecked) {
+    console.log('Membership check skipped — allowing based on member existence');
+  }
+
+  // Create session — user verified
   const session = {
     user: {
       id: whopUser.id,
