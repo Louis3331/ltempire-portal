@@ -19,11 +19,16 @@ export default async function handler(req, res) {
   // Look up memberships by email using admin API key
   let memberships = [];
   try {
-    const response = await fetch(
-      `https://api.whop.com/v5/memberships?per_page=50&user_email=${encodeURIComponent(normalizedEmail)}`,
-      { headers: { Authorization: `Bearer ${process.env.WHOP_API_KEY}` } }
-    );
+    // Try company-scoped membership endpoint
+    const bizId = process.env.WHOP_BUSINESS_ID;
+    const url = bizId
+      ? `https://api.whop.com/v5/companies/${bizId}/memberships?per_page=50&user_email=${encodeURIComponent(normalizedEmail)}`
+      : `https://api.whop.com/v5/memberships?per_page=50&user_email=${encodeURIComponent(normalizedEmail)}`;
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${process.env.WHOP_API_KEY}` }
+    });
     const rawText = await response.text();
+    console.log('Whop API url:', url);
     console.log('Whop API status:', response.status);
     console.log('Whop API raw response:', rawText.slice(0, 1000));
     if (!rawText) {
