@@ -27,12 +27,14 @@ const WhopProvider = {
         }),
       });
       const tokens = await response.json();
+      console.log('Whop token response:', JSON.stringify(tokens));
       return { tokens };
     },
   },
   userinfo: {
     url: 'https://api.whop.com/v5/me',
     async request({ tokens }) {
+      console.log('Userinfo tokens:', JSON.stringify(tokens));
       const res = await fetch('https://api.whop.com/v5/me', {
         headers: { Authorization: `Bearer ${tokens.access_token}` },
       });
