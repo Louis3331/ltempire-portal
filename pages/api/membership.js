@@ -8,7 +8,7 @@ export default async function handler(req, res) {
 
   try {
     const response = await fetch(
-      `https://api.whop.com/v5/memberships?per_page=50&user_email=${encodeURIComponent(session.email)}`,
+      `https://api.whop.com/api/v2/memberships?per_page=50&user_email=${encodeURIComponent(session.email)}`,
       { headers: { Authorization: `Bearer ${process.env.WHOP_API_KEY}` } }
     );
 

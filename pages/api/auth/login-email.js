@@ -19,11 +19,8 @@ export default async function handler(req, res) {
   // Look up memberships by email using admin API key
   let memberships = [];
   try {
-    // Try company-scoped membership endpoint
-    const bizId = process.env.WHOP_BUSINESS_ID;
-    const url = bizId
-      ? `https://api.whop.com/v5/companies/${bizId}/memberships?per_page=50&user_email=${encodeURIComponent(normalizedEmail)}`
-      : `https://api.whop.com/v5/memberships?per_page=50&user_email=${encodeURIComponent(normalizedEmail)}`;
+    // Whop v2 seller API for membership lookup by email
+    const url = `https://api.whop.com/api/v2/memberships?per_page=50&user_email=${encodeURIComponent(normalizedEmail)}`;
     const response = await fetch(url, {
       headers: { Authorization: `Bearer ${process.env.WHOP_API_KEY}` }
     });
