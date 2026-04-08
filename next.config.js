@@ -7,6 +7,19 @@ const nextConfig = {
       { protocol: 'https', hostname: 'cdn.whop.com' },
     ],
   },
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'Content-Security-Policy',
+            value: "frame-ancestors 'self' https://whop.com https://*.whop.com",
+          },
+        ],
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;
