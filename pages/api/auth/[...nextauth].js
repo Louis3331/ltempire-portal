@@ -14,6 +14,9 @@ const WhopProvider = {
   },
   token: {
     url: 'https://api.whop.com/v5/oauth/token',
+    params: {
+      redirect_uri: `${process.env.NEXTAUTH_URL}/api/auth/callback/whop`,
+    },
   },
   userinfo: {
     url: 'https://api.whop.com/v5/me',
@@ -58,4 +61,5 @@ export default NextAuth({
   session: {
     strategy: 'jwt',
   },
+  debug: true,
 });
