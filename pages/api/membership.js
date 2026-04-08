@@ -4,15 +4,13 @@ export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).end();
 
   const session = verifySession(req);
-  if (!session?.accessToken) return res.status(401).json({ error: 'Not authenticated' });
+  if (!session?.email) return res.status(401).json({ error: 'Not authenticated' });
 
   try {
-    const response = await fetch('https://api.whop.com/v5/me/memberships', {
-      headers: {
-        Authorization: `Bearer ${session.accessToken}`,
-        'Content-Type': 'application/json',
-      },
-    });
+    const response = await fetch(
+      `https://api.whop.com/v5/memberships?per_page=50&user_email=${encodeURIComponent(session.email)}`,
+      { headers: { Authorization: `Bearer ${process.env.WHOP_API_KEY}` } }
+    );
 
     if (!response.ok) {
       const errText = await response.text();
@@ -21,8 +19,9 @@ export default async function handler(req, res) {
 
     const data = await response.json();
     const productId = process.env.WHOP_PRODUCT_ID;
-    const memberships = (data.data || []).filter(m => !productId || m.product_id === productId);
-    const relevant = memberships.length > 0 ? memberships : (data.data || []);
+    const all = data.data || [];
+    const memberships = productId ? all.filter(m => m.product_id === productId) : all;
+    const relevant = memberships.length > 0 ? memberships : all;
 
     const shaped = relevant.map((m) => ({
       id: m.id,
@@ -32,6 +31,7 @@ export default async function handler(req, res) {
       quantity: m.quantity,
       renewal_period_start: m.renewal_period_start,
       renewal_period_end: m.renewal_period_end,
+      product_id: m.product_id,
       plan: m.plan ? { id: m.plan.id, name: m.plan.name, billing_period: m.plan.billing_period } : null,
     }));
 

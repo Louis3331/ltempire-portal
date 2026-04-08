@@ -5,12 +5,38 @@ import Head from 'next/head';
 export default function LoginPage() {
   const router = useRouter();
   const [checking, setChecking] = useState(true);
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
     fetch('/api/auth/session')
       .then(r => r.ok ? router.push('/dashboard') : null)
       .finally(() => setChecking(false));
   }, [router]);
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setErrorMsg('');
+    setLoading(true);
+    try {
+      const res = await fetch('/api/auth/login-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        router.push('/dashboard');
+      } else {
+        setErrorMsg(data.error || 'Login failed. Please try again.');
+      }
+    } catch {
+      setErrorMsg('Network error. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (checking) {
     return (
@@ -44,19 +70,39 @@ export default function LoginPage() {
           <div style={styles.divider} />
 
           <p style={styles.desc}>
-            Sign in with your Whop account to access your license, plan details, and member dashboard.
+            Login using your Whop email to view and manage your license.
           </p>
 
-          <button style={styles.btn} onClick={() => { window.location.href = '/api/auth/login'; }}>
-            <svg style={styles.btnIcon} viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z" />
-            </svg>
-            Sign in with Whop
-          </button>
+          <form onSubmit={handleLogin} style={styles.form}>
+            <div style={styles.inputGroup}>
+              <svg style={styles.inputIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z" />
+                <polyline points="22,6 12,13 2,6" />
+              </svg>
+              <input
+                type="email"
+                placeholder="Whop email address"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                style={styles.input}
+                required
+                autoComplete="email"
+              />
+            </div>
 
-          {router.query.error && (
-            <p style={styles.error}>Authentication failed. Please try again.</p>
-          )}
+            {errorMsg && <p style={styles.error}>{errorMsg}</p>}
+
+            <button type="submit" style={styles.btn} disabled={loading}>
+              {loading ? (
+                <>
+                  <div style={styles.btnSpinner} />
+                  Verifying...
+                </>
+              ) : (
+                'Login'
+              )}
+            </button>
+          </form>
 
           <p style={styles.footer}>
             Access restricted to active LT Empire members only.
@@ -67,6 +113,8 @@ export default function LoginPage() {
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+        input::placeholder { color: #444; }
+        input:focus { outline: none; border-color: #C9A84C !important; }
       `}</style>
     </>
   );
@@ -96,14 +144,22 @@ const styles = {
   title: { fontSize: 26, fontWeight: 700, color: '#F5F0E8', letterSpacing: 0.5, marginBottom: 4 },
   subtitle: { fontSize: 13, color: '#C9A84C', letterSpacing: 3, textTransform: 'uppercase', fontWeight: 500 },
   divider: { height: 1, background: 'linear-gradient(90deg, transparent, #2a2208, transparent)', margin: '24px 0' },
-  desc: { fontSize: 14, color: '#888', lineHeight: 1.6, marginBottom: 28 },
+  desc: { fontSize: 14, color: '#888', lineHeight: 1.6, marginBottom: 24 },
+  form: { display: 'flex', flexDirection: 'column', gap: 12, textAlign: 'left' },
+  inputGroup: { position: 'relative' },
+  inputIcon: { position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', width: 16, height: 16, color: '#555', pointerEvents: 'none' },
+  input: {
+    width: '100%', padding: '13px 14px 13px 40px', background: '#0d0d0d',
+    border: '1px solid #2a2a2a', borderRadius: 8, color: '#F5F0E8', fontSize: 14,
+    boxSizing: 'border-box', transition: 'border-color 0.2s',
+  },
+  error: { fontSize: 13, color: '#E05252', margin: '0 0 4px', textAlign: 'center' },
   btn: {
     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
     width: '100%', padding: '14px 24px', background: 'linear-gradient(135deg, #C9A84C, #9B7B2F)',
     border: 'none', borderRadius: 8, color: '#0A0A0A', fontSize: 15, fontWeight: 700,
-    letterSpacing: 0.3, transition: 'all 0.2s ease', cursor: 'pointer',
+    letterSpacing: 0.3, cursor: 'pointer', marginTop: 4,
   },
-  btnIcon: { width: 18, height: 18 },
-  error: { marginTop: 16, fontSize: 13, color: '#E05252' },
+  btnSpinner: { width: 16, height: 16, border: '2px solid rgba(10,10,10,0.3)', borderTopColor: '#0A0A0A', borderRadius: '50%', animation: 'spin 0.7s linear infinite' },
   footer: { marginTop: 24, fontSize: 12, color: '#444' },
 };
