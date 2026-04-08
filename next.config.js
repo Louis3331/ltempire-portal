@@ -2,7 +2,10 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: ['whop.com', 'cdn.whop.com'],
+    remotePatterns: [
+      { protocol: 'https', hostname: 'whop.com' },
+      { protocol: 'https', hostname: 'cdn.whop.com' },
+    ],
   },
 };
 
