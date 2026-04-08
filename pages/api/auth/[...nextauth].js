@@ -15,6 +15,9 @@ const WhopProvider = {
   token: {
     url: 'https://api.whop.com/v5/oauth/token',
     async request({ params }) {
+      console.log('CLIENT_ID:', process.env.WHOP_CLIENT_ID);
+      console.log('CLIENT_SECRET length:', process.env.WHOP_CLIENT_SECRET?.length);
+      console.log('NEXTAUTH_URL:', process.env.NEXTAUTH_URL);
       const response = await fetch('https://api.whop.com/v5/oauth/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
