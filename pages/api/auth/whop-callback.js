@@ -21,18 +21,29 @@ export default async function handler(req, res) {
   const { code, state, error } = req.query;
   const cookies = parseCookies(req);
 
+  console.log('All cookies:', req.headers.cookie);
+  console.log('Query state:', state, '| Cookie state:', cookies.whop_state);
+  console.log('code_verifier cookie:', cookies.whop_cv);
+
   if (error || !code) return res.redirect('/?error=auth_failed');
   if (state !== cookies.whop_state) return res.redirect('/?error=state_mismatch');
+
+  const codeVerifier = cookies.whop_cv;
+  console.log('Using code_verifier:', codeVerifier);
+
+  const tokenBody = new URLSearchParams({
+    grant_type: 'authorization_code',
+    code,
+    redirect_uri: `${process.env.NEXTAUTH_URL}/api/auth/whop-callback`,
+    client_id: process.env.WHOP_CLIENT_ID,
+    code_verifier: codeVerifier,
+  });
+  console.log('Token request body:', tokenBody.toString().replace(code, '[CODE]'));
 
   const tokenRes = await fetch('https://api.whop.com/oauth/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      grant_type: 'authorization_code',
-      code,
-      redirect_uri: `${process.env.NEXTAUTH_URL}/api/auth/whop-callback`,
-      client_id: process.env.WHOP_CLIENT_ID,
-    }),
+    body: tokenBody,
   });
 
   const tokens = await tokenRes.json();
