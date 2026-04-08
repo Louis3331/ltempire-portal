@@ -8,7 +8,7 @@ export default async function handler(req, res) {
 
   try {
     const response = await fetch(
-      `https://api.whop.com/api/v2/memberships?per_page=50&user_email=${encodeURIComponent(session.email)}`,
+      `https://api.whop.com/api/v2/members?email=${encodeURIComponent(session.email)}`,
       { headers: { Authorization: `Bearer ${process.env.WHOP_API_KEY}` } }
     );
 
@@ -19,7 +19,8 @@ export default async function handler(req, res) {
 
     const data = await response.json();
     const productId = process.env.WHOP_PRODUCT_ID;
-    const all = data.data || [];
+    const members = data.data || [];
+    const all = members.flatMap(m => m.memberships || []);
     const memberships = productId ? all.filter(m => m.product_id === productId) : all;
     const relevant = memberships.length > 0 ? memberships : all;
 

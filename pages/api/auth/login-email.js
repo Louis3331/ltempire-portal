@@ -19,20 +19,22 @@ export default async function handler(req, res) {
   // Look up memberships by email using admin API key
   let memberships = [];
   try {
-    // Whop v2 seller API for membership lookup by email
-    const url = `https://api.whop.com/api/v2/memberships?per_page=50&user_email=${encodeURIComponent(normalizedEmail)}`;
+    // Use /api/v2/members endpoint (requires "Read members" permission)
+    const url = `https://api.whop.com/api/v2/members?email=${encodeURIComponent(normalizedEmail)}`;
     const response = await fetch(url, {
       headers: { Authorization: `Bearer ${process.env.WHOP_API_KEY}` }
     });
     const rawText = await response.text();
     console.log('Whop API url:', url);
     console.log('Whop API status:', response.status);
-    console.log('Whop API raw response:', rawText.slice(0, 1000));
+    console.log('Whop API raw response:', rawText.slice(0, 2000));
     if (!rawText) {
       return res.status(500).json({ error: 'Whop API returned empty response.' });
     }
     const data = JSON.parse(rawText);
-    memberships = data.data || [];
+    // v2 members response: data.data is array of member objects with .memberships inside
+    const members = data.data || [];
+    memberships = members.flatMap(m => m.memberships || [m]).filter(Boolean);
   } catch (err) {
     console.error('Whop API error:', err);
     return res.status(500).json({ error: 'Could not verify membership. Try again.' });
