@@ -34,6 +34,7 @@ const WhopProvider = {
   },
   clientId: process.env.WHOP_CLIENT_ID,
   clientSecret: process.env.WHOP_CLIENT_SECRET,
+  checks: ['state'],
 };
 
 export default NextAuth({
