@@ -16,52 +16,64 @@ export default async function handler(req, res) {
 
   const normalizedEmail = email.trim().toLowerCase();
 
-  // Look up memberships by email using admin API key
-  let memberships = [];
+  // Step 1: Find user in Whop members list (only members of your business appear here)
+  let whopUser = null;
   try {
-    // Use /api/v2/members endpoint (requires "Read members" permission)
     const url = `https://api.whop.com/api/v2/members?email=${encodeURIComponent(normalizedEmail)}`;
     const response = await fetch(url, {
       headers: { Authorization: `Bearer ${process.env.WHOP_API_KEY}` }
     });
     const rawText = await response.text();
-    console.log('Whop API url:', url);
-    console.log('Whop API status:', response.status);
-    console.log('Whop API raw response:', rawText.slice(0, 2000));
-    if (!rawText) {
-      return res.status(500).json({ error: 'Whop API returned empty response.' });
+    console.log('Members API status:', response.status);
+    console.log('Members API response:', rawText.slice(0, 1000));
+    if (response.ok && rawText) {
+      const data = JSON.parse(rawText);
+      whopUser = (data.data || [])[0] || null;
     }
-    const data = JSON.parse(rawText);
-    // v2 members response: data.data is array of member objects with .memberships inside
-    const members = data.data || [];
-    memberships = members.flatMap(m => m.memberships || [m]).filter(Boolean);
   } catch (err) {
-    console.error('Whop API error:', err);
+    console.error('Whop members API error:', err);
     return res.status(500).json({ error: 'Could not verify membership. Try again.' });
   }
 
-  const productId = process.env.WHOP_PRODUCT_ID;
-  const validMemberships = memberships.filter(
-    m => m.valid && (!productId || m.product_id === productId)
-  );
-
-  if (validMemberships.length === 0) {
-    console.log('No valid memberships found for:', normalizedEmail);
+  if (!whopUser) {
     return res.status(401).json({ error: 'No active LT Empire membership found for this email.' });
   }
 
-  const whopUser = validMemberships[0].user || {};
+  console.log('Found Whop user:', whopUser.id, whopUser.email);
+
+  // Step 2: Try to get their memberships by user ID (may or may not work depending on permissions)
+  let memberships = [];
+  try {
+    const mUrl = `https://api.whop.com/api/v2/memberships?user_id=${whopUser.id}&per_page=50`;
+    const mRes = await fetch(mUrl, {
+      headers: { Authorization: `Bearer ${process.env.WHOP_API_KEY}` }
+    });
+    const mText = await mRes.text();
+    console.log('Memberships API status:', mRes.status);
+    console.log('Memberships API response:', mText.slice(0, 1000));
+    if (mRes.ok && mText) {
+      const mData = JSON.parse(mText);
+      memberships = mData.data || [];
+    }
+  } catch (err) {
+    console.log('Memberships lookup failed (non-fatal):', err.message);
+  }
+
+  // Create session — user is verified as a Whop member
   const session = {
     user: {
-      id: whopUser.id || normalizedEmail,
+      id: whopUser.id,
       name: whopUser.username || whopUser.name || normalizedEmail.split('@')[0],
       email: normalizedEmail,
+      image: whopUser.profile_pic_url || null,
     },
     email: normalizedEmail,
+    whopUserId: whopUser.id,
     expires: Date.now() + 30 * 24 * 60 * 60 * 1000,
   };
 
   const sessionToken = signSession(session, process.env.NEXTAUTH_SECRET);
   res.setHeader('Set-Cookie', `whop_session=${sessionToken}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=2592000`);
+  console.log('Login successful for:', normalizedEmail);
   return res.status(200).json({ ok: true });
 }

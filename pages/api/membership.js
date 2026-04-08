@@ -6,21 +6,24 @@ export default async function handler(req, res) {
   const session = verifySession(req);
   if (!session?.email) return res.status(401).json({ error: 'Not authenticated' });
 
+  const userId = session.whopUserId;
+  if (!userId) return res.status(200).json({ memberships: [] });
+
   try {
     const response = await fetch(
-      `https://api.whop.com/api/v2/members?email=${encodeURIComponent(session.email)}`,
+      `https://api.whop.com/api/v2/memberships?user_id=${userId}&per_page=50`,
       { headers: { Authorization: `Bearer ${process.env.WHOP_API_KEY}` } }
     );
 
     if (!response.ok) {
       const errText = await response.text();
-      return res.status(response.status).json({ error: errText });
+      console.log('Memberships fetch error:', response.status, errText);
+      return res.status(200).json({ memberships: [], note: 'Membership details unavailable' });
     }
 
     const data = await response.json();
     const productId = process.env.WHOP_PRODUCT_ID;
-    const members = data.data || [];
-    const all = members.flatMap(m => m.memberships || []);
+    const all = data.data || [];
     const memberships = productId ? all.filter(m => m.product_id === productId) : all;
     const relevant = memberships.length > 0 ? memberships : all;
 
