@@ -24,8 +24,6 @@ export default async function handler(req, res) {
   if (error || !code) return res.redirect('/?error=auth_failed');
   if (state !== cookies.whop_state) return res.redirect('/?error=state_mismatch');
 
-  const codeVerifier = cookies.whop_cv;
-
   const tokenRes = await fetch('https://api.whop.com/oauth/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -34,7 +32,6 @@ export default async function handler(req, res) {
       code,
       redirect_uri: `${process.env.NEXTAUTH_URL}/api/auth/whop-callback`,
       client_id: process.env.WHOP_CLIENT_ID,
-      code_verifier: codeVerifier,
     }),
   });
 
