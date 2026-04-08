@@ -23,7 +23,11 @@ export default async function handler(req, res) {
 
     const data = await response.json();
     const productId = process.env.WHOP_PRODUCT_ID;
-    const all = data.data || [];
+    const all = (data.data || []).filter(m => {
+      // Strictly filter to this user's memberships
+      const mUserId = m.user_id || m.user?.id;
+      return mUserId === userId;
+    });
     const memberships = productId ? all.filter(m => m.product_id === productId) : all;
     const relevant = memberships.length > 0 ? memberships : all;
 

@@ -53,7 +53,11 @@ export default async function handler(req, res) {
     console.log('Memberships API response:', mText.slice(0, 1000));
     if (mRes.ok && mText) {
       const mData = JSON.parse(mText);
-      const allMemberships = mData.data || [];
+      const allMemberships = (mData.data || []).filter(m => {
+        // Only consider this user's memberships
+        const mUserId = m.user_id || m.user?.id;
+        return mUserId === whopUser.id;
+      });
       membershipsChecked = true;
       const productId = process.env.WHOP_PRODUCT_ID;
       const relevant = productId
