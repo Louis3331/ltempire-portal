@@ -9,6 +9,7 @@ const WhopProvider = {
     params: {
       scope: 'openid',
       client_id: process.env.WHOP_CLIENT_ID,
+      redirect_uri: `${process.env.NEXTAUTH_URL}/api/auth/callback/whop`,
     },
   },
   token: {
