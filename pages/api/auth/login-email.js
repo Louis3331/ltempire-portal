@@ -23,9 +23,13 @@ export default async function handler(req, res) {
       `https://api.whop.com/v5/memberships?per_page=50&user_email=${encodeURIComponent(normalizedEmail)}`,
       { headers: { Authorization: `Bearer ${process.env.WHOP_API_KEY}` } }
     );
-    const data = await response.json();
-    console.log('Whop membership lookup status:', response.status);
-    console.log('Whop membership data:', JSON.stringify(data).slice(0, 500));
+    const rawText = await response.text();
+    console.log('Whop API status:', response.status);
+    console.log('Whop API raw response:', rawText.slice(0, 1000));
+    if (!rawText) {
+      return res.status(500).json({ error: 'Whop API returned empty response.' });
+    }
+    const data = JSON.parse(rawText);
     memberships = data.data || [];
   } catch (err) {
     console.error('Whop API error:', err);
