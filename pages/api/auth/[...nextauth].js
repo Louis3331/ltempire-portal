@@ -24,6 +24,7 @@ const WhopProvider = {
           redirect_uri: `${process.env.NEXTAUTH_URL}/api/auth/callback/whop`,
           client_id: process.env.WHOP_CLIENT_ID,
           client_secret: process.env.WHOP_CLIENT_SECRET,
+          scope: 'openid',
         }),
       });
       const tokens = await response.json();
