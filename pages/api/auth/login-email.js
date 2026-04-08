@@ -54,8 +54,8 @@ export default async function handler(req, res) {
     if (mRes.ok && mText) {
       const mData = JSON.parse(mText);
       const allMemberships = (mData.data || []).filter(m => {
-        // Only consider this user's memberships
-        const mUserId = m.user_id || m.user?.id;
+        // user field can be a string ID or an object
+        const mUserId = m.user_id || (typeof m.user === 'string' ? m.user : m.user?.id);
         return mUserId === whopUser.id;
       });
       membershipsChecked = true;
