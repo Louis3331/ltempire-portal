@@ -14,8 +14,20 @@ const WhopProvider = {
   },
   token: {
     url: 'https://api.whop.com/v5/oauth/token',
-    params: {
-      redirect_uri: `${process.env.NEXTAUTH_URL}/api/auth/callback/whop`,
+    async request({ params }) {
+      const response = await fetch('https://api.whop.com/v5/oauth/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          grant_type: 'authorization_code',
+          code: params.code,
+          redirect_uri: `${process.env.NEXTAUTH_URL}/api/auth/callback/whop`,
+          client_id: process.env.WHOP_CLIENT_ID,
+          client_secret: process.env.WHOP_CLIENT_SECRET,
+        }),
+      });
+      const tokens = await response.json();
+      return { tokens };
     },
   },
   userinfo: {
