@@ -15,6 +15,8 @@ const WhopProvider = {
   token: {
     url: 'https://api.whop.com/oauth/token',
     async request({ params, checks }) {
+      console.log('params.code:', params.code);
+      console.log('code_verifier:', checks?.code_verifier);
       const body = new URLSearchParams({
         grant_type: 'authorization_code',
         code: params.code,
@@ -24,6 +26,7 @@ const WhopProvider = {
       if (checks?.code_verifier) {
         body.append('code_verifier', checks.code_verifier);
       }
+      console.log('token body:', body.toString().replace(params.code, '[CODE]'));
       const response = await fetch('https://api.whop.com/oauth/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
