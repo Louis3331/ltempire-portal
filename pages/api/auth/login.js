@@ -3,16 +3,14 @@ import crypto from 'crypto';
 export default function handler(req, res) {
   const codeVerifier = crypto.randomBytes(32).toString('base64url');
   const codeChallenge = crypto.createHash('sha256').update(codeVerifier).digest('base64url');
-  const state = crypto.randomBytes(16).toString('hex');
+  const nonce = crypto.randomBytes(16).toString('hex');
+
+  // Embed codeVerifier in state to bypass cookie issues
+  const state = `${nonce}~${codeVerifier}`;
 
   console.log('Generated code_verifier:', codeVerifier);
   console.log('Generated code_challenge:', codeChallenge);
-
-  const cookieOpts = 'HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=600';
-  res.setHeader('Set-Cookie', [
-    `whop_cv=${codeVerifier}; ${cookieOpts}`,
-    `whop_state=${state}; ${cookieOpts}`,
-  ]);
+  console.log('State (nonce~verifier):', state);
 
   const params = new URLSearchParams({
     client_id: process.env.WHOP_CLIENT_ID,

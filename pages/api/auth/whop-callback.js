@@ -19,17 +19,17 @@ function signSession(data, secret) {
 
 export default async function handler(req, res) {
   const { code, state, error } = req.query;
-  const cookies = parseCookies(req);
 
-  console.log('All cookies:', req.headers.cookie);
-  console.log('Query state:', state, '| Cookie state:', cookies.whop_state);
-  console.log('code_verifier cookie:', cookies.whop_cv);
+  console.log('Received state:', state);
+  console.log('Received code length:', code?.length);
 
   if (error || !code) return res.redirect('/?error=auth_failed');
-  if (state !== cookies.whop_state) return res.redirect('/?error=state_mismatch');
+  if (!state || !state.includes('~')) return res.redirect('/?error=state_mismatch');
 
-  const codeVerifier = cookies.whop_cv;
-  console.log('Using code_verifier:', codeVerifier);
+  // Extract codeVerifier from state (no cookie needed)
+  const tildeIdx = state.indexOf('~');
+  const codeVerifier = state.slice(tildeIdx + 1);
+  console.log('Extracted code_verifier from state:', codeVerifier);
 
   const tokenBody = new URLSearchParams({
     grant_type: 'authorization_code',
