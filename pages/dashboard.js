@@ -1,10 +1,10 @@
-import { useSession, signOut } from 'next-auth/react';
+
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 
 export default function Dashboard() {
-  const { data: session, status } = useSession();
+  const [session, setSession] = useState(null);
   const router = useRouter();
   const [memberships, setMemberships] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -12,20 +12,24 @@ export default function Dashboard() {
   const [copied, setCopied] = useState(null);
 
   useEffect(() => {
-    if (status === 'unauthenticated') router.push('/');
-  }, [status, router]);
-
-  useEffect(() => {
-    if (status !== 'authenticated') return;
-    fetch('/api/membership')
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.error) setError(data.error);
-        else setMemberships(data.memberships || []);
+    fetch('/api/auth/session')
+      .then(r => {
+        if (!r.ok) { router.push('/'); return null; }
+        return r.json();
       })
-      .catch(() => setError('Could not load membership data.'))
+      .then(data => {
+        if (!data) return;
+        setSession(data);
+        return fetch('/api/membership')
+          .then(r => r.json())
+          .then(d => {
+            if (d.error) setError(d.error);
+            else setMemberships(d.memberships || []);
+          })
+          .catch(() => setError('Could not load membership data.'));
+      })
       .finally(() => setLoading(false));
-  }, [status]);
+  }, [router]);
 
   const copyToClipboard = async (text, id) => {
     try {
@@ -54,7 +58,7 @@ export default function Dashboard() {
     return map[s] || s;
   };
 
-  if (status === 'loading') {
+  if (loading) {
     return <Loader />;
   }
 
@@ -111,7 +115,7 @@ export default function Dashboard() {
                 <div style={styles.userEmail}>{user?.email || ''}</div>
               </div>
             </div>
-            <button style={styles.signOutBtn} onClick={() => signOut({ callbackUrl: '/' })}>
+            <button style={styles.signOutBtn} onClick={() => { window.location.href = '/api/auth/logout'; }}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 16, height: 16 }}>
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
