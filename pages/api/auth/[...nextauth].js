@@ -20,7 +20,6 @@ const WhopProvider = {
         code: params.code,
         redirect_uri: `${process.env.NEXTAUTH_URL}/api/auth/callback/whop`,
         client_id: process.env.WHOP_CLIENT_ID,
-        client_secret: process.env.WHOP_CLIENT_SECRET,
       });
       if (checks?.code_verifier) {
         body.append('code_verifier', checks.code_verifier);
@@ -38,7 +37,6 @@ const WhopProvider = {
   userinfo: {
     url: 'https://api.whop.com/v5/me',
     async request({ tokens }) {
-      console.log('Userinfo tokens:', JSON.stringify(tokens));
       const res = await fetch('https://api.whop.com/v5/me', {
         headers: { Authorization: `Bearer ${tokens.access_token}` },
       });
@@ -79,5 +77,4 @@ export default NextAuth({
   session: {
     strategy: 'jwt',
   },
-  debug: true,
 });
