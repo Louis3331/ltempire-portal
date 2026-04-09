@@ -15,19 +15,17 @@ export default async function handler(req, res) {
   }
 
   const normalizedEmail = email.trim().toLowerCase();
+  const productId = process.env.WHOP_PRODUCT_ID;
 
-  // Step 1: Find user in Whop members list (only members of your business appear here)
+  // Step 1: Find user in Whop by email
   let whopUser = null;
   try {
     const url = `https://api.whop.com/api/v2/members?email=${encodeURIComponent(normalizedEmail)}`;
     const response = await fetch(url, {
       headers: { Authorization: `Bearer ${process.env.WHOP_API_KEY}` }
     });
-    const rawText = await response.text();
-    console.log('Members API status:', response.status);
-    console.log('Members API response:', rawText.slice(0, 1000));
-    if (response.ok && rawText) {
-      const data = JSON.parse(rawText);
+    if (response.ok) {
+      const data = await response.json();
       whopUser = (data.data || [])[0] || null;
     }
   } catch (err) {
@@ -41,45 +39,40 @@ export default async function handler(req, res) {
 
   console.log('Found Whop user:', whopUser.id, whopUser.email);
 
-  // Step 2: Check their memberships to enforce active-only access
-  let membershipsChecked = false;
+  // Step 2: Get memberships filtered by THIS product — strictly verify ownership
+  let validMembership = null;
   try {
-    const mUrl = `https://api.whop.com/api/v2/memberships?user_id=${whopUser.id}&per_page=50`;
+    // Filter by product_id so we only get memberships for LT Empire specifically
+    const mUrl = `https://api.whop.com/api/v2/memberships?product_id=${productId}&per_page=50`;
     const mRes = await fetch(mUrl, {
       headers: { Authorization: `Bearer ${process.env.WHOP_API_KEY}` }
     });
-    const mText = await mRes.text();
-    console.log('Memberships API status:', mRes.status);
-    console.log('Memberships API response:', mText.slice(0, 1000));
-    if (mRes.ok && mText) {
-      const mData = JSON.parse(mText);
-      const allMemberships = (mData.data || []).filter(m => {
-        // user field can be a string ID or an object
+
+    if (mRes.ok) {
+      const mData = await mRes.json();
+      const allMemberships = mData.data || [];
+
+      // Find a membership that belongs to THIS user AND is valid
+      validMembership = allMemberships.find(m => {
         const mUserId = m.user_id || (typeof m.user === 'string' ? m.user : m.user?.id);
-        return mUserId === whopUser.id;
+        return mUserId === whopUser.id && m.valid === true;
       });
-      membershipsChecked = true;
-      const productId = process.env.WHOP_PRODUCT_ID;
-      const relevant = productId
-        ? allMemberships.filter(m => m.product_id === productId)
-        : allMemberships;
-      const hasValid = (relevant.length > 0 ? relevant : allMemberships).some(m => m.valid);
-      if (!hasValid) {
-        console.log('No valid memberships — access denied for:', normalizedEmail);
-        return res.status(401).json({ error: 'Your LT Empire membership has expired or is inactive.' });
-      }
-      console.log('Valid membership confirmed for:', normalizedEmail);
+
+      console.log('Product memberships found:', allMemberships.length, '| Matching user+valid:', !!validMembership);
     }
   } catch (err) {
-    console.log('Memberships lookup failed (non-fatal):', err.message);
+    console.error('Memberships lookup error:', err.message);
+    return res.status(500).json({ error: 'Could not verify membership. Try again.' });
   }
 
-  // If membership check couldn't run (API permission issue), member existence is enough
-  if (!membershipsChecked) {
-    console.log('Membership check skipped — allowing based on member existence');
+  if (!validMembership) {
+    console.log('Access denied — no valid membership for:', normalizedEmail);
+    return res.status(401).json({ error: 'No active LT Empire membership found for this email.' });
   }
 
-  // Create session — user verified
+  console.log('Valid membership confirmed:', validMembership.id, 'for', normalizedEmail);
+
+  // Create session
   const session = {
     user: {
       id: whopUser.id,

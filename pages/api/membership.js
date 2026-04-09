@@ -10,8 +10,9 @@ export default async function handler(req, res) {
   if (!userId) return res.status(200).json({ memberships: [] });
 
   try {
+    const productId = process.env.WHOP_PRODUCT_ID;
     const response = await fetch(
-      `https://api.whop.com/api/v2/memberships?user_id=${userId}&per_page=50`,
+      `https://api.whop.com/api/v2/memberships?product_id=${productId}&per_page=50`,
       { headers: { Authorization: `Bearer ${process.env.WHOP_API_KEY}` } }
     );
 
@@ -22,14 +23,12 @@ export default async function handler(req, res) {
     }
 
     const data = await response.json();
-    const productId = process.env.WHOP_PRODUCT_ID;
+    // Strictly filter to this user's memberships only
     const all = (data.data || []).filter(m => {
-      // user field can be a string ID or an object
       const mUserId = m.user_id || (typeof m.user === 'string' ? m.user : m.user?.id);
       return mUserId === userId;
     });
-    const memberships = productId ? all.filter(m => m.product_id === productId) : all;
-    const relevant = memberships.length > 0 ? memberships : all;
+    const relevant = all;
 
     const shaped = relevant.map((m) => ({
       id: m.id,

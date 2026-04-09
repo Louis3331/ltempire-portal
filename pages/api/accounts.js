@@ -3,8 +3,10 @@ import { kv } from '@vercel/kv';
 import { verifySession } from './auth/session';
 
 async function getMemberships(userId) {
+  const productId = process.env.WHOP_PRODUCT_ID;
+  // Filter by product_id to scope to LT Empire only, then filter by user
   const res = await fetch(
-    `https://api.whop.com/api/v2/memberships?user_id=${userId}&per_page=50`,
+    `https://api.whop.com/api/v2/memberships?product_id=${productId}&per_page=50`,
     { headers: { Authorization: `Bearer ${process.env.WHOP_API_KEY}` } }
   );
   if (!res.ok) return [];
