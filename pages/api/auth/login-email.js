@@ -33,7 +33,10 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Could not verify membership. Try again.' });
   }
 
-  if (!whopUser) {
+  // Critical: verify the returned user's email actually matches what was entered
+  // (Whop members API sometimes ignores the email filter and returns any member)
+  if (!whopUser || whopUser.email?.toLowerCase() !== normalizedEmail) {
+    console.log('Email mismatch — API returned:', whopUser?.email, '| Entered:', normalizedEmail);
     return res.status(401).json({ error: 'No active LT Empire membership found for this email.' });
   }
 
