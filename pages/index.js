@@ -57,7 +57,7 @@ export default function LoginPage() {
       <div style={styles.page}>
         <div style={styles.grid} aria-hidden="true" />
 
-        <div style={styles.card}>
+        <div style={styles.card} className="login-card">
           <div style={styles.logoWrap}>
             <div style={styles.logoCircle}>
               <span style={styles.logoText}>LT</span>
@@ -115,6 +115,10 @@ export default function LoginPage() {
         @keyframes fadeIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
         input::placeholder { color: #444; }
         input:focus { outline: none; border-color: #C9A84C !important; }
+        * { box-sizing: border-box; }
+        @media (max-width: 480px) {
+          .login-card { padding: 32px 20px !important; }
+        }
       `}</style>
     </>
   );
