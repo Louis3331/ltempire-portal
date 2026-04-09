@@ -9,6 +9,8 @@ export default function Dashboard() {
   const [error, setError] = useState(null);
   const [tab, setTab] = useState('licenses');
   const [copied, setCopied] = useState(null);
+  const [accounts, setAccounts] = useState([]);
+  const [accountsLoading, setAccountsLoading] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -30,6 +32,21 @@ export default function Dashboard() {
       .catch(() => setError('Could not load membership data.'))
       .finally(() => setLoading(false));
   }, [router]);
+
+  const loadAccounts = () => {
+    setAccountsLoading(true);
+    fetch('/api/accounts')
+      .then(r => r.json())
+      .then(d => setAccounts(d.accounts || []))
+      .catch(() => {})
+      .finally(() => setAccountsLoading(false));
+  };
+
+  const deleteAccount = async (licenseKey, id) => {
+    if (!confirm('Remove this account? The EA will be blocked on next validation.')) return;
+    await fetch(`/api/accounts?licenseKey=${encodeURIComponent(licenseKey)}&id=${id}`, { method: 'DELETE' });
+    loadAccounts();
+  };
 
   const copy = async (text, id) => {
     try { await navigator.clipboard.writeText(text); setCopied(id); setTimeout(() => setCopied(null), 2000); } catch {}
@@ -83,7 +100,7 @@ export default function Dashboard() {
             <button style={{ ...S.tab, ...(tab === 'licenses' ? S.tabActive : {}) }} onClick={() => setTab('licenses')}>
               License Keys
             </button>
-            <button style={{ ...S.tab, ...(tab === 'accounts' ? S.tabActive : {}) }} onClick={() => setTab('accounts')}>
+            <button style={{ ...S.tab, ...(tab === 'accounts' ? S.tabActive : {}) }} onClick={() => { setTab('accounts'); loadAccounts(); }}>
               Accounts
             </button>
           </div>
@@ -168,17 +185,41 @@ export default function Dashboard() {
               <table style={S.table}>
                 <thead>
                   <tr>
-                    {['License Key', 'Account Number', 'Account Name', 'Account Server', 'Registered', 'Last Update'].map(h => (
+                    {['License Key', 'Account Number', 'Account Name', 'Account Server', 'Registered', 'Last Update', 'Remove'].map(h => (
                       <th key={h} style={S.th}>{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <td colSpan={6} style={{ ...S.td, textAlign: 'center', padding: '48px 0', color: '#555', fontSize: 14 }}>
-                      No trading accounts registered yet.
-                    </td>
-                  </tr>
+                  {accountsLoading ? (
+                    <tr><td colSpan={7} style={{ ...S.td, textAlign: 'center', padding: '48px 0', color: '#555' }}>Loading...</td></tr>
+                  ) : accounts.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} style={{ ...S.td, textAlign: 'center', padding: '48px 0', color: '#555', fontSize: 14 }}>
+                        No trading accounts registered yet.<br />
+                        <span style={{ fontSize: 12, color: '#444', marginTop: 6, display: 'block' }}>
+                          Accounts appear here automatically when the EA runs on an MT5 account.
+                        </span>
+                      </td>
+                    </tr>
+                  ) : accounts.map(a => (
+                    <tr key={a.id} style={S.tr}>
+                      <td style={S.td}><code style={S.keyCode}>{a.licenseKey}</code></td>
+                      <td style={{ ...S.td, color: '#C9A84C', fontWeight: 600 }}>{a.accountNumber}</td>
+                      <td style={S.td}>{a.accountName || '—'}</td>
+                      <td style={S.td}>{a.accountServer || '—'}</td>
+                      <td style={{ ...S.td, color: '#888', fontSize: 12 }}>{new Date(a.registeredAt).toLocaleString()}</td>
+                      <td style={{ ...S.td, color: '#888', fontSize: 12 }}>{new Date(a.lastUpdate).toLocaleString()}</td>
+                      <td style={S.td}>
+                        <button
+                          onClick={() => deleteAccount(a.licenseKey, a.id)}
+                          style={{ padding: '5px 12px', background: 'rgba(224,82,82,0.12)', border: '1px solid rgba(224,82,82,0.3)', borderRadius: 5, color: '#E05252', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
