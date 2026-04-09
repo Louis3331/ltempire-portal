@@ -37,18 +37,27 @@ export default async function handler(req, res) {
     console.log('Whop check failed, allowing with grace');
   }
 
-  // Step 2: Get registered accounts for this license
+  // Step 2: Get registered accounts for this license (with KV error handling)
   const key = `accounts:${licenseKey}`;
-  let accounts = (await kv.get(key)) || [];
+  let accounts = [];
+  let kvAvailable = false;
+
+  try {
+    accounts = (await kv.get(key)) || [];
+    kvAvailable = true;
+  } catch (kvErr) {
+    console.error('KV unavailable — allowing with license-only validation:', kvErr.message);
+    // KV down: license is valid, skip account tracking
+    return res.status(200).json({ valid: true, reason: 'License valid (account tracking unavailable)' });
+  }
 
   const existing = accounts.find(a => a.accountNumber === accountNumberStr);
 
   if (existing) {
-    // Already registered — just update last seen
     existing.lastUpdate = Date.now();
     if (accountName)   existing.accountName   = accountName;
     if (accountServer) existing.accountServer = accountServer;
-    await kv.set(key, accounts);
+    try { await kv.set(key, accounts); } catch {}
     console.log(`Account ${accountNumberStr} updated for license ${licenseKey}`);
     return res.status(200).json({
       valid: true,
@@ -58,7 +67,7 @@ export default async function handler(req, res) {
     });
   }
 
-  // Step 3: New account — check limit
+  // New account — check limit
   if (accounts.length >= MAX_ACCOUNTS) {
     console.log(`Account limit reached for license ${licenseKey}: ${accounts.length}/${MAX_ACCOUNTS}`);
     return res.status(200).json({
@@ -69,7 +78,7 @@ export default async function handler(req, res) {
     });
   }
 
-  // Step 4: Register new account
+  // Register new account
   accounts.push({
     id: `acc_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
     accountNumber: accountNumberStr,
@@ -79,7 +88,7 @@ export default async function handler(req, res) {
     lastUpdate:    Date.now(),
   });
 
-  await kv.set(key, accounts);
+  try { await kv.set(key, accounts); } catch {}
   console.log(`New account ${accountNumberStr} registered for license ${licenseKey} (${accounts.length}/${MAX_ACCOUNTS})`);
 
   return res.status(200).json({
