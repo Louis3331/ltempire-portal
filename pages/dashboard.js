@@ -2,15 +2,50 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 
+/* ── Icons ─────────────────────────────────────────────── */
+const KeyIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="nav-icon">
+    <circle cx="8" cy="15" r="4" /><path d="M12 11l8-8m-3 0l3 3m-6 0l3 3" strokeLinecap="round" />
+  </svg>
+);
+const MonitorIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="nav-icon">
+    <rect x="2" y="3" width="20" height="14" rx="2" /><path d="M8 21h8M12 17v4" strokeLinecap="round" />
+  </svg>
+);
+const MenuIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="22" height="22">
+    <line x1="3" y1="6" x2="21" y2="6" strokeLinecap="round" />
+    <line x1="3" y1="12" x2="21" y2="12" strokeLinecap="round" />
+    <line x1="3" y1="18" x2="21" y2="18" strokeLinecap="round" />
+  </svg>
+);
+const CloseIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="22" height="22">
+    <line x1="18" y1="6" x2="6" y2="18" strokeLinecap="round" />
+    <line x1="6" y1="6" x2="18" y2="18" strokeLinecap="round" />
+  </svg>
+);
+
+/* ── Nav items config ───────────────────────────────────── */
+const NAV = [
+  { id: 'licenses', label: 'License Keys', icon: <KeyIcon /> },
+  { id: 'accounts', label: 'Accounts',     icon: <MonitorIcon /> },
+];
+
+/* ── Main component ─────────────────────────────────────── */
 export default function Dashboard() {
-  const [session, setSession] = useState(null);
-  const [memberships, setMemberships] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [tab, setTab] = useState('licenses');
-  const [copied, setCopied] = useState(null);
-  const [accounts, setAccounts] = useState([]);
-  const [accountsLoading, setAccountsLoading] = useState(false);
+  const [session,        setSession]        = useState(null);
+  const [memberships,    setMemberships]    = useState([]);
+  const [loading,        setLoading]        = useState(true);
+  const [error,          setError]          = useState(null);
+  const [tab,            setTab]            = useState('licenses');
+  const [copied,         setCopied]         = useState(null);
+  const [accounts,       setAccounts]       = useState([]);
+  const [accountsLoading,setAccountsLoading]= useState(false);
+  const [sidebarOpen,    setSidebarOpen]    = useState(false);
+  const [animKey,        setAnimKey]        = useState(0);
+  const [slideDir,       setSlideDir]       = useState('right');
   const router = useRouter();
 
   useEffect(() => {
@@ -43,16 +78,24 @@ export default function Dashboard() {
     try { await navigator.clipboard.writeText(text); setCopied(id); setTimeout(() => setCopied(null), 2000); } catch {}
   };
 
+  const switchTab = (newTab) => {
+    if (newTab === tab) { setSidebarOpen(false); return; }
+    const dir = NAV.findIndex(n => n.id === newTab) > NAV.findIndex(n => n.id === tab) ? 'right' : 'left';
+    setSlideDir(dir);
+    setAnimKey(k => k + 1);
+    setTab(newTab);
+    if (newTab === 'accounts') loadAccounts();
+    setSidebarOpen(false);
+  };
+
   const fmt = (ts) => {
     if (!ts) return '—';
     return new Date(ts * 1000).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   };
-
   const fmtMs = (ms) => {
     if (!ms) return '—';
     return new Date(ms).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
   };
-
   const statusColor = (s) => ({ active: '#3ECF8E', trialing: '#C9A84C', expired: '#E05252', canceled: '#E05252' }[s] || '#888');
   const statusLabel = (s) => ({ active: 'Active', trialing: 'Trial', expired: 'Expired', canceled: 'Canceled', past_due: 'Past Due', completed: 'Active' }[s] || s);
 
@@ -60,6 +103,8 @@ export default function Dashboard() {
   if (!session) return null;
 
   const email = session.user?.email || session.email || '';
+  const initial = email[0]?.toUpperCase() || 'U';
+  const pageTitle = NAV.find(n => n.id === tab)?.label || '';
 
   return (
     <>
@@ -68,99 +113,223 @@ export default function Dashboard() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
 
-      <div className="page">
+      <div className="layout">
         <div className="grid" aria-hidden="true" />
 
-        {/* Top bar */}
-        <header className="topbar">
-          <div className="topbar-logo">
+        {/* Mobile overlay */}
+        {sidebarOpen && <div className="overlay" onClick={() => setSidebarOpen(false)} />}
+
+        {/* ── Sidebar ─────────────────────────────────── */}
+        <aside className={`sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
+          {/* Logo */}
+          <div className="sidebar-logo">
             <div className="logo-circle"><span className="logo-text">LT</span></div>
             <div>
               <div className="brand-name">LT Empire</div>
               <div className="brand-sub">Member Portal</div>
             </div>
           </div>
-          <div className="topbar-right">
-            <span className="logged-as">{email}</span>
+
+          {/* Nav */}
+          <nav className="sidebar-nav">
+            <p className="nav-section-label">Navigation</p>
+            {NAV.map(item => (
+              <button
+                key={item.id}
+                className={`nav-item ${tab === item.id ? 'nav-active' : ''}`}
+                onClick={() => switchTab(item.id)}
+              >
+                {item.icon}
+                <span>{item.label}</span>
+                {tab === item.id && <span className="nav-pip" />}
+              </button>
+            ))}
+          </nav>
+
+          {/* Footer */}
+          <div className="sidebar-footer">
+            <div className="user-info">
+              <div className="user-avatar">{initial}</div>
+              <div className="user-email">{email}</div>
+            </div>
             <button className="logout-btn" onClick={() => { window.location.href = '/api/auth/logout'; }}>
               Logout
             </button>
           </div>
-        </header>
+        </aside>
 
-        {/* Content */}
-        <main className="main">
-          {/* Tabs */}
-          <div className="tabs">
-            <button className={`tab-btn ${tab === 'licenses' ? 'tab-active' : ''}`} onClick={() => setTab('licenses')}>
-              License Keys
+        {/* ── Main ────────────────────────────────────── */}
+        <div className="main-wrap">
+          {/* Mobile header */}
+          <header className="mobile-header">
+            <button className="hamburger" onClick={() => setSidebarOpen(o => !o)} aria-label="Menu">
+              {sidebarOpen ? <CloseIcon /> : <MenuIcon />}
             </button>
-            <button className={`tab-btn ${tab === 'accounts' ? 'tab-active' : ''}`} onClick={() => { setTab('accounts'); loadAccounts(); }}>
-              Accounts
+            <span className="mobile-brand">LT Empire</span>
+            <button className="logout-btn-sm" onClick={() => { window.location.href = '/api/auth/logout'; }}>
+              Logout
             </button>
+          </header>
+
+          {/* Page header */}
+          <div className="page-header">
+            <h1 className="page-title">{pageTitle}</h1>
+            <p className="page-subtitle">
+              {tab === 'licenses' ? 'Your active license keys and membership details' : 'MT5 trading accounts linked to your license'}
+            </p>
           </div>
 
-          {error && (
-            <div className="error-box">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#E05252" strokeWidth="2" style={{ width: 18, height: 18, flexShrink: 0 }}>
-                <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
-              </svg>
-              {error}
-            </div>
-          )}
-
-          {/* License Keys Tab */}
-          {tab === 'licenses' && !error && (
-            memberships.length === 0 ? (
-              <div className="empty">
-                <p style={{ color: '#888', fontSize: 14 }}>No memberships found for this account.</p>
-                <p style={{ color: '#555', fontSize: 12, marginTop: 6 }}>Make sure you used the same email as your Whop purchase.</p>
+          {/* Animated content */}
+          <main key={animKey} className={`main slide-${slideDir}`}>
+            {error && (
+              <div className="error-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="#E05252" strokeWidth="2" style={{ width: 18, height: 18, flexShrink: 0 }}>
+                  <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+                {error}
               </div>
-            ) : (
+            )}
+
+            {/* ── License Keys Tab ── */}
+            {tab === 'licenses' && !error && (
+              memberships.length === 0 ? (
+                <div className="empty">
+                  <div className="empty-icon">
+                    <KeyIcon />
+                  </div>
+                  <p style={{ color: '#888', fontSize: 14, marginTop: 12 }}>No memberships found for this account.</p>
+                  <p style={{ color: '#555', fontSize: 12, marginTop: 6 }}>Make sure you used the same email as your Whop purchase.</p>
+                </div>
+              ) : (
+                <div className="table-wrap">
+                  <div className="table-scroll">
+                    <table className="table">
+                      <thead>
+                        <tr>
+                          {['License Key', 'Status', 'Plan', 'Registered', 'Expires', 'Valid'].map(h => (
+                            <th key={h} className="th">{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {memberships.map((m) => (
+                          <tr key={m.id} className="tr">
+                            <td className="td">
+                              <div className="key-cell">
+                                <code className="key-code">{m.license_key || '—'}</code>
+                                {m.license_key && (
+                                  <button className="copy-btn" onClick={() => copy(m.license_key, m.id)} title="Copy">
+                                    {copied === m.id ? (
+                                      <svg viewBox="0 0 24 24" fill="none" stroke="#3ECF8E" strokeWidth="2.5" style={{ width: 13, height: 13 }}>
+                                        <polyline points="20 6 9 17 4 12" strokeLinecap="round" strokeLinejoin="round" />
+                                      </svg>
+                                    ) : (
+                                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 13, height: 13 }}>
+                                        <rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                                      </svg>
+                                    )}
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                            <td className="td">
+                              <span className="pill" style={{ background: statusColor(m.status) + '20', color: statusColor(m.status), border: `1px solid ${statusColor(m.status)}40` }}>
+                                <span className="dot" style={{ background: statusColor(m.status) }} />
+                                {statusLabel(m.status)}
+                              </span>
+                            </td>
+                            <td className="td" style={{ color: '#C9A84C', fontSize: 13 }}>{m.plan?.name || '—'}</td>
+                            <td className="td" style={{ color: '#888', fontSize: 13 }}>{fmt(m.renewal_period_start)}</td>
+                            <td className="td" style={{ color: '#888', fontSize: 13 }}>{fmt(m.renewal_period_end)}</td>
+                            <td className="td">
+                              <span style={{ color: m.valid ? '#3ECF8E' : '#E05252', fontWeight: 700, fontSize: 13 }}>
+                                {m.valid ? 'Yes' : 'No'}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Mobile cards */}
+                  <div className="mobile-cards">
+                    {memberships.map((m) => (
+                      <div key={m.id} className="mobile-card">
+                        <div className="mc-row">
+                          <span className="mc-label">License Key</span>
+                          <div className="key-cell">
+                            <code className="key-code" style={{ fontSize: 12 }}>{m.license_key || '—'}</code>
+                            {m.license_key && (
+                              <button className="copy-btn" onClick={() => copy(m.license_key, m.id)}>
+                                {copied === m.id ? (
+                                  <svg viewBox="0 0 24 24" fill="none" stroke="#3ECF8E" strokeWidth="2.5" style={{ width: 13, height: 13 }}><polyline points="20 6 9 17 4 12" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                                ) : (
+                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 13, height: 13 }}><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>
+                                )}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                        <div className="mc-row">
+                          <span className="mc-label">Status</span>
+                          <span className="pill" style={{ background: statusColor(m.status) + '20', color: statusColor(m.status), border: `1px solid ${statusColor(m.status)}40` }}>
+                            <span className="dot" style={{ background: statusColor(m.status) }} />{statusLabel(m.status)}
+                          </span>
+                        </div>
+                        <div className="mc-row">
+                          <span className="mc-label">Plan</span>
+                          <span style={{ color: '#C9A84C', fontSize: 13 }}>{m.plan?.name || '—'}</span>
+                        </div>
+                        <div className="mc-row">
+                          <span className="mc-label">Expires</span>
+                          <span style={{ color: '#888', fontSize: 13 }}>{fmt(m.renewal_period_end)}</span>
+                        </div>
+                        <div className="mc-row">
+                          <span className="mc-label">Valid</span>
+                          <span style={{ color: m.valid ? '#3ECF8E' : '#E05252', fontWeight: 700, fontSize: 13 }}>{m.valid ? 'Yes' : 'No'}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )
+            )}
+
+            {/* ── Accounts Tab ── */}
+            {tab === 'accounts' && (
               <div className="table-wrap">
                 <div className="table-scroll">
                   <table className="table">
                     <thead>
                       <tr>
-                        {['License Key', 'Status', 'Plan', 'Registered', 'Expires', 'Valid'].map(h => (
+                        {['License Key', 'Account No.', 'Name', 'Server', 'Registered', 'Last Update', ''].map(h => (
                           <th key={h} className="th">{h}</th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
-                      {memberships.map((m) => (
-                        <tr key={m.id} className="tr">
-                          <td className="td">
-                            <div className="key-cell">
-                              <code className="key-code">{m.license_key || '—'}</code>
-                              {m.license_key && (
-                                <button className="copy-btn" onClick={() => copy(m.license_key, m.id)} title="Copy">
-                                  {copied === m.id ? (
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="#3ECF8E" strokeWidth="2.5" style={{ width: 13, height: 13 }}>
-                                      <polyline points="20 6 9 17 4 12" strokeLinecap="round" strokeLinejoin="round" />
-                                    </svg>
-                                  ) : (
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 13, height: 13 }}>
-                                      <rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                                    </svg>
-                                  )}
-                                </button>
-                              )}
-                            </div>
-                          </td>
-                          <td className="td">
-                            <span className="pill" style={{ background: statusColor(m.status) + '20', color: statusColor(m.status), border: `1px solid ${statusColor(m.status)}40` }}>
-                              <span className="dot" style={{ background: statusColor(m.status) }} />
-                              {statusLabel(m.status)}
+                      {accountsLoading ? (
+                        <tr><td colSpan={7} className="td" style={{ textAlign: 'center', padding: '48px 0', color: '#555' }}>Loading...</td></tr>
+                      ) : accounts.length === 0 ? (
+                        <tr>
+                          <td colSpan={7} className="td" style={{ textAlign: 'center', padding: '48px 0', color: '#555', fontSize: 14 }}>
+                            No trading accounts registered yet.<br />
+                            <span style={{ fontSize: 12, color: '#444', marginTop: 6, display: 'block' }}>
+                              Accounts appear automatically when the EA runs on MT5.
                             </span>
                           </td>
-                          <td className="td" style={{ color: '#C9A84C', fontSize: 13 }}>{m.plan?.name || '—'}</td>
-                          <td className="td" style={{ color: '#888', fontSize: 13 }}>{fmt(m.renewal_period_start)}</td>
-                          <td className="td" style={{ color: '#888', fontSize: 13 }}>{fmt(m.renewal_period_end)}</td>
+                        </tr>
+                      ) : accounts.map(a => (
+                        <tr key={a.id} className="tr">
+                          <td className="td"><code className="key-code" style={{ fontSize: 12 }}>{a.licenseKey}</code></td>
+                          <td className="td" style={{ color: '#C9A84C', fontWeight: 600 }}>{a.accountNumber}</td>
+                          <td className="td">{a.accountName || '—'}</td>
+                          <td className="td">{a.accountServer || '—'}</td>
+                          <td className="td" style={{ color: '#888', fontSize: 12 }}>{fmtMs(a.registeredAt)}</td>
+                          <td className="td" style={{ color: '#888', fontSize: 12 }}>{fmtMs(a.lastUpdate)}</td>
                           <td className="td">
-                            <span style={{ color: m.valid ? '#3ECF8E' : '#E05252', fontWeight: 700, fontSize: 13 }}>
-                              {m.valid ? 'Yes' : 'No'}
-                            </span>
+                            <button className="del-btn" onClick={() => deleteAccount(a.licenseKey, a.id)}>Delete</button>
                           </td>
                         </tr>
                       ))}
@@ -168,245 +337,236 @@ export default function Dashboard() {
                   </table>
                 </div>
 
-                {/* Mobile card view for license keys */}
-                <div className="mobile-cards">
-                  {memberships.map((m) => (
-                    <div key={m.id} className="mobile-card">
-                      <div className="mc-row">
-                        <span className="mc-label">License Key</span>
-                        <div className="key-cell">
-                          <code className="key-code" style={{ fontSize: 12 }}>{m.license_key || '—'}</code>
-                          {m.license_key && (
-                            <button className="copy-btn" onClick={() => copy(m.license_key, m.id)}>
-                              {copied === m.id ? (
-                                <svg viewBox="0 0 24 24" fill="none" stroke="#3ECF8E" strokeWidth="2.5" style={{ width: 13, height: 13 }}><polyline points="20 6 9 17 4 12" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                              ) : (
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 13, height: 13 }}><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>
-                              )}
-                            </button>
-                          )}
+                {/* Mobile cards */}
+                {!accountsLoading && accounts.length > 0 && (
+                  <div className="mobile-cards">
+                    {accounts.map(a => (
+                      <div key={a.id} className="mobile-card">
+                        <div className="mc-row">
+                          <span className="mc-label">Account No.</span>
+                          <span style={{ color: '#C9A84C', fontWeight: 700 }}>{a.accountNumber}</span>
                         </div>
+                        <div className="mc-row">
+                          <span className="mc-label">Name</span>
+                          <span style={{ color: '#ccc', fontSize: 13 }}>{a.accountName || '—'}</span>
+                        </div>
+                        <div className="mc-row">
+                          <span className="mc-label">Server</span>
+                          <span style={{ color: '#ccc', fontSize: 13 }}>{a.accountServer || '—'}</span>
+                        </div>
+                        <div className="mc-row">
+                          <span className="mc-label">License</span>
+                          <code className="key-code" style={{ fontSize: 11 }}>{a.licenseKey}</code>
+                        </div>
+                        <div className="mc-row">
+                          <span className="mc-label">Last Update</span>
+                          <span style={{ color: '#888', fontSize: 12 }}>{fmtMs(a.lastUpdate)}</span>
+                        </div>
+                        <button className="del-btn" style={{ width: '100%', marginTop: 8 }} onClick={() => deleteAccount(a.licenseKey, a.id)}>Delete Account</button>
                       </div>
-                      <div className="mc-row">
-                        <span className="mc-label">Status</span>
-                        <span className="pill" style={{ background: statusColor(m.status) + '20', color: statusColor(m.status), border: `1px solid ${statusColor(m.status)}40` }}>
-                          <span className="dot" style={{ background: statusColor(m.status) }} />{statusLabel(m.status)}
-                        </span>
-                      </div>
-                      <div className="mc-row">
-                        <span className="mc-label">Plan</span>
-                        <span style={{ color: '#C9A84C', fontSize: 13 }}>{m.plan?.name || '—'}</span>
-                      </div>
-                      <div className="mc-row">
-                        <span className="mc-label">Valid</span>
-                        <span style={{ color: m.valid ? '#3ECF8E' : '#E05252', fontWeight: 700, fontSize: 13 }}>{m.valid ? 'Yes' : 'No'}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )
-          )}
-
-          {/* Accounts Tab */}
-          {tab === 'accounts' && (
-            <div className="table-wrap">
-              <div className="table-scroll">
-                <table className="table">
-                  <thead>
-                    <tr>
-                      {['License Key', 'Account No.', 'Name', 'Server', 'Registered', 'Last Update', ''].map(h => (
-                        <th key={h} className="th">{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {accountsLoading ? (
-                      <tr><td colSpan={7} className="td" style={{ textAlign: 'center', padding: '48px 0', color: '#555' }}>Loading...</td></tr>
-                    ) : accounts.length === 0 ? (
-                      <tr>
-                        <td colSpan={7} className="td" style={{ textAlign: 'center', padding: '48px 0', color: '#555', fontSize: 14 }}>
-                          No trading accounts registered yet.<br />
-                          <span style={{ fontSize: 12, color: '#444', marginTop: 6, display: 'block' }}>
-                            Accounts appear automatically when the EA runs on MT5.
-                          </span>
-                        </td>
-                      </tr>
-                    ) : accounts.map(a => (
-                      <tr key={a.id} className="tr">
-                        <td className="td"><code className="key-code" style={{ fontSize: 12 }}>{a.licenseKey}</code></td>
-                        <td className="td" style={{ color: '#C9A84C', fontWeight: 600 }}>{a.accountNumber}</td>
-                        <td className="td">{a.accountName || '—'}</td>
-                        <td className="td">{a.accountServer || '—'}</td>
-                        <td className="td" style={{ color: '#888', fontSize: 12 }}>{fmtMs(a.registeredAt)}</td>
-                        <td className="td" style={{ color: '#888', fontSize: 12 }}>{fmtMs(a.lastUpdate)}</td>
-                        <td className="td">
-                          <button className="del-btn" onClick={() => deleteAccount(a.licenseKey, a.id)}>Delete</button>
-                        </td>
-                      </tr>
                     ))}
-                  </tbody>
-                </table>
+                  </div>
+                )}
+
+                {accountsLoading && (
+                  <div className="mobile-cards" style={{ padding: '32px 16px', textAlign: 'center', color: '#555' }}>Loading...</div>
+                )}
+                {!accountsLoading && accounts.length === 0 && (
+                  <div className="mobile-cards" style={{ padding: '40px 16px', textAlign: 'center', color: '#555', fontSize: 14 }}>
+                    No trading accounts registered yet.<br />
+                    <span style={{ fontSize: 12, color: '#444', marginTop: 6, display: 'block' }}>Accounts appear automatically when the EA runs on MT5.</span>
+                  </div>
+                )}
               </div>
-
-              {/* Mobile card view for accounts */}
-              {accounts.length > 0 && (
-                <div className="mobile-cards">
-                  {accounts.map(a => (
-                    <div key={a.id} className="mobile-card">
-                      <div className="mc-row">
-                        <span className="mc-label">Account No.</span>
-                        <span style={{ color: '#C9A84C', fontWeight: 700 }}>{a.accountNumber}</span>
-                      </div>
-                      <div className="mc-row">
-                        <span className="mc-label">Name</span>
-                        <span style={{ color: '#ccc', fontSize: 13 }}>{a.accountName || '—'}</span>
-                      </div>
-                      <div className="mc-row">
-                        <span className="mc-label">Server</span>
-                        <span style={{ color: '#ccc', fontSize: 13 }}>{a.accountServer || '—'}</span>
-                      </div>
-                      <div className="mc-row">
-                        <span className="mc-label">License</span>
-                        <code className="key-code" style={{ fontSize: 11 }}>{a.licenseKey}</code>
-                      </div>
-                      <div className="mc-row">
-                        <span className="mc-label">Last Update</span>
-                        <span style={{ color: '#888', fontSize: 12 }}>{fmtMs(a.lastUpdate)}</span>
-                      </div>
-                      <button className="del-btn" style={{ width: '100%', marginTop: 8 }} onClick={() => deleteAccount(a.licenseKey, a.id)}>Delete Account</button>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {accountsLoading && (
-                <div className="mobile-cards" style={{ padding: '32px 16px', textAlign: 'center', color: '#555' }}>Loading...</div>
-              )}
-              {!accountsLoading && accounts.length === 0 && (
-                <div className="mobile-cards" style={{ padding: '40px 16px', textAlign: 'center', color: '#555', fontSize: 14 }}>
-                  No trading accounts registered yet.<br />
-                  <span style={{ fontSize: 12, color: '#444', marginTop: 6, display: 'block' }}>Accounts appear automatically when the EA runs on MT5.</span>
-                </div>
-              )}
-            </div>
-          )}
-        </main>
+            )}
+          </main>
+        </div>
       </div>
 
       <style>{`
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background: #0A0A0A; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        .page { min-height: 100vh; background: #0A0A0A; position: relative; }
+        @keyframes spin       { to { transform: rotate(360deg); } }
+        @keyframes slideRight { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes slideLeft  { from { opacity: 0; transform: translateX(-28px); } to { opacity: 1; transform: translateX(0); } }
+
+        .slide-right { animation: slideRight 0.28s cubic-bezier(0.25,0.46,0.45,0.94); }
+        .slide-left  { animation: slideLeft  0.28s cubic-bezier(0.25,0.46,0.45,0.94); }
+
+        /* ── Grid ── */
         .grid {
           position: fixed; inset: 0;
-          background-image: linear-gradient(rgba(201,168,76,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(201,168,76,0.03) 1px, transparent 1px);
+          background-image: linear-gradient(rgba(201,168,76,0.03) 1px, transparent 1px),
+                            linear-gradient(90deg, rgba(201,168,76,0.03) 1px, transparent 1px);
           background-size: 48px 48px; pointer-events: none; z-index: 0;
         }
 
-        /* Top bar */
-        .topbar {
-          position: sticky; top: 0; z-index: 10;
-          background: rgba(10,10,10,0.95); border-bottom: 1px solid #1e1e1e;
-          backdrop-filter: blur(8px);
-          display: flex; align-items: center; justify-content: space-between;
-          padding: 12px 24px; gap: 12px;
+        /* ── Layout ── */
+        .layout { display: flex; min-height: 100vh; background: #0A0A0A; }
+
+        /* ── Sidebar ── */
+        .sidebar {
+          width: 220px; flex-shrink: 0;
+          background: #0d0d0d; border-right: 1px solid #1a1a1a;
+          display: flex; flex-direction: column;
+          position: fixed; top: 0; left: 0; bottom: 0; z-index: 20;
+          transition: transform 0.25s cubic-bezier(0.25,0.46,0.45,0.94);
         }
-        .topbar-logo { display: flex; align-items: center; gap: 10; flex-shrink: 0; }
+
+        .sidebar-logo {
+          display: flex; align-items: center; gap: 10px;
+          padding: 20px 16px 18px; border-bottom: 1px solid #1a1a1a; flex-shrink: 0;
+        }
         .logo-circle {
-          width: 34px; height: 34px; border-radius: 50%;
+          width: 36px; height: 36px; border-radius: 50%;
           background: linear-gradient(135deg, #C9A84C, #9B7B2F);
           display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+          box-shadow: 0 0 20px rgba(201,168,76,0.2);
         }
-        .logo-text { font-size: 12px; font-weight: 800; color: #0A0A0A; }
+        .logo-text  { font-size: 13px; font-weight: 800; color: #0A0A0A; }
         .brand-name { font-size: 14px; font-weight: 700; color: #F5F0E8; }
-        .brand-sub { font-size: 10px; color: #C9A84C; letter-spacing: 2px; text-transform: uppercase; }
-        .topbar-right { display: flex; align-items: center; gap: 10px; min-width: 0; }
-        .logged-as {
-          font-size: 12px; color: #666; white-space: nowrap;
-          overflow: hidden; text-overflow: ellipsis; max-width: 200px;
+        .brand-sub  { font-size: 9px; color: #C9A84C; letter-spacing: 2px; text-transform: uppercase; margin-top: 2px; }
+
+        .sidebar-nav { flex: 1; padding: 16px 10px; display: flex; flex-direction: column; gap: 2px; overflow-y: auto; }
+        .nav-section-label { font-size: 10px; color: #333; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 600; padding: 0 8px 8px; }
+
+        .nav-item {
+          display: flex; align-items: center; gap: 10px;
+          padding: 10px 12px; border-radius: 8px;
+          background: transparent; border: none;
+          color: #555; font-size: 13px; font-weight: 500;
+          cursor: pointer; text-align: left; width: 100%; position: relative;
+          transition: background 0.15s, color 0.15s;
         }
+        .nav-item:hover { background: #151515; color: #999; }
+        .nav-active { background: rgba(201,168,76,0.08) !important; color: #C9A84C !important; }
+        .nav-pip {
+          position: absolute; right: 10px; width: 6px; height: 6px;
+          border-radius: 50%; background: #C9A84C;
+        }
+        .nav-icon { width: 17px; height: 17px; flex-shrink: 0; }
+
+        .sidebar-footer {
+          padding: 14px; border-top: 1px solid #1a1a1a;
+          display: flex; flex-direction: column; gap: 10px; flex-shrink: 0;
+        }
+        .user-info { display: flex; align-items: center; gap: 10px; min-width: 0; }
+        .user-avatar {
+          width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+          background: #1e1e1e; border: 1px solid #2a2a2a;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 12px; font-weight: 700; color: #C9A84C;
+        }
+        .user-email { font-size: 11px; color: #555; word-break: break-all; line-height: 1.3; }
         .logout-btn {
-          padding: 7px 14px; background: #1a1a1a; border: 1px solid #333;
-          border-radius: 6px; color: #E05252; font-size: 13px; font-weight: 600;
-          cursor: pointer; flex-shrink: 0; white-space: nowrap;
+          width: 100%; padding: 8px; background: rgba(224,82,82,0.07);
+          border: 1px solid rgba(224,82,82,0.2); border-radius: 6px;
+          color: #E05252; font-size: 12px; font-weight: 600; cursor: pointer;
+          transition: background 0.15s;
         }
+        .logout-btn:hover { background: rgba(224,82,82,0.14); }
 
-        /* Main */
-        .main { position: relative; z-index: 1; padding: 24px; max-width: 1200px; margin: 0 auto; }
+        /* ── Main wrap ── */
+        .main-wrap { margin-left: 220px; flex: 1; min-width: 0; display: flex; flex-direction: column; position: relative; z-index: 1; }
 
-        /* Tabs */
-        .tabs { display: flex; margin-bottom: 20px; border-bottom: 1px solid #1e1e1e; }
-        .tab-btn {
-          padding: 10px 20px; background: transparent; border: none;
-          border-bottom: 2px solid transparent; color: #555; font-size: 14px;
-          font-weight: 600; cursor: pointer; transition: all 0.15s; margin-bottom: -1px;
-        }
-        .tab-active { color: #C9A84C; border-bottom-color: #C9A84C; }
+        /* ── Mobile header (hidden on desktop) ── */
+        .mobile-header { display: none; }
 
-        /* Error */
+        /* ── Page header ── */
+        .page-header { padding: 28px 32px 0; }
+        .page-title  { font-size: 22px; font-weight: 700; color: #F5F0E8; }
+        .page-subtitle { font-size: 13px; color: #555; margin-top: 4px; }
+
+        /* ── Content area ── */
+        .main { padding: 20px 32px 40px; }
+
+        /* ── Error ── */
         .error-box {
           display: flex; align-items: center; gap: 10px;
           background: rgba(224,82,82,0.08); border: 1px solid rgba(224,82,82,0.2);
           border-radius: 8px; padding: 14px 18px; color: #E05252; font-size: 14px; margin-bottom: 20px;
         }
-        .empty { text-align: center; padding: 60px 0; }
 
-        /* Table */
-        .table-wrap { background: #111; border: 1px solid #1e1e1e; border-radius: 10px; overflow: hidden; animation: fadeIn 0.3s ease; }
+        /* ── Empty state ── */
+        .empty { text-align: center; padding: 80px 0; }
+        .empty-icon { display: inline-flex; align-items: center; justify-content: center; width: 56px; height: 56px; border-radius: 16px; background: #151515; border: 1px solid #222; color: #333; }
+        .empty-icon svg { width: 26px; height: 26px; }
+
+        /* ── Table ── */
+        .table-wrap { background: #111; border: 1px solid #1e1e1e; border-radius: 10px; overflow: hidden; }
         .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
         .table { width: 100%; border-collapse: collapse; min-width: 600px; }
         .th {
           padding: 12px 16px; text-align: left; font-size: 11px; font-weight: 600;
-          color: #555; text-transform: uppercase; letter-spacing: 0.8px;
+          color: #444; text-transform: uppercase; letter-spacing: 0.8px;
           border-bottom: 1px solid #1e1e1e; background: #0d0d0d; white-space: nowrap;
         }
-        .td { padding: 14px 16px; font-size: 13px; color: #ccc; border-bottom: 1px solid #181818; vertical-align: middle; }
+        .td { padding: 14px 16px; font-size: 13px; color: #ccc; border-bottom: 1px solid #161616; vertical-align: middle; }
+        .tr:last-child td { border-bottom: none; }
         .tr:hover td { background: rgba(201,168,76,0.03); }
 
-        /* Key */
+        /* ── Key ── */
         .key-cell { display: flex; align-items: center; gap: 8px; }
         .key-code { font-family: monospace; font-size: 13px; color: #C9A84C; letter-spacing: 0.5px; word-break: break-all; }
         .copy-btn { background: transparent; border: none; color: #555; cursor: pointer; padding: 3px; display: flex; align-items: center; flex-shrink: 0; }
+        .copy-btn:hover { color: #888; }
 
-        /* Pills */
+        /* ── Pills ── */
         .pill { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; white-space: nowrap; }
-        .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+        .dot  { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
 
-        /* Delete button */
+        /* ── Delete ── */
         .del-btn {
-          padding: 5px 12px; background: rgba(224,82,82,0.12); border: 1px solid rgba(224,82,82,0.3);
+          padding: 5px 12px; background: rgba(224,82,82,0.10); border: 1px solid rgba(224,82,82,0.25);
           border-radius: 5px; color: #E05252; font-size: 12px; font-weight: 600; cursor: pointer;
+          transition: background 0.15s;
         }
+        .del-btn:hover { background: rgba(224,82,82,0.18); }
 
-        /* Mobile cards — hidden on desktop */
+        /* ── Mobile cards (hidden on desktop) ── */
         .mobile-cards { display: none; }
-        .mobile-card {
-          padding: 16px; border-bottom: 1px solid #1a1a1a;
-        }
+        .mobile-card { padding: 16px; border-bottom: 1px solid #1a1a1a; }
         .mobile-card:last-child { border-bottom: none; }
         .mc-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; gap: 12px; }
-        .mc-label { font-size: 11px; color: #555; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600; flex-shrink: 0; }
+        .mc-label { font-size: 10px; color: #444; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 600; flex-shrink: 0; }
 
-        /* Responsive */
-        @media (max-width: 640px) {
-          .topbar { padding: 10px 16px; }
-          .brand-sub { display: none; }
-          .logged-as { max-width: 130px; font-size: 11px; }
-          .main { padding: 16px; }
-          .tab-btn { padding: 10px 16px; font-size: 13px; }
+        /* ── Mobile overlay ── */
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 19; }
 
-          /* Hide desktop table, show mobile cards */
+        /* ── Hamburger ── */
+        .hamburger { background: transparent; border: none; cursor: pointer; color: #888; padding: 4px; display: flex; align-items: center; }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+          .sidebar { transform: translateX(-100%); }
+          .sidebar-open { transform: translateX(0) !important; }
+          .main-wrap { margin-left: 0; }
+
+          .mobile-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 16px; background: rgba(13,13,13,0.95);
+            border-bottom: 1px solid #1a1a1a; position: sticky; top: 0; z-index: 10;
+            backdrop-filter: blur(10px);
+          }
+          .mobile-brand { font-size: 15px; font-weight: 700; color: #F5F0E8; }
+          .logout-btn-sm {
+            padding: 6px 12px; background: rgba(224,82,82,0.08);
+            border: 1px solid rgba(224,82,82,0.2); border-radius: 6px;
+            color: #E05252; font-size: 12px; font-weight: 600; cursor: pointer;
+          }
+
+          .page-header { padding: 18px 16px 0; }
+          .page-title  { font-size: 18px; }
+          .page-subtitle { font-size: 12px; }
+          .main { padding: 14px 16px 32px; }
+
           .table-scroll { display: none; }
           .mobile-cards { display: block; }
         }
 
         @media (max-width: 400px) {
-          .logged-as { display: none; }
-          .logout-btn { padding: 6px 12px; font-size: 12px; }
+          .logout-btn-sm { font-size: 11px; padding: 5px 10px; }
         }
       `}</style>
     </>
