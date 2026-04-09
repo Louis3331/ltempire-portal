@@ -5,8 +5,8 @@ import Head from 'next/head';
 export default function LoginPage() {
   const router = useRouter();
   const [checking, setChecking] = useState(true);
-  const [email, setEmail] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [email, setEmail]       = useState('');
+  const [loading, setLoading]   = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
@@ -40,8 +40,8 @@ export default function LoginPage() {
 
   if (checking) {
     return (
-      <div style={styles.center}>
-        <div style={styles.spinner} />
+      <div className="lp-center">
+        <div className="lp-spinner" />
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
@@ -54,28 +54,26 @@ export default function LoginPage() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
 
-      <div style={styles.page}>
-        <div style={styles.grid} aria-hidden="true" />
+      <div className="lp-page">
+        <div className="lp-grid" aria-hidden="true" />
 
-        <div style={styles.card} className="login-card">
-          <div style={styles.logoWrap}>
-            <div style={styles.logoCircle}>
-              <span style={styles.logoText}>LT</span>
+        <div className="lp-card login-card">
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
+            <div style={{ width: 72, height: 72, borderRadius: '50%', background: 'linear-gradient(135deg, #C9A84C, #9B7B2F)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 32px rgba(201,168,76,0.3)' }}>
+              <span style={{ fontSize: 26, fontWeight: 800, color: '#0A0A0A', letterSpacing: 1 }}>LT</span>
             </div>
           </div>
 
-          <h1 style={styles.title}>LT Empire</h1>
-          <p style={styles.subtitle}>Member Portal</p>
+          <h1 className="lp-title">LT Empire</h1>
+          <p className="lp-subtitle">Member Portal</p>
 
-          <div style={styles.divider} />
+          <div className="lp-divider" />
 
-          <p style={styles.desc}>
-            Login using your Whop email to view and manage your license.
-          </p>
+          <p className="lp-desc">Login using your Whop email to view and manage your license.</p>
 
-          <form onSubmit={handleLogin} style={styles.form}>
-            <div style={styles.inputGroup}>
-              <svg style={styles.inputIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 12, textAlign: 'left' }}>
+            <div style={{ position: 'relative' }}>
+              <svg className="lp-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z" />
                 <polyline points="22,6 12,13 2,6" />
               </svg>
@@ -84,86 +82,128 @@ export default function LoginPage() {
                 placeholder="Whop email address"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                style={styles.input}
+                className="lp-input"
                 required
                 autoComplete="email"
               />
             </div>
 
-            {errorMsg && <p style={styles.error}>{errorMsg}</p>}
+            {errorMsg && <p style={{ fontSize: 13, color: '#E05252', margin: '0 0 4px', textAlign: 'center' }}>{errorMsg}</p>}
 
-            <button type="submit" style={styles.btn} disabled={loading}>
+            <button type="submit" className="lp-btn" disabled={loading}>
               {loading ? (
                 <>
-                  <div style={styles.btnSpinner} />
+                  <div style={{ width: 16, height: 16, border: '2px solid rgba(10,10,10,0.3)', borderTopColor: '#0A0A0A', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
                   Verifying...
                 </>
-              ) : (
-                'Login'
-              )}
+              ) : 'Login'}
             </button>
           </form>
 
-          <p style={styles.footer}>
-            Access restricted to active LT Empire members only.
-          </p>
+          <p className="lp-footer">Access restricted to active LT Empire members only.</p>
         </div>
       </div>
 
       <style>{`
-        @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
-        input::placeholder { color: #444; }
-        input:focus { outline: none; border-color: #C9A84C !important; }
-        * { box-sizing: border-box; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        /* ── Dark (default) ── */
+        :root {
+          --lp-bg:        #0A0A0A;
+          --lp-bg-grad:   radial-gradient(ellipse at 50% 0%, #1a1408 0%, #0A0A0A 70%);
+          --lp-grid:      rgba(201,168,76,0.04);
+          --lp-card:      #111111;
+          --lp-card-bdr:  #2a2208;
+          --lp-card-shad: 0 0 60px rgba(201,168,76,0.06), 0 24px 48px rgba(0,0,0,0.5);
+          --lp-text:      #F5F0E8;
+          --lp-muted:     #888;
+          --lp-dim:       #444;
+          --lp-divider:   linear-gradient(90deg, transparent, #2a2208, transparent);
+          --lp-input-bg:  #0d0d0d;
+          --lp-input-bdr: #2a2a2a;
+          --lp-ph:        #444;
+          --lp-icon:      #555;
+          --lp-gold:      #C9A84C;
+        }
+
+        /* ── Light ── */
+        html[data-theme="light"] {
+          --lp-bg:        #F2F0EB;
+          --lp-bg-grad:   radial-gradient(ellipse at 50% 0%, #F5EDD8 0%, #F2F0EB 70%);
+          --lp-grid:      rgba(139,96,16,0.05);
+          --lp-card:      #FFFFFF;
+          --lp-card-bdr:  #E4E0D8;
+          --lp-card-shad: 0 0 60px rgba(139,96,16,0.05), 0 24px 48px rgba(0,0,0,0.08);
+          --lp-text:      #1A1817;
+          --lp-muted:     #7A7570;
+          --lp-dim:       #B0ABA5;
+          --lp-divider:   linear-gradient(90deg, transparent, #E4E0D8, transparent);
+          --lp-input-bg:  #FAFAF7;
+          --lp-input-bdr: #E0DDD6;
+          --lp-ph:        #B0ABA5;
+          --lp-icon:      #9A9590;
+          --lp-gold:      #8B6010;
+        }
+
+        @keyframes spin    { to { transform: rotate(360deg); } }
+        @keyframes fadeIn  { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+        .lp-center  { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--lp-bg); }
+        .lp-spinner { width: 36px; height: 36px; border: 3px solid #222; border-top-color: #C9A84C; border-radius: 50%; animation: spin 0.8s linear infinite; }
+
+        .lp-page {
+          min-height: 100vh; display: flex; align-items: center; justify-content: center;
+          padding: 24px; position: relative; background: var(--lp-bg-grad);
+          transition: background 0.25s;
+        }
+        .lp-grid {
+          position: fixed; inset: 0;
+          background-image: linear-gradient(var(--lp-grid) 1px, transparent 1px),
+                            linear-gradient(90deg, var(--lp-grid) 1px, transparent 1px);
+          background-size: 48px 48px; pointer-events: none;
+          transition: background-image 0.25s;
+        }
+        .lp-card {
+          position: relative; z-index: 1;
+          background: var(--lp-card); border: 1px solid var(--lp-card-bdr);
+          border-radius: 16px; padding: 48px 40px;
+          width: 100%; max-width: 420px; text-align: center;
+          box-shadow: var(--lp-card-shad); animation: fadeIn 0.4s ease;
+          transition: background 0.25s, border-color 0.25s, box-shadow 0.25s;
+        }
+        .lp-title    { font-size: 26px; font-weight: 700; color: var(--lp-text); letter-spacing: 0.5px; margin-bottom: 4px; }
+        .lp-subtitle { font-size: 13px; color: var(--lp-gold); letter-spacing: 3px; text-transform: uppercase; font-weight: 500; }
+        .lp-divider  { height: 1px; background: var(--lp-divider); margin: 24px 0; }
+        .lp-desc     { font-size: 14px; color: var(--lp-muted); line-height: 1.6; margin-bottom: 24px; }
+        .lp-footer   { margin-top: 24px; font-size: 12px; color: var(--lp-dim); }
+
+        .lp-input-icon {
+          position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+          width: 16px; height: 16px; color: var(--lp-icon); pointer-events: none;
+        }
+        .lp-input {
+          width: 100%; padding: 13px 14px 13px 40px;
+          background: var(--lp-input-bg); border: 1px solid var(--lp-input-bdr);
+          border-radius: 8px; color: var(--lp-text); font-size: 14px;
+          box-sizing: border-box; transition: border-color 0.2s, background 0.2s;
+        }
+        .lp-input::placeholder { color: var(--lp-ph); }
+        .lp-input:focus { outline: none; border-color: var(--lp-gold); }
+
+        .lp-btn {
+          display: flex; align-items: center; justify-content: center; gap: 10px;
+          width: 100%; padding: 14px 24px;
+          background: linear-gradient(135deg, #C9A84C, #9B7B2F);
+          border: none; border-radius: 8px; color: #0A0A0A;
+          font-size: 15px; font-weight: 700; letter-spacing: 0.3px;
+          cursor: pointer; margin-top: 4px;
+        }
+        .lp-btn:disabled { opacity: 0.8; cursor: not-allowed; }
+
         @media (max-width: 480px) {
-          .login-card { padding: 32px 20px !important; }
+          .lp-card { padding: 32px 20px; }
         }
       `}</style>
     </>
   );
 }
-
-const styles = {
-  page: {
-    minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-    padding: '24px', position: 'relative',
-    background: 'radial-gradient(ellipse at 50% 0%, #1a1408 0%, #0A0A0A 70%)',
-  },
-  grid: {
-    position: 'fixed', inset: 0,
-    backgroundImage: `linear-gradient(rgba(201,168,76,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(201,168,76,0.04) 1px, transparent 1px)`,
-    backgroundSize: '48px 48px', pointerEvents: 'none',
-  },
-  center: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0A0A0A' },
-  spinner: { width: 36, height: 36, border: '3px solid #222', borderTopColor: '#C9A84C', borderRadius: '50%', animation: 'spin 0.8s linear infinite' },
-  card: {
-    position: 'relative', zIndex: 1, background: '#111111', border: '1px solid #2a2208',
-    borderRadius: 16, padding: '48px 40px', width: '100%', maxWidth: 420, textAlign: 'center',
-    boxShadow: '0 0 60px rgba(201,168,76,0.06), 0 24px 48px rgba(0,0,0,0.5)', animation: 'fadeIn 0.4s ease',
-  },
-  logoWrap: { display: 'flex', justifyContent: 'center', marginBottom: 20 },
-  logoCircle: { width: 72, height: 72, borderRadius: '50%', background: 'linear-gradient(135deg, #C9A84C, #9B7B2F)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 32px rgba(201,168,76,0.3)' },
-  logoText: { fontSize: 26, fontWeight: 800, color: '#0A0A0A', letterSpacing: 1 },
-  title: { fontSize: 26, fontWeight: 700, color: '#F5F0E8', letterSpacing: 0.5, marginBottom: 4 },
-  subtitle: { fontSize: 13, color: '#C9A84C', letterSpacing: 3, textTransform: 'uppercase', fontWeight: 500 },
-  divider: { height: 1, background: 'linear-gradient(90deg, transparent, #2a2208, transparent)', margin: '24px 0' },
-  desc: { fontSize: 14, color: '#888', lineHeight: 1.6, marginBottom: 24 },
-  form: { display: 'flex', flexDirection: 'column', gap: 12, textAlign: 'left' },
-  inputGroup: { position: 'relative' },
-  inputIcon: { position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', width: 16, height: 16, color: '#555', pointerEvents: 'none' },
-  input: {
-    width: '100%', padding: '13px 14px 13px 40px', background: '#0d0d0d',
-    border: '1px solid #2a2a2a', borderRadius: 8, color: '#F5F0E8', fontSize: 14,
-    boxSizing: 'border-box', transition: 'border-color 0.2s',
-  },
-  error: { fontSize: 13, color: '#E05252', margin: '0 0 4px', textAlign: 'center' },
-  btn: {
-    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-    width: '100%', padding: '14px 24px', background: 'linear-gradient(135deg, #C9A84C, #9B7B2F)',
-    border: 'none', borderRadius: 8, color: '#0A0A0A', fontSize: 15, fontWeight: 700,
-    letterSpacing: 0.3, cursor: 'pointer', marginTop: 4,
-  },
-  btnSpinner: { width: 16, height: 16, border: '2px solid rgba(10,10,10,0.3)', borderTopColor: '#0A0A0A', borderRadius: '50%', animation: 'spin 0.7s linear infinite' },
-  footer: { marginTop: 24, fontSize: 12, color: '#444' },
-};
