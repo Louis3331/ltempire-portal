@@ -37,8 +37,8 @@ const g = {
       },
       {
         title: 'Attach EA to Chart',
-        desc:  'Open a XAUUSD chart (M15 or H1 timeframe recommended). In the Navigator panel find LTE Gold under Expert Advisors and double-click or drag it onto the chart.',
-        tip:   'Use M15 or H1 timeframe for best results.',
+        desc:  'Open a XAUUSD chart on the H1 timeframe. In the Navigator panel find LTE Gold under Expert Advisors and double-click or drag it onto the chart.',
+        tip:   'Use H1 timeframe for best results.',
         tipType: 'info',
       },
       {
@@ -104,8 +104,8 @@ const g = {
       },
       {
         title: '将 EA 附加到图表',
-        desc:  '打开 XAUUSD 图表（建议使用 M15 或 H1 时间框架），在导航器面板中找到 LTE Gold，双击或拖拽到图表上。',
-        tip:   '建议使用 M15 或 H1 时间框架以获得最佳效果。',
+        desc:  '打开 XAUUSD 图表（H1 时间框架），在导航器面板中找到 LTE Gold，双击或拖拽到图表上。',
+        tip:   '建议使用 H1 时间框架以获得最佳效果。',
         tipType: 'info',
       },
       {
@@ -428,49 +428,81 @@ const Svg5 = () => {
   );
 };
 
-const Svg6 = () => (
-  <Win title="MetaTrader 5 — XAUUSD, H1">
-    {/* Navigator panel */}
-    <rect x="0" y="28" width="110" height={H - 28} fill="#0a0a0a" stroke="#1a1a1a" strokeWidth="1" />
-    <text x="8" y="44" fill="#555" fontSize="7.5" fontFamily="system-ui,sans-serif" fontWeight="600" letterSpacing="0.5">NAVIGATOR</text>
-    <text x="8" y="58" fill="#555" fontSize="8" fontFamily="system-ui,sans-serif">▶ Indicators</text>
-    <text x="8" y="72" fill="#C9A84C" fontSize="8" fontFamily="system-ui,sans-serif">▼ Expert Advisors</text>
-    <rect x="6" y="76" width="98" height="16" rx="3" fill="rgba(201,168,76,0.12)" />
-    <text x="14" y="87" fill="#C9A84C" fontSize="8" fontFamily="system-ui,sans-serif" fontWeight="600">LTE Gold</text>
-    <text x="8" y="108" fill="#555" fontSize="8" fontFamily="system-ui,sans-serif">▶ Scripts</text>
-    {/* Drag arrow */}
-    <path d="M104,84 Q135,84 155,110" stroke="#C9A84C" strokeWidth="1.5" strokeDasharray="4,2" markerEnd="url(#arr3)" />
-    <defs>
-      <marker id="arr3" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
-        <path d="M0,0 L0,6 L6,3 z" fill="#C9A84C" />
-      </marker>
-    </defs>
-    <text x="118" y="78" fill="#C9A84C" fontSize="7.5" fontFamily="system-ui,sans-serif">Drag to chart</text>
-    {/* Chart area */}
-    <rect x="110" y="28" width={W - 110} height={H - 28} fill="#0d0d0d" />
-    <text x="120" y="44" fill="#888" fontSize="8" fontFamily="system-ui,sans-serif">XAUUSD, H1</text>
-    {/* Candlestick chart */}
-    {[
-      [140,80,100,60], [155,75,105,65], [170,90,110,75], [185,70,100,60],
-      [200,85,115,70], [215,65,95,55],  [230,80,110,70], [245,75,105,60],
-      [260,90,120,75], [275,65,95,50],  [290,85,115,70], [305,70,100,60],
-      [320,80,110,65], [335,60,90,45],  [350,75,105,60], [365,85,115,70],
-    ].map(([x, yHigh, yLow, yClose], i) => {
-      const isGreen = i % 3 !== 1;
-      const clr = isGreen ? '#3ECF8E' : '#E05252';
-      const bodyTop = isGreen ? yClose : yClose - 12;
-      return (
-        <g key={i}>
-          <line x1={x} y1={yHigh} x2={x} y2={yLow + 20} stroke={clr} strokeWidth="0.8" opacity="0.6" />
-          <rect x={x - 3} y={bodyTop} width="6" height="12" fill={clr} opacity="0.8" />
+const Svg6 = () => {
+  const candles = [
+    [0,1],[1,-1],[2,1],[3,1],[4,-1],[5,1],[6,-1],[7,1],
+    [8,1],[9,-1],[10,1],[11,1],[12,-1],[13,1],[14,1],[15,-1],
+    [16,1],[17,1],[18,-1],[19,1],[20,1],[21,-1],[22,1],[23,1],
+  ];
+  const chartX = 108, chartY = 28, chartW = W - chartX, chartH = H - chartY;
+  const cW = Math.floor(chartW / candles.length);
+  const midY = chartY + chartH * 0.48;
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', borderRadius: 8, display: 'block' }}>
+      {/* Window */}
+      <rect width={W} height={H} rx="8" fill="#0d0d0d" stroke="#252525" strokeWidth="1" />
+      {/* Title bar */}
+      <rect width={W} height="22" rx="8" fill="#161616" />
+      <rect y="14" width={W} height="8" fill="#161616" />
+      <circle cx="12" cy="11" r="4" fill="#E05252" opacity="0.7" />
+      <circle cx="24" cy="11" r="4" fill="#C9A84C" opacity="0.7" />
+      <circle cx="36" cy="11" r="4" fill="#3ECF8E" opacity="0.7" />
+      <text x={W / 2} y="15" textAnchor="middle" fill="#555" fontSize="8" fontFamily="system-ui,sans-serif">MetaTrader 5 — XAUUSD, H1</text>
+
+      {/* Navigator panel */}
+      <rect x="0" y="22" width={chartX} height={H - 22} fill="#0a0a0a" stroke="#1e1e1e" strokeWidth="1" />
+      <text x="6" y="36" fill="#444" fontSize="7" fontFamily="system-ui,sans-serif" fontWeight="700" letterSpacing="0.8">NAVIGATOR</text>
+      <text x="6" y="50" fill="#444" fontSize="8" fontFamily="system-ui,sans-serif">▶ Indicators</text>
+      <text x="6" y="63" fill="#C9A84C" fontSize="8" fontFamily="system-ui,sans-serif">▼ Expert Advisors</text>
+      {/* LTE Gold row highlighted */}
+      <rect x="4" y="66" width={chartX - 8} height="15" rx="2" fill="rgba(201,168,76,0.14)" stroke="#C9A84C" strokeWidth="0.8" />
+      <text x="10" y="77" fill="#C9A84C" fontSize="8" fontFamily="system-ui,sans-serif" fontWeight="700">✦ LTE Gold</text>
+      <text x="6" y="93" fill="#444" fontSize="8" fontFamily="system-ui,sans-serif">▶ Scripts</text>
+
+      {/* Drag arrow */}
+      <defs>
+        <marker id="arr6" markerWidth="6" markerHeight="6" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L6,3 L0,6 z" fill="#C9A84C" />
+        </marker>
+      </defs>
+      <path d={`M${chartX - 1},73 Q${chartX + 20},73 ${chartX + 30},85`} stroke="#C9A84C" strokeWidth="1.4" strokeDasharray="3,2" fill="none" markerEnd="url(#arr6)" />
+
+      {/* Chart area */}
+      <rect x={chartX} y={chartY} width={chartW} height={chartH} fill="#0d0d0d" />
+      {/* Grid lines */}
+      {[0.25,0.5,0.75].map(f => (
+        <line key={f} x1={chartX} y1={chartY + chartH * f} x2={W} y2={chartY + chartH * f} stroke="#161616" strokeWidth="0.8" />
+      ))}
+      {/* Timeframe tabs */}
+      {['M1','M5','M15','M30','H1','H4','D1'].map((tf, i) => (
+        <g key={tf}>
+          {tf === 'H1' && <rect x={chartX + 4 + i * 26} y={chartY + 2} width="24" height="13" rx="2" fill="#1e1e1e" stroke="#C9A84C" strokeWidth="0.8" />}
+          <text x={chartX + 16 + i * 26} y={chartY + 12} textAnchor="middle" fill={tf === 'H1' ? '#C9A84C' : '#333'} fontSize="7.5" fontFamily="system-ui,sans-serif" fontWeight={tf === 'H1' ? '700' : '400'}>{tf}</text>
         </g>
-      );
-    })}
-    {/* EA badge on chart */}
-    <rect x="340" y="35" width="48" height="16" rx="3" fill="#1a1a1a" stroke="#2a2a2a" />
-    <text x="364" y="46" textAnchor="middle" fill="#3ECF8E" fontSize="8" fontFamily="system-ui,sans-serif">☺ EA Active</text>
-  </Win>
-);
+      ))}
+      {/* Candles */}
+      {candles.map(([i, dir]) => {
+        const x = chartX + i * cW + cW / 2;
+        const clr = dir > 0 ? '#3ECF8E' : '#E05252';
+        const bodyH = 8 + (i % 5) * 2;
+        const wickH = bodyH + 6;
+        const top = midY - (dir > 0 ? bodyH : 0) - (i % 3) * 3;
+        return (
+          <g key={i}>
+            <line x1={x} y1={top - 4} x2={x} y2={top + wickH} stroke={clr} strokeWidth="0.8" opacity="0.5" />
+            <rect x={x - 3} y={top} width="6" height={bodyH} fill={clr} opacity="0.85" />
+          </g>
+        );
+      })}
+      {/* Tip callout at bottom — matching screenshot style */}
+      <rect x={chartX + 10} y={H - 32} width={chartW - 20} height="22" rx="5" fill="rgba(30,24,8,0.92)" stroke="rgba(201,168,76,0.3)" strokeWidth="1" />
+      <circle cx={chartX + 24} cy={H - 21} r="5" fill="rgba(201,168,76,0.15)" stroke="#C9A84C" strokeWidth="0.8" />
+      <text x={chartX + 24} y={H - 17} textAnchor="middle" fill="#C9A84C" fontSize="8" fontFamily="system-ui,sans-serif">💡</text>
+      <text x={chartX + 34} y={H - 18} fill="#C9A84C" fontSize="8.5" fontFamily="system-ui,sans-serif">Use H1 timeframe for best results.</text>
+      <circle cx={W - 20} cy={H - 21} r="3" fill="#C9A84C" opacity="0.6" />
+    </svg>
+  );
+};
 
 const Svg7 = () => (
   <Win title="LTE Gold — EA Parameters">
