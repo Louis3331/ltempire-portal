@@ -360,40 +360,73 @@ const Svg4 = () => {
   );
 };
 
-const Svg5 = () => (
-  <Win title="MetaTrader 5 — Options">
-    {/* Dialog bg */}
-    <rect x="30" y="32" width="340" height="175" rx="6" fill="#141414" stroke="#2a2a2a" />
-    {/* Tab strip */}
-    <rect x="30" y="32" width="340" height="22" rx="6" fill="#0d0d0d" />
-    <rect y="46" x="30" width="340" height="8" fill="#0d0d0d" />
-    {['Charts','Expert Advisors','Events','Objects'].map((tab, i) => (
-      <g key={tab}>
-        {i === 1 && <rect x={32 + i * 80} y="32" width="80" height="22" rx="4" fill="#1e1e1e" />}
-        <text x={72 + i * 80} y="46" textAnchor="middle" fill={i === 1 ? '#C9A84C' : '#555'} fontSize="8" fontFamily="system-ui,sans-serif" fontWeight={i === 1 ? '600' : '400'}>{tab}</text>
-      </g>
-    ))}
-    {/* Content */}
-    <text x="46" y="72" fill="#777" fontSize="8" fontFamily="system-ui,sans-serif">✅  Allow automated trading</text>
-    <text x="46" y="88" fill="#777" fontSize="8" fontFamily="system-ui,sans-serif">✅  Allow DLL imports</text>
-    {/* WebRequest checkbox — highlighted */}
-    <rect x="42" y="96" width="310" height="16" rx="2" fill="rgba(201,168,76,0.06)" />
-    <rect x="44" y="98" width="10" height="10" rx="2" fill="#C9A84C" />
-    <text x="54" y="107" fill="#C9A84C" fontSize="8" fontFamily="system-ui,sans-serif">✓</text>
-    <text x="60" y="107" fill="#C9A84C" fontSize="8" fontFamily="system-ui,sans-serif" fontWeight="600">Allow WebRequests for listed URL:</text>
-    {/* URL input */}
-    <rect x="44" y="116" width="230" height="16" rx="3" fill="#0d0d0d" stroke="#C9A84C" strokeWidth="1" />
-    <text x="50" y="127" fill="#C9A84C" fontSize="8" fontFamily="monospace">https://www.ltempire.com</text>
-    {/* Add button */}
-    <rect x="280" y="116" width="60" height="16" rx="3" fill="#1a1a1a" stroke="#333" />
-    <text x="310" y="127" textAnchor="middle" fill="#888" fontSize="8" fontFamily="system-ui,sans-serif">Add</text>
-    <Highlight x="42" y="94" w="314" h="42" label="Check this & add the URL" labelX="200" labelY="84" arrow="down" />
-    {/* OK button */}
-    <rect x="290" y="172" width="60" height="20" rx="4" fill="url(#gbtn2)" />
-    <defs><linearGradient id="gbtn2" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="#C9A84C"/><stop offset="100%" stopColor="#9B7B2F"/></linearGradient></defs>
-    <text x="320" y="185" textAnchor="middle" fill="#0a0a0a" fontSize="9" fontFamily="system-ui,sans-serif" fontWeight="700">OK</text>
-  </Win>
-);
+const Svg5 = () => {
+  const tabs = ['Server','Charts','Trade','Expert Advisors','GPU','Events','Notifications'];
+  const activeTab = 3;
+  // checkbox helper
+  const Cb = ({ x, y, checked, label, highlight }) => (
+    <g>
+      <rect x={x} y={y} width="9" height="9" rx="1.5" fill={checked ? '#fff' : '#e8e8e8'} stroke="#888" strokeWidth="0.8" />
+      {checked && <text x={x + 1} y={y + 8} fill="#1a6fc4" fontSize="9" fontFamily="system-ui,sans-serif" fontWeight="900">✓</text>}
+      <text x={x + 14} y={y + 8} fill={highlight ? '#000' : '#222'} fontSize="8.5" fontFamily="system-ui,sans-serif" fontWeight={highlight ? '600' : '400'}>{label}</text>
+    </g>
+  );
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', borderRadius: 8, display: 'block' }}>
+      {/* Window bg — light theme like real MT5 */}
+      <rect width={W} height={H} rx="8" fill="#f0f0f0" stroke="#bbb" strokeWidth="1" />
+      {/* Title bar */}
+      <rect width={W} height="22" rx="8" fill="#e0e0e0" />
+      <rect y="14" width={W} height="8" fill="#e0e0e0" />
+      <text x="16" y="15" fill="#333" fontSize="9" fontFamily="system-ui,sans-serif" fontWeight="600">Options</text>
+      <text x={W - 28} y="15" fill="#666" fontSize="11" fontFamily="system-ui,sans-serif">✕</text>
+      {/* Tab strip */}
+      <rect y="22" width={W} height="22" fill="#dcdcdc" />
+      <rect y="43" width={W} height="1" fill="#bbb" />
+      {tabs.map((tab, i) => {
+        const x = 8 + i * 55;
+        const isActive = i === activeTab;
+        return (
+          <g key={tab}>
+            {isActive && <>
+              <rect x={x - 2} y="22" width={tab.length * 5.2 + 8} height="22" fill="#f0f0f0" />
+              <rect x={x - 2} y="43" width={tab.length * 5.2 + 8} height="1" fill="#f0f0f0" />
+            </>}
+            <text x={x} y="37" fill={isActive ? '#1a6fc4' : '#555'} fontSize="8" fontFamily="system-ui,sans-serif" fontWeight={isActive ? '700' : '400'}>{tab}</text>
+            {isActive && <rect x={x - 2} y="42" width={tab.length * 5.2 + 8} height="2" fill="#1a6fc4" />}
+          </g>
+        );
+      })}
+      {/* Content area */}
+      <rect y="44" width={W} height={H - 44} rx="0" fill="#f0f0f0" />
+      {/* Checkboxes */}
+      <Cb x={14} y={54}  checked={true}  label="Allow algorithmic trading" />
+      <Cb x={26} y={70}  checked={false} label="Disable algorithmic trading when the account has been changed" />
+      <Cb x={26} y={83}  checked={false} label="Disable algorithmic trading when the profile has been changed" />
+      <Cb x={26} y={96}  checked={false} label="Disable algorithmic trading when the charts symbol or period has been changed" />
+      <Cb x={26} y={109} checked={false} label="Disable algorithmic trading via external Python API" />
+      <Cb x={14} y={122} checked={true}  label="Allow DLL imports (potentially dangerous, enable only for trusted applications)" />
+      {/* WebRequest row — highlighted */}
+      <Cb x={14} y={137} checked={true}  label="Allow WebRequest for listed URL:" highlight={true} />
+      {/* Gold highlight ring around checkbox + label */}
+      <rect x="11" y="134" width="200" height="16" rx="3" fill="rgba(201,168,76,0.15)" stroke="#C9A84C" strokeWidth="1.2" />
+      {/* URL list box */}
+      <rect x="14" y="155" width="372" height="28" rx="2" fill="#fff" stroke="#aaa" strokeWidth="0.8" />
+      {/* URL row highlighted blue */}
+      <rect x="15" y="156" width="370" height="14" fill="#1a6fc4" />
+      <text x="22" y="167" fill="#fff" fontSize="8.5" fontFamily="system-ui,sans-serif">🌐  https://www.ltempire.com</text>
+      {/* Add new row */}
+      <text x="22" y="179" fill="#888" fontSize="8" fontFamily="system-ui,sans-serif">+  add new URL like 'https://www.mql5.com'</text>
+      {/* OK / Cancel / Help buttons */}
+      <rect x="238" y="196" width="44" height="18" rx="3" fill="#1a6fc4" stroke="#1560a8" strokeWidth="0.8" />
+      <text x="260" y="208" textAnchor="middle" fill="#fff" fontSize="9" fontFamily="system-ui,sans-serif" fontWeight="700">OK</text>
+      <rect x="288" y="196" width="54" height="18" rx="3" fill="#e8e8e8" stroke="#bbb" strokeWidth="0.8" />
+      <text x="315" y="208" textAnchor="middle" fill="#333" fontSize="9" fontFamily="system-ui,sans-serif">Cancel</text>
+      <rect x="348" y="196" width="44" height="18" rx="3" fill="#e8e8e8" stroke="#bbb" strokeWidth="0.8" />
+      <text x="370" y="208" textAnchor="middle" fill="#333" fontSize="9" fontFamily="system-ui,sans-serif">Help</text>
+    </svg>
+  );
+};
 
 const Svg6 = () => (
   <Win title="MetaTrader 5 — XAUUSD, H1">
