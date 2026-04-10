@@ -59,13 +59,13 @@ export default function LoginPage() {
       <div className="lp-page">
         <div className="lp-grid" aria-hidden="true" />
 
-        <div className="lp-card login-card">
-          {/* Language toggle */}
-          <div className="lp-lang-row">
-            <button className={`lp-lang-btn ${lang === 'en' ? 'lp-lang-active' : ''}`} onClick={() => setLang('en')}>EN</button>
-            <button className={`lp-lang-btn ${lang === 'zh' ? 'lp-lang-active' : ''}`} onClick={() => setLang('zh')}>中文</button>
-          </div>
+        {/* Language toggle — top right of page */}
+        <div className="lp-lang-corner">
+          <button className={`lp-lang-btn ${lang === 'en' ? 'lp-lang-active' : ''}`} onClick={() => setLang('en')}>EN</button>
+          <button className={`lp-lang-btn ${lang === 'zh' ? 'lp-lang-active' : ''}`} onClick={() => setLang('zh')}>中文</button>
+        </div>
 
+        <div className="lp-card login-card">
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
             <div style={{ width: 72, height: 72, borderRadius: '50%', background: 'linear-gradient(135deg, #C9A84C, #9B7B2F)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 32px rgba(201,168,76,0.3)' }}>
               <span style={{ fontSize: 26, fontWeight: 800, color: '#0A0A0A', letterSpacing: 1 }}>LT</span>
@@ -179,9 +179,10 @@ export default function LoginPage() {
           transition: background 0.25s, border-color 0.25s, box-shadow 0.25s;
         }
 
-        /* Language toggle */
-        .lp-lang-row {
-          display: flex; justify-content: flex-end; gap: 6px; margin-bottom: 20px;
+        /* Language toggle — fixed top right */
+        .lp-lang-corner {
+          position: fixed; top: 16px; right: 20px; z-index: 10;
+          display: flex; gap: 6px;
         }
         .lp-lang-btn {
           padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;
