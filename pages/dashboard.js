@@ -214,6 +214,15 @@ export default function Dashboard() {
             ))}
           </nav>
 
+          {/* Language — sidebar only on mobile */}
+          <div className="theme-row sidebar-lang-row">
+            <span className="theme-label">{t('lang.label')}</span>
+            <div style={{ display: 'flex', gap: 4 }}>
+              <button className={`lang-pill ${lang === 'en' ? 'lang-active' : ''}`} onClick={() => switchLang('en')}>EN</button>
+              <button className={`lang-pill ${lang === 'zh' ? 'lang-active' : ''}`} onClick={() => switchLang('zh')}>中文</button>
+            </div>
+          </div>
+
           {/* Theme toggle */}
           <div className="theme-row">
             <span className="theme-label">{theme === 'dark' ? t('theme.dark') : t('theme.light')}</span>
@@ -572,11 +581,13 @@ export default function Dashboard() {
         .nav-pip { position: absolute; right: 10px; width: 6px; height: 6px; border-radius: 50%; background: var(--gold); }
         .nav-icon { width: 17px; height: 17px; flex-shrink: 0; }
 
-        /* ── Language corner (fixed top right) ── */
+        /* ── Language corner (fixed top right, desktop only) ── */
         .lang-corner {
           position: fixed; top: 14px; right: 20px; z-index: 30;
           display: flex; gap: 5px;
         }
+        /* Sidebar lang row hidden on desktop, visible on mobile */
+        .sidebar-lang-row { display: none; }
 
         /* ── Sidebar rows (theme only now) ── */
         .theme-row {
@@ -715,6 +726,8 @@ export default function Dashboard() {
 
         /* ── Responsive ── */
         @media (max-width: 768px) {
+          .lang-corner     { display: none; }
+          .sidebar-lang-row{ display: flex; }
           .sidebar     { transform: translateX(-100%); }
           .sidebar-open{ transform: translateX(0) !important; }
           .main-wrap   { margin-left: 0; }
