@@ -10,8 +10,8 @@ function useTilt() {
     const { left, top, width, height } = card.getBoundingClientRect();
     const x = (e.clientX - left) / width  - 0.5;   // -0.5 to 0.5
     const y = (e.clientY - top)  / height - 0.5;
-    card.style.transform = `perspective(600px) rotateY(${x * 6}deg) rotateX(${-y * 6}deg) scale(1.015)`;
-    card.style.boxShadow = `${-x * 8}px ${y * 8}px 24px rgba(201,168,76,0.1)`;
+    card.style.transform = `perspective(800px) rotateY(${x * 2.5}deg) rotateX(${-y * 2.5}deg)`;
+    card.style.boxShadow = `${-x * 4}px ${y * 4}px 16px rgba(201,168,76,0.07)`;
   }, []);
 
   const onLeave = useCallback((e) => {
