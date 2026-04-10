@@ -596,42 +596,79 @@ const Svg7 = () => {
   );
 };
 
-const Svg8 = () => (
-  <Win title="MetaTrader 5 — XAUUSD, H1">
-    {/* Toolbar */}
-    <rect x="0" y="28" width={W} height="26" fill="#141414" stroke="#1a1a1a" strokeWidth="1" />
-    {/* AutoTrading button — highlighted */}
-    <rect x="120" y="31" width="88" height="20" rx="4" fill="rgba(62,207,142,0.15)" stroke="#3ECF8E" strokeWidth="1.5" />
-    <text x="134" y="44" fill="#3ECF8E" fontSize="8" fontFamily="system-ui,sans-serif" fontWeight="700">▶ AutoTrading ON</text>
-    <Highlight x="118" y="29" w="92" h="24" label="Must be ON (green)" labelX="164" labelY="19" arrow="down" />
-    {/* Other toolbar items */}
-    <text x="16" y="44" fill="#555" fontSize="8" fontFamily="system-ui,sans-serif">New Order  Chart  Navigator</text>
-    <text x="220" y="44" fill="#555" fontSize="8" fontFamily="system-ui,sans-serif">History  Strategy Tester</text>
-    {/* Chart */}
-    <rect x="0" y="54" width={W} height={H - 80} fill="#0d0d0d" />
-    {[140,158,176,194,212,230,248,266,284,302,320,338,356,374].map((x, i) => {
-      const hs = [55,62,48,70,58,45,68,52,60,42,65,50,58,44];
-      const bs = [16,14,18,12,16,14,12,16,14,18,12,16,14,12];
-      const isG = i % 3 !== 2;
-      const clr = isG ? '#3ECF8E' : '#E05252';
-      return (
-        <g key={x}>
-          <line x1={x} y1={70 + hs[i] - 8} x2={x} y2={70 + hs[i] + bs[i] + 8} stroke={clr} strokeWidth="0.8" opacity="0.5"/>
-          <rect x={x-4} y={70 + hs[i]} width="8" height={bs[i]} fill={clr} opacity="0.85"/>
-        </g>
-      );
-    })}
-    {/* EA smiley badge */}
-    <rect x="340" y="60" width="52" height="24" rx="4" fill="#0d2a1a" stroke="#3ECF8E" strokeWidth="1" />
-    <text x="366" y="70" textAnchor="middle" fill="#3ECF8E" fontSize="9" fontFamily="system-ui,sans-serif">☺</text>
-    <text x="366" y="80" textAnchor="middle" fill="#3ECF8E" fontSize="7" fontFamily="system-ui,sans-serif">Running</text>
-    {/* Experts tab at bottom */}
-    <rect x="0" y={H - 26} width={W} height="26" fill="#0a0a0a" stroke="#1a1a1a" strokeWidth="1"/>
-    <text x="10" y={H - 10} fill="#555" fontSize="7.5" fontFamily="system-ui,sans-serif">Toolbox:  Trade   History   </text>
-    <text x="150" y={H - 10} fill="#C9A84C" fontSize="7.5" fontFamily="system-ui,sans-serif" fontWeight="600">Experts   Journal</text>
-    <text x="260" y={H - 10} fill="#3ECF8E" fontSize="7.5" fontFamily="system-ui,sans-serif">● LTE Gold: initialized</text>
-  </Win>
-);
+const Svg8 = () => {
+  const candles = [
+    [0,1],[1,1],[2,-1],[3,1],[4,1],[5,-1],[6,1],[7,-1],[8,1],[9,1],[10,-1],[11,1],[12,1],[13,-1],[14,1],[15,1],
+  ];
+  const chartX = 0, chartY = 54, chartW = W - 90, chartH = 118;
+  const midY = chartY + chartH * 0.5;
+  const cW = Math.floor(chartW / candles.length);
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', borderRadius: 8, display: 'block' }}>
+      {/* Window */}
+      <rect width={W} height={H} rx="8" fill="#f0f0f0" stroke="#bbb" strokeWidth="1" />
+      {/* Title bar */}
+      <rect width={W} height="18" rx="8" fill="#e0e0e0" />
+      <rect y="12" width={W} height="6" fill="#e0e0e0" />
+      <text x="6" y="13" fill="#444" fontSize="7" fontFamily="system-ui,sans-serif">Just Global Markets Ltd. - [XAUUSD.ecn,H1]</text>
+      <text x={W-36} y="13" fill="#666" fontSize="9" fontFamily="system-ui,sans-serif">─  □  ✕</text>
+      {/* Menu bar */}
+      <rect y="18" width={W} height="14" fill="#e8e8e8" />
+      {['Insert','Charts','Tools','Window','Help'].map((m,i)=>(
+        <text key={m} x={6+i*48} y="29" fill="#333" fontSize="8" fontFamily="system-ui,sans-serif">{m}</text>
+      ))}
+      {/* Toolbar */}
+      <rect y="32" width={W} height="22" fill="#f5f5f5" stroke="#ddd" strokeWidth="0.5" />
+      {/* Toolbar icons (generic grey boxes) */}
+      {[6,22,38,54,70,86].map(x=>(
+        <rect key={x} x={x} y="35" width="14" height="14" rx="2" fill="#e0e0e0" stroke="#ccc" strokeWidth="0.5"/>
+      ))}
+      {/* Algo Trading button — green/active */}
+      <rect x="108" y="34" width="72" height="16" rx="2" fill="#e8f5e9" stroke="#4caf50" strokeWidth="1.2"/>
+      <text x="112" y="45" fill="#2e7d32" fontSize="8" fontFamily="system-ui,sans-serif" fontWeight="700">▶ Algo Trading</text>
+      {/* Gold callout above Algo Trading */}
+      <rect x="90" y="22" width="110" height="12" rx="3" fill="rgba(201,168,76,0.18)" stroke="#C9A84C" strokeWidth="1"/>
+      <text x="145" y="31" textAnchor="middle" fill="#C9A84C" fontSize="7.5" fontFamily="system-ui,sans-serif" fontWeight="700">↓ Click to enable (green)</text>
+      {/* New Order button */}
+      <rect x="186" y="34" width="56" height="16" rx="2" fill="#e8e8e8" stroke="#ccc" strokeWidth="0.5"/>
+      <text x="214" y="45" textAnchor="middle" fill="#333" fontSize="8" fontFamily="system-ui,sans-serif">＋ New Order</text>
+      {/* Chart area */}
+      <rect x={chartX} y={chartY} width={chartW} height={chartH} fill="#131722"/>
+      {/* Grid */}
+      {[0.25,0.5,0.75].map(f=>(
+        <line key={f} x1={chartX} y1={chartY+chartH*f} x2={chartX+chartW} y2={chartY+chartH*f} stroke="#1e2433" strokeWidth="0.8"/>
+      ))}
+      {/* Candles */}
+      {candles.map(([i,dir])=>{
+        const x = chartX + i*cW + cW/2;
+        const clr = dir>0?'#26a69a':'#ef5350';
+        const bodyH = 10 + (i%4)*2;
+        const top = midY - (dir>0?bodyH:0) - (i%3)*4;
+        return (
+          <g key={i}>
+            <line x1={x} y1={top-5} x2={x} y2={top+bodyH+5} stroke={clr} strokeWidth="0.8" opacity="0.6"/>
+            <rect x={x-4} y={top} width="8" height={bodyH} fill={clr} opacity="0.9"/>
+          </g>
+        );
+      })}
+      {/* EA info panel — top right of chart */}
+      <rect x={chartW+2} y={chartY} width="88" height={chartH} fill="#f0f0f0" stroke="#ddd" strokeWidth="0.5"/>
+      <text x={chartW+6} y={chartY+12} fill="#333" fontSize="7.5" fontFamily="system-ui,sans-serif" fontWeight="700">LTE Gold v1.01</text>
+      <rect x={chartW+2} y={chartY+14} width="88" height="0.5" fill="#ddd"/>
+      <text x={chartW+6} y={chartY+24} fill="#666" fontSize="6.5" fontFamily="system-ui,sans-serif">Current P&amp;L:</text>
+      <text x={chartW+6} y={chartY+34} fill="#2e7d32" fontSize="6.5" fontFamily="system-ui,sans-serif">Daily profit:</text>
+      <text x={chartW+6} y={chartY+44} fill="#555" fontSize="6.5" fontFamily="system-ui,sans-serif">EA is cu...</text>
+      {/* Smiley on chart top-right corner */}
+      <rect x={chartW-40} y={chartY+4} width="36" height="14" rx="2" fill="rgba(38,166,154,0.15)" stroke="#26a69a" strokeWidth="0.8"/>
+      <text x={chartW-22} y={chartY+14} textAnchor="middle" fill="#26a69a" fontSize="9" fontFamily="system-ui,sans-serif">☺</text>
+      {/* Bottom toolbox */}
+      <rect x="0" y={chartY+chartH} width={W} height={H-(chartY+chartH)} fill="#e8e8e8" stroke="#ddd" strokeWidth="0.5"/>
+      <text x="6" y={chartY+chartH+11} fill="#666" fontSize="7.5" fontFamily="system-ui,sans-serif">Trade   History   Experts   Journal</text>
+      <rect x="0" y={chartY+chartH+13} width={W} height="1" fill="#ddd"/>
+      <text x="6" y={H-5} fill="#2e7d32" fontSize="7.5" fontFamily="system-ui,sans-serif">● LTE Gold: EA initialized successfully</text>
+    </svg>
+  );
+};
 
 const SVGS = [Svg1, Svg2, Svg3, Svg4, Svg5, Svg6, Svg7, Svg8];
 
