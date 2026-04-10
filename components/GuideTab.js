@@ -361,14 +361,21 @@ const Svg4 = () => {
 };
 
 const Svg5 = () => {
-  const tabs = ['Server','Charts','Trade','Expert Advisors','GPU','Events','Notifications'];
-  const activeTab = 3;
-  // checkbox helper
+  // Fixed x positions so "Expert Advisors" doesn't overlap neighbours
+  const tabs = [
+    { label: 'Server',           x: 6  },
+    { label: 'Charts',           x: 42 },
+    { label: 'Trade',            x: 80 },
+    { label: 'Expert Advisors',  x: 112, active: true },
+    { label: 'GPU',              x: 202 },
+    { label: 'Events',           x: 228 },
+    { label: 'Notifications',    x: 268 },
+  ];
   const Cb = ({ x, y, checked, label, highlight }) => (
     <g>
       <rect x={x} y={y} width="9" height="9" rx="1.5" fill={checked ? '#fff' : '#e8e8e8'} stroke="#888" strokeWidth="0.8" />
       {checked && <text x={x + 1} y={y + 8} fill="#1a6fc4" fontSize="9" fontFamily="system-ui,sans-serif" fontWeight="900">✓</text>}
-      <text x={x + 14} y={y + 8} fill={highlight ? '#000' : '#222'} fontSize="8.5" fontFamily="system-ui,sans-serif" fontWeight={highlight ? '600' : '400'}>{label}</text>
+      <text x={x + 14} y={y + 8} fill={highlight ? '#000' : '#222'} fontSize="8" fontFamily="system-ui,sans-serif" fontWeight={highlight ? '600' : '400'}>{label}</text>
     </g>
   );
   return (
@@ -383,20 +390,16 @@ const Svg5 = () => {
       {/* Tab strip */}
       <rect y="22" width={W} height="22" fill="#dcdcdc" />
       <rect y="43" width={W} height="1" fill="#bbb" />
-      {tabs.map((tab, i) => {
-        const x = 8 + i * 55;
-        const isActive = i === activeTab;
-        return (
-          <g key={tab}>
-            {isActive && <>
-              <rect x={x - 2} y="22" width={tab.length * 5.2 + 8} height="22" fill="#f0f0f0" />
-              <rect x={x - 2} y="43" width={tab.length * 5.2 + 8} height="1" fill="#f0f0f0" />
-            </>}
-            <text x={x} y="37" fill={isActive ? '#1a6fc4' : '#555'} fontSize="8" fontFamily="system-ui,sans-serif" fontWeight={isActive ? '700' : '400'}>{tab}</text>
-            {isActive && <rect x={x - 2} y="42" width={tab.length * 5.2 + 8} height="2" fill="#1a6fc4" />}
-          </g>
-        );
-      })}
+      {tabs.map(({ label, x, active }) => (
+        <g key={label}>
+          {active && <>
+            <rect x={x - 3} y="22" width="88" height="22" fill="#f0f0f0" />
+            <rect x={x - 3} y="43" width="88" height="1" fill="#f0f0f0" />
+          </>}
+          <text x={x} y="37" fill={active ? '#1a6fc4' : '#555'} fontSize="7.5" fontFamily="system-ui,sans-serif" fontWeight={active ? '700' : '400'}>{label}</text>
+          {active && <rect x={x - 3} y="42" width="88" height="2" fill="#1a6fc4" />}
+        </g>
+      ))}
       {/* Content area */}
       <rect y="44" width={W} height={H - 44} rx="0" fill="#f0f0f0" />
       {/* Checkboxes */}
