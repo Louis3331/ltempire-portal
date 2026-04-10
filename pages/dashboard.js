@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
+import { useLang } from '../lib/useLang';
 
 /* ── Icons ─────────────────────────────────────────────── */
 const KeyIcon = () => (
@@ -38,12 +39,6 @@ const MoonIcon = () => (
   </svg>
 );
 
-/* ── Nav config ─────────────────────────────────────────── */
-const NAV = [
-  { id: 'licenses', label: 'License Keys', icon: <KeyIcon /> },
-  { id: 'accounts', label: 'Accounts',     icon: <MonitorIcon /> },
-];
-
 /* ── Main component ─────────────────────────────────────── */
 export default function Dashboard() {
   const [session,         setSession]         = useState(null);
@@ -58,7 +53,14 @@ export default function Dashboard() {
   const [animKey,         setAnimKey]         = useState(0);
   const [slideDir,        setSlideDir]        = useState('right');
   const [theme,           setTheme]           = useState('dark');
+  const { lang, setLang, t } = useLang();
   const router = useRouter();
+
+  /* Nav built inside component so labels are reactive to lang */
+  const NAV = [
+    { id: 'licenses', label: t('nav.licenses'), icon: <KeyIcon /> },
+    { id: 'accounts', label: t('nav.accounts'), icon: <MonitorIcon /> },
+  ];
 
   /* Load session + memberships */
   useEffect(() => {
@@ -72,9 +74,9 @@ export default function Dashboard() {
           else setMemberships(d.memberships || []);
         });
       })
-      .catch(() => setError('Could not load membership data.'))
+      .catch(() => setError(t('error.load')))
       .finally(() => setLoading(false));
-  }, [router]);
+  }, [router]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* Read saved theme */
   useEffect(() => {
@@ -92,14 +94,18 @@ export default function Dashboard() {
     try { localStorage.setItem('lt-theme', next); } catch {}
   };
 
+  const switchLang = (l) => {
+    setLang(l);
+    document.documentElement.setAttribute('lang', l === 'zh' ? 'zh-CN' : 'en');
+  };
+
   const loadAccounts = () => {
     setAccountsLoading(true);
     fetch('/api/accounts').then(r => r.json()).then(d => setAccounts(d.accounts || [])).catch(() => {}).finally(() => setAccountsLoading(false));
   };
 
-
   const deleteAccount = async (licenseKey, id) => {
-    if (!confirm('Remove this account? The EA will be blocked on next validation.')) return;
+    if (!confirm(t('accounts.confirmDelete'))) return;
     await fetch(`/api/accounts?licenseKey=${encodeURIComponent(licenseKey)}&id=${id}`, { method: 'DELETE' });
     loadAccounts();
   };
@@ -110,7 +116,8 @@ export default function Dashboard() {
 
   const switchTab = (newTab) => {
     if (newTab === tab) { setSidebarOpen(false); return; }
-    const dir = NAV.findIndex(n => n.id === newTab) > NAV.findIndex(n => n.id === tab) ? 'right' : 'left';
+    const navIds = NAV.map(n => n.id);
+    const dir = navIds.indexOf(newTab) > navIds.indexOf(tab) ? 'right' : 'left';
     setSlideDir(dir);
     setAnimKey(k => k + 1);
     setTab(newTab);
@@ -119,22 +126,28 @@ export default function Dashboard() {
   };
 
   const fmt = (ts) => {
-    if (!ts) return '—';
-    return new Date(ts * 1000).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    if (!ts) return t('label.none');
+    return new Date(ts * 1000).toLocaleDateString(lang === 'zh' ? 'zh-CN' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   };
   const fmtMs = (ms) => {
-    if (!ms) return '—';
-    return new Date(ms).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    if (!ms) return t('label.none');
+    return new Date(ms).toLocaleDateString(lang === 'zh' ? 'zh-CN' : 'en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
   };
+
   const statusColor = (s) => ({ active: '#3ECF8E', trialing: '#C9A84C', expired: '#E05252', canceled: '#E05252' }[s] || '#888');
-  const statusLabel = (s) => ({ active: 'Active', trialing: 'Trial', expired: 'Expired', canceled: 'Canceled', past_due: 'Past Due', completed: 'Active' }[s] || s);
+  const statusLabel = (s) => ({
+    active: t('status.active'), trialing: t('status.trial'),
+    expired: t('status.expired'), canceled: t('status.canceled'),
+    past_due: t('status.pastDue'), completed: t('status.active'),
+  }[s] || s);
 
   if (loading) return <Loader />;
   if (!session) return null;
 
   const email     = session.user?.email || session.email || '';
   const initial   = email[0]?.toUpperCase() || 'U';
-  const pageTitle = NAV.find(n => n.id === tab)?.label || '';
+  const pageTitle    = tab === 'licenses' ? t('page.licenses.title') : t('page.accounts.title');
+  const pageSubtitle = tab === 'licenses' ? t('page.licenses.subtitle') : t('page.accounts.subtitle');
 
   return (
     <>
@@ -146,13 +159,11 @@ export default function Dashboard() {
       <div className="layout">
         <div className="grid" aria-hidden="true" />
 
-        {/* Mobile overlay */}
         {sidebarOpen && <div className="overlay" onClick={() => setSidebarOpen(false)} />}
 
         {/* ── Sidebar ─────────────────────────────────── */}
         <aside className={`sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
 
-          {/* Logo */}
           <div className="sidebar-logo">
             <div className="logo-circle"><span className="logo-text">LT</span></div>
             <div>
@@ -161,9 +172,8 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Nav */}
           <nav className="sidebar-nav">
-            <p className="nav-section-label">Navigation</p>
+            <p className="nav-section-label">{t('nav.section')}</p>
             {NAV.map(item => (
               <button
                 key={item.id}
@@ -177,10 +187,19 @@ export default function Dashboard() {
             ))}
           </nav>
 
+          {/* Language toggle */}
+          <div className="theme-row">
+            <span className="theme-label">{t('lang.label')}</span>
+            <div className="lang-pills">
+              <button className={`lang-pill ${lang === 'en' ? 'lang-active' : ''}`} onClick={() => switchLang('en')}>EN</button>
+              <button className={`lang-pill ${lang === 'zh' ? 'lang-active' : ''}`} onClick={() => switchLang('zh')}>中文</button>
+            </div>
+          </div>
+
           {/* Theme toggle */}
           <div className="theme-row">
-            <span className="theme-label">{theme === 'dark' ? 'Dark Mode' : 'Light Mode'}</span>
-            <button className="theme-toggle" onClick={toggleTheme} title="Toggle theme" aria-label="Toggle theme">
+            <span className="theme-label">{theme === 'dark' ? t('theme.dark') : t('theme.light')}</span>
+            <button className="theme-toggle" onClick={toggleTheme} aria-label="Toggle theme">
               <span className={`toggle-track ${theme === 'light' ? 'toggle-on' : ''}`}>
                 <span className="toggle-thumb">
                   {theme === 'dark' ? <MoonIcon /> : <SunIcon />}
@@ -189,48 +208,45 @@ export default function Dashboard() {
             </button>
           </div>
 
-          {/* Footer */}
           <div className="sidebar-footer">
             <div className="user-info">
               <div className="user-avatar">{initial}</div>
               <div className="user-email">{email}</div>
             </div>
             <button className="logout-btn" onClick={() => { window.location.href = '/api/auth/logout'; }}>
-              Logout
+              {t('sidebar.logout')}
             </button>
           </div>
         </aside>
 
-        {/* ── Main area ───────────────────────────────── */}
+        {/* ── Main ────────────────────────────────────── */}
         <div className="main-wrap">
 
-          {/* Mobile header */}
           <header className="mobile-header">
             <button className="hamburger" onClick={() => setSidebarOpen(o => !o)} aria-label="Menu">
               {sidebarOpen ? <CloseIcon /> : <MenuIcon />}
             </button>
             <span className="mobile-brand">LT Empire</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              {/* Mobile lang toggle */}
+              <div className="lang-pills-sm">
+                <button className={`lang-pill-sm ${lang === 'en' ? 'lang-active' : ''}`} onClick={() => switchLang('en')}>EN</button>
+                <button className={`lang-pill-sm ${lang === 'zh' ? 'lang-active' : ''}`} onClick={() => switchLang('zh')}>中</button>
+              </div>
               <button className="theme-toggle-sm" onClick={toggleTheme} aria-label="Toggle theme">
                 {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
               </button>
               <button className="logout-btn-sm" onClick={() => { window.location.href = '/api/auth/logout'; }}>
-                Logout
+                {t('sidebar.logout')}
               </button>
             </div>
           </header>
 
-          {/* Page header */}
           <div className="page-header">
             <h1 className="page-title">{pageTitle}</h1>
-            <p className="page-subtitle">
-              {tab === 'licenses'
-                ? 'Your active license keys and membership details'
-                : 'MT5 trading accounts linked to your license'}
-            </p>
+            <p className="page-subtitle">{pageSubtitle}</p>
           </div>
 
-          {/* Animated content */}
           <main key={animKey} className={`main slide-${slideDir}`}>
 
             {error && (
@@ -247,8 +263,8 @@ export default function Dashboard() {
               memberships.length === 0 ? (
                 <div className="empty">
                   <div className="empty-icon"><KeyIcon /></div>
-                  <p style={{ color: 'var(--text-muted)', fontSize: 14, marginTop: 12 }}>No memberships found for this account.</p>
-                  <p style={{ color: 'var(--text-dim)', fontSize: 12, marginTop: 6 }}>Make sure you used the same email as your Whop purchase.</p>
+                  <p style={{ color: 'var(--text-muted)', fontSize: 14, marginTop: 12 }}>{t('licenses.empty')}</p>
+                  <p style={{ color: 'var(--text-dim)', fontSize: 12, marginTop: 6 }}>{t('licenses.emptyHint')}</p>
                 </div>
               ) : (
                 <div className="table-wrap">
@@ -256,7 +272,7 @@ export default function Dashboard() {
                     <table className="table">
                       <thead>
                         <tr>
-                          {['License Key', 'Status', 'Plan', 'Registered', 'Expires', 'Valid'].map(h => (
+                          {[t('th.licenseKey'), t('th.status'), t('th.plan'), t('th.registered'), t('th.expires'), t('th.valid')].map(h => (
                             <th key={h} className="th">{h}</th>
                           ))}
                         </tr>
@@ -266,9 +282,9 @@ export default function Dashboard() {
                           <tr key={m.id} className="tr">
                             <td className="td">
                               <div className="key-cell">
-                                <code className="key-code">{m.license_key || '—'}</code>
+                                <code className="key-code">{m.license_key || t('label.none')}</code>
                                 {m.license_key && (
-                                  <button className="copy-btn" onClick={() => copy(m.license_key, m.id)} title="Copy">
+                                  <button className="copy-btn" onClick={() => copy(m.license_key, m.id)} title={t('btn.copy')}>
                                     {copied === m.id ? (
                                       <svg viewBox="0 0 24 24" fill="none" stroke="#3ECF8E" strokeWidth="2.5" style={{ width: 13, height: 13 }}><polyline points="20 6 9 17 4 12" strokeLinecap="round" strokeLinejoin="round" /></svg>
                                     ) : (
@@ -284,12 +300,12 @@ export default function Dashboard() {
                                 {statusLabel(m.status)}
                               </span>
                             </td>
-                            <td className="td" style={{ color: 'var(--gold)', fontSize: 13 }}>{m.plan?.name || '—'}</td>
+                            <td className="td" style={{ color: 'var(--gold)', fontSize: 13 }}>{m.plan?.name || t('label.none')}</td>
                             <td className="td" style={{ color: 'var(--text-muted)', fontSize: 13 }}>{fmt(m.renewal_period_start)}</td>
                             <td className="td" style={{ color: 'var(--text-muted)', fontSize: 13 }}>{fmt(m.renewal_period_end)}</td>
                             <td className="td">
                               <span style={{ color: m.valid ? '#3ECF8E' : '#E05252', fontWeight: 700, fontSize: 13 }}>
-                                {m.valid ? 'Yes' : 'No'}
+                                {m.valid ? t('label.yes') : t('label.no')}
                               </span>
                             </td>
                           </tr>
@@ -303,9 +319,9 @@ export default function Dashboard() {
                     {memberships.map((m) => (
                       <div key={m.id} className="mobile-card">
                         <div className="mc-row">
-                          <span className="mc-label">License Key</span>
+                          <span className="mc-label">{t('th.licenseKey')}</span>
                           <div className="key-cell">
-                            <code className="key-code" style={{ fontSize: 12 }}>{m.license_key || '—'}</code>
+                            <code className="key-code" style={{ fontSize: 12 }}>{m.license_key || t('label.none')}</code>
                             {m.license_key && (
                               <button className="copy-btn" onClick={() => copy(m.license_key, m.id)}>
                                 {copied === m.id
@@ -317,22 +333,22 @@ export default function Dashboard() {
                           </div>
                         </div>
                         <div className="mc-row">
-                          <span className="mc-label">Status</span>
+                          <span className="mc-label">{t('th.status')}</span>
                           <span className="pill" style={{ background: statusColor(m.status) + '20', color: statusColor(m.status), border: `1px solid ${statusColor(m.status)}40` }}>
                             <span className="dot" style={{ background: statusColor(m.status) }} />{statusLabel(m.status)}
                           </span>
                         </div>
                         <div className="mc-row">
-                          <span className="mc-label">Plan</span>
-                          <span style={{ color: 'var(--gold)', fontSize: 13 }}>{m.plan?.name || '—'}</span>
+                          <span className="mc-label">{t('th.plan')}</span>
+                          <span style={{ color: 'var(--gold)', fontSize: 13 }}>{m.plan?.name || t('label.none')}</span>
                         </div>
                         <div className="mc-row">
-                          <span className="mc-label">Expires</span>
+                          <span className="mc-label">{t('th.expires')}</span>
                           <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>{fmt(m.renewal_period_end)}</span>
                         </div>
                         <div className="mc-row">
-                          <span className="mc-label">Valid</span>
-                          <span style={{ color: m.valid ? '#3ECF8E' : '#E05252', fontWeight: 700, fontSize: 13 }}>{m.valid ? 'Yes' : 'No'}</span>
+                          <span className="mc-label">{t('th.valid')}</span>
+                          <span style={{ color: m.valid ? '#3ECF8E' : '#E05252', fontWeight: 700, fontSize: 13 }}>{m.valid ? t('label.yes') : t('label.no')}</span>
                         </div>
                       </div>
                     ))}
@@ -348,33 +364,31 @@ export default function Dashboard() {
                   <table className="table">
                     <thead>
                       <tr>
-                        {['License Key', 'Account No.', 'Name', 'Server', 'Registered', 'Last Update', ''].map(h => (
-                          <th key={h} className="th">{h}</th>
+                        {[t('th.licenseKey'), t('th.accountNo'), t('th.name'), t('th.server'), t('th.registered'), t('th.lastUpdate'), ''].map((h, i) => (
+                          <th key={i} className="th">{h}</th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
                       {accountsLoading ? (
-                        <tr><td colSpan={7} className="td" style={{ textAlign: 'center', padding: '48px 0', color: 'var(--text-dim)' }}>Loading...</td></tr>
+                        <tr><td colSpan={7} className="td" style={{ textAlign: 'center', padding: '48px 0', color: 'var(--text-dim)' }}>{t('label.loading')}</td></tr>
                       ) : accounts.length === 0 ? (
                         <tr>
                           <td colSpan={7} className="td" style={{ textAlign: 'center', padding: '48px 0', color: 'var(--text-dim)', fontSize: 14 }}>
-                            No trading accounts registered yet.<br />
-                            <span style={{ fontSize: 12, color: 'var(--text-dimmer)', marginTop: 6, display: 'block' }}>
-                              Accounts appear automatically when the EA runs on MT5.
-                            </span>
+                            {t('accounts.empty')}<br />
+                            <span style={{ fontSize: 12, color: 'var(--text-dimmer)', marginTop: 6, display: 'block' }}>{t('accounts.emptyHint')}</span>
                           </td>
                         </tr>
                       ) : accounts.map(a => (
                         <tr key={a.id} className="tr">
                           <td className="td"><code className="key-code" style={{ fontSize: 12 }}>{a.licenseKey}</code></td>
                           <td className="td" style={{ color: 'var(--gold)', fontWeight: 600 }}>{a.accountNumber}</td>
-                          <td className="td">{a.accountName || '—'}</td>
-                          <td className="td">{a.accountServer || '—'}</td>
+                          <td className="td">{a.accountName || t('label.none')}</td>
+                          <td className="td">{a.accountServer || t('label.none')}</td>
                           <td className="td" style={{ color: 'var(--text-muted)', fontSize: 12 }}>{fmtMs(a.registeredAt)}</td>
                           <td className="td" style={{ color: 'var(--text-muted)', fontSize: 12 }}>{fmtMs(a.lastUpdate)}</td>
                           <td className="td">
-                            <button className="del-btn" onClick={() => deleteAccount(a.licenseKey, a.id)}>Delete</button>
+                            <button className="del-btn" onClick={() => deleteAccount(a.licenseKey, a.id)}>{t('btn.delete')}</button>
                           </td>
                         </tr>
                       ))}
@@ -388,42 +402,43 @@ export default function Dashboard() {
                     {accounts.map(a => (
                       <div key={a.id} className="mobile-card">
                         <div className="mc-row">
-                          <span className="mc-label">Account No.</span>
+                          <span className="mc-label">{t('th.accountNo')}</span>
                           <span style={{ color: 'var(--gold)', fontWeight: 700 }}>{a.accountNumber}</span>
                         </div>
                         <div className="mc-row">
-                          <span className="mc-label">Name</span>
-                          <span style={{ color: 'var(--text)', fontSize: 13 }}>{a.accountName || '—'}</span>
+                          <span className="mc-label">{t('th.name')}</span>
+                          <span style={{ color: 'var(--text)', fontSize: 13 }}>{a.accountName || t('label.none')}</span>
                         </div>
                         <div className="mc-row">
-                          <span className="mc-label">Server</span>
-                          <span style={{ color: 'var(--text)', fontSize: 13 }}>{a.accountServer || '—'}</span>
+                          <span className="mc-label">{t('th.server')}</span>
+                          <span style={{ color: 'var(--text)', fontSize: 13 }}>{a.accountServer || t('label.none')}</span>
                         </div>
                         <div className="mc-row">
-                          <span className="mc-label">License</span>
+                          <span className="mc-label">{t('label.license')}</span>
                           <code className="key-code" style={{ fontSize: 11 }}>{a.licenseKey}</code>
                         </div>
                         <div className="mc-row">
-                          <span className="mc-label">Last Update</span>
+                          <span className="mc-label">{t('th.lastUpdate')}</span>
                           <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>{fmtMs(a.lastUpdate)}</span>
                         </div>
-                        <button className="del-btn" style={{ width: '100%', marginTop: 8 }} onClick={() => deleteAccount(a.licenseKey, a.id)}>Delete Account</button>
+                        <button className="del-btn" style={{ width: '100%', marginTop: 8 }} onClick={() => deleteAccount(a.licenseKey, a.id)}>
+                          {t('btn.deleteAccount')}
+                        </button>
                       </div>
                     ))}
                   </div>
                 )}
                 {accountsLoading && (
-                  <div className="mobile-cards" style={{ padding: '32px 16px', textAlign: 'center', color: 'var(--text-dim)' }}>Loading...</div>
+                  <div className="mobile-cards" style={{ padding: '32px 16px', textAlign: 'center', color: 'var(--text-dim)' }}>{t('label.loading')}</div>
                 )}
                 {!accountsLoading && accounts.length === 0 && (
                   <div className="mobile-cards" style={{ padding: '40px 16px', textAlign: 'center', color: 'var(--text-dim)', fontSize: 14 }}>
-                    No trading accounts registered yet.<br />
-                    <span style={{ fontSize: 12, color: 'var(--text-dimmer)', marginTop: 6, display: 'block' }}>Accounts appear automatically when the EA runs on MT5.</span>
+                    {t('accounts.empty')}<br />
+                    <span style={{ fontSize: 12, color: 'var(--text-dimmer)', marginTop: 6, display: 'block' }}>{t('accounts.emptyHint')}</span>
                   </div>
                 )}
               </div>
             )}
-
           </main>
         </div>
       </div>
@@ -453,8 +468,9 @@ export default function Dashboard() {
           --toggle-bg:        #222;
           --toggle-on-bg:     #3a2e0e;
           --shadow-sidebar:   none;
+          --lang-bg:          #1a1a1a;
+          --lang-border:      #2a2a2a;
         }
-
         html[data-theme="light"] {
           --bg:               #F2F0EB;
           --bg-sidebar:       #FFFFFF;
@@ -478,6 +494,8 @@ export default function Dashboard() {
           --toggle-bg:        #DDD9D0;
           --toggle-on-bg:     #F0E8D0;
           --shadow-sidebar:   2px 0 12px rgba(0,0,0,0.06);
+          --lang-bg:          #F0EDE6;
+          --lang-border:      #E0DDD6;
         }
 
         /* ── Reset ── */
@@ -488,7 +506,6 @@ export default function Dashboard() {
         @keyframes spin       { to { transform: rotate(360deg); } }
         @keyframes slideRight { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: translateX(0); } }
         @keyframes slideLeft  { from { opacity: 0; transform: translateX(-28px); } to { opacity: 1; transform: translateX(0); } }
-
         .slide-right { animation: slideRight 0.28s cubic-bezier(0.25,0.46,0.45,0.94); }
         .slide-left  { animation: slideLeft  0.28s cubic-bezier(0.25,0.46,0.45,0.94); }
 
@@ -498,7 +515,6 @@ export default function Dashboard() {
           background-image: linear-gradient(var(--gold-grid) 1px, transparent 1px),
                             linear-gradient(90deg, var(--gold-grid) 1px, transparent 1px);
           background-size: 48px 48px; pointer-events: none; z-index: 0;
-          transition: background-image 0.25s;
         }
 
         /* ── Layout ── */
@@ -507,13 +523,11 @@ export default function Dashboard() {
         /* ── Sidebar ── */
         .sidebar {
           width: 220px; flex-shrink: 0;
-          background: var(--bg-sidebar);
-          border-right: 1px solid var(--border);
+          background: var(--bg-sidebar); border-right: 1px solid var(--border);
           box-shadow: var(--shadow-sidebar);
           display: flex; flex-direction: column;
           position: fixed; top: 0; left: 0; bottom: 0; z-index: 20;
-          transition: transform 0.25s cubic-bezier(0.25,0.46,0.45,0.94),
-                      background 0.25s, border-color 0.25s, box-shadow 0.25s;
+          transition: transform 0.25s cubic-bezier(0.25,0.46,0.45,0.94), background 0.25s, border-color 0.25s;
         }
         .sidebar-logo {
           display: flex; align-items: center; gap: 10px;
@@ -545,26 +559,41 @@ export default function Dashboard() {
         .nav-pip { position: absolute; right: 10px; width: 6px; height: 6px; border-radius: 50%; background: var(--gold); }
         .nav-icon { width: 17px; height: 17px; flex-shrink: 0; }
 
-        /* ── Theme toggle ── */
+        /* ── Language pills ── */
         .theme-row {
           display: flex; align-items: center; justify-content: space-between;
           padding: 10px 14px; border-top: 1px solid var(--border);
         }
         .theme-label { font-size: 12px; color: var(--text-dim); font-weight: 500; }
+
+        .lang-pills { display: flex; gap: 4px; }
+        .lang-pill {
+          padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
+          cursor: pointer; border: 1px solid var(--lang-border);
+          background: var(--lang-bg); color: var(--text-dim);
+          transition: all 0.15s;
+        }
+        .lang-active {
+          background: var(--gold) !important;
+          border-color: var(--gold) !important;
+          color: #0A0A0A !important;
+        }
+
+        /* ── Theme toggle ── */
         .theme-toggle { background: transparent; border: none; cursor: pointer; padding: 0; }
         .toggle-track {
           display: flex; align-items: center;
           width: 44px; height: 24px; border-radius: 12px;
-          background: var(--toggle-bg);
-          padding: 2px; transition: background 0.25s;
-          position: relative;
+          background: var(--toggle-bg); padding: 2px;
+          transition: background 0.25s; position: relative;
         }
         .toggle-on { background: var(--toggle-on-bg) !important; }
         .toggle-thumb {
           width: 20px; height: 20px; border-radius: 50%;
           background: var(--bg-sidebar); border: 1px solid var(--border);
           display: flex; align-items: center; justify-content: center;
-          color: var(--gold); transition: transform 0.25s cubic-bezier(0.25,0.46,0.45,0.94), background 0.25s;
+          color: var(--gold);
+          transition: transform 0.25s cubic-bezier(0.25,0.46,0.45,0.94), background 0.25s;
           position: absolute; left: 2px;
         }
         .toggle-on .toggle-thumb { transform: translateX(20px); }
@@ -590,19 +619,13 @@ export default function Dashboard() {
         }
         .logout-btn:hover { background: rgba(224,82,82,0.14); }
 
-        /* ── Main wrap ── */
+        /* ── Main ── */
         .main-wrap { margin-left: 220px; flex: 1; min-width: 0; display: flex; flex-direction: column; position: relative; z-index: 1; }
-
-        /* ── Mobile header ── */
         .mobile-header { display: none; }
-
-        /* ── Page header ── */
-        .page-header  { padding: 28px 32px 0; }
-        .page-title   { font-size: 22px; font-weight: 700; color: var(--text); }
-        .page-subtitle{ font-size: 13px; color: var(--text-dim); margin-top: 4px; }
-
-        /* ── Content ── */
-        .main { padding: 20px 32px 40px; }
+        .page-header   { padding: 28px 32px 0; }
+        .page-title    { font-size: 22px; font-weight: 700; color: var(--text); }
+        .page-subtitle { font-size: 13px; color: var(--text-dim); margin-top: 4px; }
+        .main          { padding: 20px 32px 40px; }
 
         /* ── Error ── */
         .error-box {
@@ -646,8 +669,7 @@ export default function Dashboard() {
         /* ── Delete ── */
         .del-btn {
           padding: 5px 12px; background: rgba(224,82,82,0.10); border: 1px solid rgba(224,82,82,0.25);
-          border-radius: 5px; color: #E05252; font-size: 12px; font-weight: 600; cursor: pointer;
-          transition: background 0.15s;
+          border-radius: 5px; color: #E05252; font-size: 12px; font-weight: 600; cursor: pointer; transition: background 0.15s;
         }
         .del-btn:hover { background: rgba(224,82,82,0.18); }
 
@@ -662,47 +684,50 @@ export default function Dashboard() {
         .overlay   { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 19; }
         .hamburger { background: transparent; border: none; cursor: pointer; color: var(--text-muted); padding: 4px; display: flex; align-items: center; }
 
-        /* ── Mobile theme toggle (top bar) ── */
+        /* ── Mobile theme + lang toggles ── */
         .theme-toggle-sm {
           background: var(--avatar-bg); border: 1px solid var(--border);
           border-radius: 6px; padding: 6px; cursor: pointer;
           color: var(--gold); display: flex; align-items: center; justify-content: center;
-          transition: background 0.2s;
+        }
+        .lang-pills-sm { display: flex; gap: 3px; }
+        .lang-pill-sm {
+          padding: 4px 8px; border-radius: 20px; font-size: 11px; font-weight: 600;
+          cursor: pointer; border: 1px solid var(--lang-border);
+          background: var(--lang-bg); color: var(--text-dim); transition: all 0.15s;
         }
 
         /* ── Responsive ── */
         @media (max-width: 768px) {
-          .sidebar    { transform: translateX(-100%); }
-          .sidebar-open { transform: translateX(0) !important; }
-          .main-wrap  { margin-left: 0; }
+          .sidebar     { transform: translateX(-100%); }
+          .sidebar-open{ transform: translateX(0) !important; }
+          .main-wrap   { margin-left: 0; }
 
           .mobile-header {
             display: flex; align-items: center; justify-content: space-between;
-            padding: 12px 16px;
-            background: var(--bg-sidebar);
+            padding: 12px 16px; background: var(--bg-sidebar);
             border-bottom: 1px solid var(--border);
-            position: sticky; top: 0; z-index: 10;
-            backdrop-filter: blur(10px);
+            position: sticky; top: 0; z-index: 10; backdrop-filter: blur(10px);
             transition: background 0.25s, border-color 0.25s;
           }
-          .mobile-brand { font-size: 15px; font-weight: 700; color: var(--text); }
+          .mobile-brand  { font-size: 15px; font-weight: 700; color: var(--text); }
           .logout-btn-sm {
             padding: 6px 12px; background: rgba(224,82,82,0.08);
             border: 1px solid rgba(224,82,82,0.2); border-radius: 6px;
             color: #E05252; font-size: 12px; font-weight: 600; cursor: pointer;
           }
-          .page-header  { padding: 18px 16px 0; }
-          .page-title   { font-size: 18px; }
-          .page-subtitle{ font-size: 12px; }
-          .main         { padding: 14px 16px 32px; }
-          .table-scroll { display: none; }
-          .mobile-cards { display: block; }
+          .page-header   { padding: 18px 16px 0; }
+          .page-title    { font-size: 18px; }
+          .page-subtitle { font-size: 12px; }
+          .main          { padding: 14px 16px 32px; }
+          .table-scroll  { display: none; }
+          .mobile-cards  { display: block; }
         }
 
         @media (max-width: 400px) {
           .logout-btn-sm { font-size: 11px; padding: 5px 10px; }
+          .lang-pill-sm  { font-size: 10px; padding: 3px 6px; }
         }
-
       `}</style>
     </>
   );

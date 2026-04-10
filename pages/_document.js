@@ -11,6 +11,8 @@ export default function Document() {
             try {
               var t = localStorage.getItem('lt-theme') || 'dark';
               document.documentElement.setAttribute('data-theme', t);
+              var l = localStorage.getItem('lt-lang') || 'en';
+              document.documentElement.setAttribute('lang', l === 'zh' ? 'zh-CN' : 'en');
             } catch(e) {}
           })();
         `}} />
