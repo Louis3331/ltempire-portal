@@ -1,7 +1,27 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { useLang } from '../lib/useLang';
+
+/* ── Card tilt handler ──────────────────────────────────── */
+function useTilt() {
+  const onMove = useCallback((e) => {
+    const card = e.currentTarget;
+    const { left, top, width, height } = card.getBoundingClientRect();
+    const x = (e.clientX - left) / width  - 0.5;   // -0.5 to 0.5
+    const y = (e.clientY - top)  / height - 0.5;
+    card.style.transform = `perspective(600px) rotateY(${x * 6}deg) rotateX(${-y * 6}deg) scale(1.015)`;
+    card.style.boxShadow = `${-x * 8}px ${y * 8}px 24px rgba(201,168,76,0.1)`;
+  }, []);
+
+  const onLeave = useCallback((e) => {
+    const card = e.currentTarget;
+    card.style.transform = 'perspective(600px) rotateY(0deg) rotateX(0deg) scale(1)';
+    card.style.boxShadow = '';
+  }, []);
+
+  return { onMouseMove: onMove, onMouseLeave: onLeave };
+}
 
 /* ── Icons ─────────────────────────────────────────────── */
 const KeyIcon = () => (
@@ -54,6 +74,7 @@ export default function Dashboard() {
   const [slideDir,        setSlideDir]        = useState('right');
   const [theme,           setTheme]           = useState('dark');
   const { lang, setLang, t } = useLang();
+  const tilt = useTilt();
   const router = useRouter();
 
   /* Nav built inside component so labels are reactive to lang */
@@ -259,7 +280,7 @@ export default function Dashboard() {
                   <p style={{ color: 'var(--text-dim)', fontSize: 12, marginTop: 6 }}>{t('licenses.emptyHint')}</p>
                 </div>
               ) : (
-                <div className="table-wrap">
+                <div className="table-wrap" {...tilt}>
                   <div className="table-scroll">
                     <table className="table">
                       <thead>
@@ -309,7 +330,7 @@ export default function Dashboard() {
                   {/* Mobile cards */}
                   <div className="mobile-cards">
                     {memberships.map((m) => (
-                      <div key={m.id} className="mobile-card">
+                      <div key={m.id} className="mobile-card tilt-card" {...tilt}>
                         <div className="mc-row">
                           <span className="mc-label">{t('th.licenseKey')}</span>
                           <div className="key-cell">
@@ -351,7 +372,7 @@ export default function Dashboard() {
 
             {/* ── Accounts ── */}
             {tab === 'accounts' && (
-              <div className="table-wrap">
+              <div className="table-wrap" {...tilt}>
                 <div className="table-scroll">
                   <table className="table">
                     <thead>
@@ -392,7 +413,7 @@ export default function Dashboard() {
                 {!accountsLoading && accounts.length > 0 && (
                   <div className="mobile-cards">
                     {accounts.map(a => (
-                      <div key={a.id} className="mobile-card">
+                      <div key={a.id} className="mobile-card tilt-card" {...tilt}>
                         <div className="mc-row">
                           <span className="mc-label">{t('th.accountNo')}</span>
                           <span style={{ color: 'var(--gold)', fontWeight: 700 }}>{a.accountNumber}</span>
@@ -641,8 +662,11 @@ export default function Dashboard() {
         }
         .empty-icon svg { width: 26px; height: 26px; }
 
+        /* ── Tilt ── */
+        .table-wrap, .tilt-card { transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.25s, border-color 0.25s; will-change: transform; }
+
         /* ── Table ── */
-        .table-wrap   { background: var(--bg-table); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; transition: background 0.25s, border-color 0.25s; }
+        .table-wrap   { background: var(--bg-table); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
         .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
         .table        { width: 100%; border-collapse: collapse; min-width: 600px; }
         .th {
