@@ -240,35 +240,67 @@ const Svg2 = () => (
   </Win>
 );
 
-const Svg3 = () => (
-  <Win title="MetaTrader 5">
-    {/* Menu bar */}
-    <rect x="0" y="28" width={W} height="22" fill="#141414" />
-    {['File','View','Insert','Charts','Tools','Window','Help'].map((m, i) => (
-      <text key={m} x={10 + i * 54} y="42" fill={i === 0 ? '#C9A84C' : '#777'} fontSize="9" fontFamily="system-ui,sans-serif" fontWeight={i === 0 ? '600' : '400'}>{m}</text>
-    ))}
-    {/* Dropdown */}
-    <rect x="6" y="50" width="155" height="130" rx="4" fill="#1a1a1a" stroke="#2a2a2a" strokeWidth="1" />
-    {[
-      { label: 'New Chart',           hot: 'Ctrl+N', hi: false },
-      { label: 'Open Data Folder',    hot: '',       hi: true  },
-      { label: '─────────────',       hot: '',       hi: false },
-      { label: 'Save As...',          hot: '',       hi: false },
-      { label: 'Print...',            hot: 'Ctrl+P', hi: false },
-      { label: '─────────────',       hot: '',       hi: false },
-      { label: 'Exit',                hot: 'Alt+F4', hi: false },
-    ].map(({ label, hot, hi }, i) => (
-      <g key={i}>
-        {hi && <rect x="8" y={56 + i * 16} width="151" height="15" rx="2" fill="rgba(201,168,76,0.15)" />}
-        <text x="14" y={67 + i * 16} fill={hi ? '#C9A84C' : label.startsWith('─') ? '#2a2a2a' : '#aaa'} fontSize="8.5" fontFamily="system-ui,sans-serif" fontWeight={hi ? '600' : '400'}>{label}</text>
-        {hot && <text x="148" y={67 + i * 16} textAnchor="end" fill="#555" fontSize="7.5" fontFamily="system-ui,sans-serif">{hot}</text>}
-      </g>
-    ))}
-    <Highlight x="8" y="68" w="151" h="15" label="Click here" labelX="200" labelY="72" arrow="up" />
-    {/* arrow from label to item */}
-    <path d="M168,72 L162,75" stroke="#C9A84C" strokeWidth="1" strokeDasharray="3,2" />
-  </Win>
-);
+const Svg3 = () => {
+  const menuItems = [
+    { label: 'New Chart',        hot: '',               sep: false, hi: false },
+    { label: 'Open Deleted',     hot: '',               sep: false, hi: false },
+    { label: 'Profiles',         hot: '',               sep: false, hi: false },
+    { label: 'Close',            hot: 'Ctrl+F4',        sep: false, hi: false },
+    { label: 'Save',             hot: 'Ctrl+S',         sep: false, hi: false },
+    { label: 'Save as Picture',  hot: '',               sep: false, hi: false },
+    { label: null,               hot: '',               sep: true,  hi: false },
+    { label: 'Open Data Folder', hot: 'Ctrl+Shift+D',   sep: false, hi: true  },
+    { label: null,               hot: '',               sep: true,  hi: false },
+    { label: 'Print',            hot: 'Ctrl+P',         sep: false, hi: false },
+    { label: 'Print Preview',    hot: '',               sep: false, hi: false },
+  ];
+  const dropW = 190, rowH = 17, dropX = 4, dropY = 50;
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', borderRadius: 8, display: 'block' }}>
+      {/* Window bg */}
+      <rect width={W} height={H} rx="8" fill="#1c1c1c" stroke="#333" strokeWidth="1" />
+      {/* Title bar */}
+      <rect width={W} height="22" rx="8" fill="#2a2a2a" />
+      <rect y="14" width={W} height="8" fill="#2a2a2a" />
+      <circle cx="12" cy="11" r="4" fill="#E05252" opacity="0.8" />
+      <circle cx="24" cy="11" r="4" fill="#C9A84C" opacity="0.8" />
+      <circle cx="36" cy="11" r="4" fill="#3ECF8E" opacity="0.8" />
+      <text x={W / 2} y="15" textAnchor="middle" fill="#666" fontSize="8" fontFamily="system-ui,sans-serif">MetaTrader 5</text>
+      {/* Menu bar */}
+      <rect y="22" width={W} height="18" fill="#242424" />
+      {/* "File" tab — active/pressed */}
+      <rect x={dropX} y="22" width="28" height="18" fill="#1a1a1a" />
+      <text x="18" y="34" textAnchor="middle" fill="#e0e0e0" fontSize="9" fontFamily="system-ui,sans-serif" fontWeight="600">File</text>
+      {['View','Insert','Charts','Tools','Window','Help'].map((m, i) => (
+        <text key={m} x={38 + i * 46} y="34" fill="#999" fontSize="9" fontFamily="system-ui,sans-serif">{m}</text>
+      ))}
+      {/* Dropdown panel */}
+      <rect x={dropX} y={dropY} width={dropW} height={menuItems.length * rowH + 8} rx="3" fill="#1a1a1a" stroke="#3a3a3a" strokeWidth="1" />
+      {menuItems.map(({ label, hot, sep, hi }, i) => {
+        const y = dropY + 4 + i * rowH;
+        if (sep) return <rect key={i} x={dropX + 4} y={y + 7} width={dropW - 8} height="1" fill="#333" />;
+        return (
+          <g key={i}>
+            {hi && <rect x={dropX + 2} y={y + 1} width={dropW - 4} height={rowH - 2} rx="2" fill="#3a6bc4" />}
+            <text x={dropX + 22} y={y + 12} fill={hi ? '#fff' : '#ccc'} fontSize="9" fontFamily="system-ui,sans-serif" fontWeight={hi ? '600' : '400'}>{label}</text>
+            {hot && <text x={dropX + dropW - 5} y={y + 12} textAnchor="end" fill={hi ? '#aad4ff' : '#666'} fontSize="8" fontFamily="system-ui,sans-serif">{hot}</text>}
+            {/* folder icon for Open Data Folder */}
+            {hi && <text x={dropX + 8} y={y + 12} fill="#f0c040" fontSize="9" fontFamily="system-ui,sans-serif">📁</text>}
+          </g>
+        );
+      })}
+      {/* Gold callout arrow from right side */}
+      <line x1={dropX + dropW + 55} y1="148" x2={dropX + dropW + 4} y2="148" stroke="#C9A84C" strokeWidth="1.5" markerEnd="url(#arr3)" />
+      <rect x={dropX + dropW + 58} y="138" width="88" height="20" rx="4" fill="rgba(201,168,76,0.12)" stroke="#C9A84C" strokeWidth="1" />
+      <text x={dropX + dropW + 102} y="151" textAnchor="middle" fill="#C9A84C" fontSize="9" fontFamily="system-ui,sans-serif" fontWeight="700">Click here</text>
+      <defs>
+        <marker id="arr3" markerWidth="6" markerHeight="6" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L6,3 L0,6 z" fill="#C9A84C" />
+        </marker>
+      </defs>
+    </svg>
+  );
+};
 
 const Svg4 = () => (
   <Win title="MQL5 › Experts">
