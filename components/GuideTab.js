@@ -341,14 +341,12 @@ const Svg4 = () => {
               ? <rect x="0" y={y - 2} width={W} height={rowH} fill="#1a3a5c" />
               : (i % 2 === 0 && <rect x="0" y={y - 2} width={W} height={rowH} fill="rgba(255,255,255,0.02)" />)
             }
-            {/* Pin icon */}
-            <text x="8" y={y + 12} fill="#555" fontSize="9" fontFamily="system-ui,sans-serif">📌</text>
             {/* Folder or EA icon */}
             {isFolder
-              ? <text x="24" y={y + 12} fill="#e8a020" fontSize="10" fontFamily="system-ui,sans-serif">📁</text>
-              : <text x="24" y={y + 12} fill="#3ECF8E" fontSize="10" fontFamily="system-ui,sans-serif">✦</text>
+              ? <text x="12" y={y + 12} fill="#e8a020" fontSize="10" fontFamily="system-ui,sans-serif">📁</text>
+              : <text x="12" y={y + 12} fill="#3ECF8E" fontSize="10" fontFamily="system-ui,sans-serif">✦</text>
             }
-            <text x="38" y={y + 12} fill={hi ? '#ffffff' : isFolder ? '#cccccc' : '#aaaaaa'} fontSize="9" fontFamily={isFolder ? 'system-ui,sans-serif' : 'monospace'} fontWeight={hi ? '600' : '400'}>{name}</text>
+            <text x="26" y={y + 12} fill={hi ? '#ffffff' : isFolder ? '#cccccc' : '#aaaaaa'} fontSize="9" fontFamily={isFolder ? 'system-ui,sans-serif' : 'monospace'} fontWeight={hi ? '600' : '400'}>{name}</text>
             <text x={colDate} y={y + 12} fill={hi ? '#aad4ff' : '#666'} fontSize="8.5" fontFamily="system-ui,sans-serif">{date}</text>
           </g>
         );
