@@ -173,31 +173,46 @@ const Highlight = ({ x, y, w, h, label, labelX, labelY, arrow = 'down' }) => (
 );
 
 const Svg1 = () => (
-  <Win title="LT Empire | Dashboard">
-    {/* Sidebar */}
-    <rect x="0" y="28" width="90" height={H - 28} fill="#0a0a0a" />
-    <rect x="0" y="28" width="90" height={H - 28} fill="none" stroke="#1a1a1a" strokeWidth="1" />
-    <text x="8" y="50" fill="#333" fontSize="8" fontFamily="system-ui,sans-serif" fontWeight="600" letterSpacing="1">NAVIGATION</text>
-    <rect x="6" y="56" width="78" height="22" rx="4" fill="rgba(201,168,76,0.12)" />
-    <text x="14" y="71" fill="#C9A84C" fontSize="9" fontFamily="system-ui,sans-serif">🔑 License Keys</text>
-    <text x="14" y="96" fill="#444" fontSize="9" fontFamily="system-ui,sans-serif">💻 Accounts</text>
-    <text x="14" y="116" fill="#444" fontSize="9" fontFamily="system-ui,sans-serif">📖 Guide</text>
-    {/* Table */}
-    <rect x="100" y="36" width="290" height="18" fill="#0d0d0d" />
-    <text x="108" y="49" fill="#444" fontSize="7.5" fontFamily="system-ui,sans-serif" letterSpacing="0.5">LICENSE KEY</text>
-    <text x="260" y="49" fill="#444" fontSize="7.5" fontFamily="system-ui,sans-serif" letterSpacing="0.5">STATUS</text>
-    <text x="328" y="49" fill="#444" fontSize="7.5" fontFamily="system-ui,sans-serif" letterSpacing="0.5">VALID</text>
-    <rect x="100" y="54" width="290" height="1" fill="#1a1a1a" />
-    {/* Row */}
-    <rect x="100" y="55" width="290" height="30" fill="#111" />
-    <text x="108" y="74" fill="#C9A84C" fontSize="9" fontFamily="monospace">L-2D3186-336F6F77-C4FE98W</text>
-    <text x="260" y="74" fill="#3ECF8E" fontSize="9" fontFamily="system-ui,sans-serif">● Active</text>
-    <text x="338" y="74" fill="#3ECF8E" fontSize="9" fontFamily="system-ui,sans-serif" fontWeight="700">Yes</text>
-    {/* Copy button highlight */}
-    <rect x="326" y="60" width="20" height="14" rx="3" fill="#1a1a1a" stroke="#2a2a2a" />
-    <text x="336" y="70" textAnchor="middle" fill="#777" fontSize="8" fontFamily="system-ui,sans-serif">⎘</text>
-    <Highlight x="324" y="58" w="24" h="18" label="Click to copy" labelX="336" labelY="48" arrow="down" />
-  </Win>
+  <svg viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', borderRadius: 8, display: 'block' }}>
+    {/* Dark background */}
+    <rect width={W} height={H} rx="8" fill="#0d0d0d" stroke="#252525" strokeWidth="1" />
+
+    {/* Centered card */}
+    <rect x="60" y="40" width="280" height="140" rx="8" fill="#111111" stroke="#1e1e1e" strokeWidth="1" />
+
+    {/* LICENSE KEY header row */}
+    <rect x="60" y="40" width="280" height="36" rx="8" fill="#0d0d0d" />
+    <rect x="60" y="60" width="280" height="16" fill="#0d0d0d" />
+    <text x="80" y="62" fill="#444" fontSize="8" fontFamily="system-ui,sans-serif" letterSpacing="1.5" fontWeight="600">LICENSE KEY</text>
+
+    {/* Divider */}
+    <rect x="60" y="76" width="280" height="1" fill="#1e1e1e" />
+
+    {/* Key row */}
+    <rect x="60" y="77" width="280" height="50" fill="#111111" />
+
+    {/* Gold license key text */}
+    <text x="80" y="108" fill="#C9A84C" fontSize="13" fontFamily="monospace" fontWeight="500" letterSpacing="0.5">L-2D3106-336F6F77-C4FE93W</text>
+
+    {/* Copy button */}
+    <rect x="294" y="96" width="26" height="20" rx="4" fill="#1a1a1a" stroke="#2a2a2a" strokeWidth="1" />
+    {/* Copy icon — two overlapping squares */}
+    <rect x="300" y="100" width="10" height="10" rx="1.5" fill="none" stroke="#666" strokeWidth="1.5" />
+    <rect x="303" y="103" width="10" height="10" rx="1.5" fill="#1a1a1a" stroke="#666" strokeWidth="1.5" />
+
+    {/* Gold glow highlight on copy button */}
+    <rect x="292" y="94" width="30" height="24" rx="5" fill="rgba(201,168,76,0.10)" stroke="#C9A84C" strokeWidth="1.5" />
+
+    {/* Arrow + label */}
+    <line x1="307" y1="88" x2="307" y2="93" stroke="#C9A84C" strokeWidth="1.5" markerEnd="url(#arr1)" />
+    <text x="307" y="84" textAnchor="middle" fill="#C9A84C" fontSize="9" fontFamily="system-ui,sans-serif" fontWeight="700">Click to copy</text>
+
+    <defs>
+      <marker id="arr1" markerWidth="6" markerHeight="6" refX="3" refY="6" orient="auto">
+        <path d="M0,0 L3,6 L6,0" fill="none" stroke="#C9A84C" strokeWidth="1.2" />
+      </marker>
+    </defs>
+  </svg>
 );
 
 const Svg2 = () => (
