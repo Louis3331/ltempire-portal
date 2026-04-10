@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { useLang } from '../lib/useLang';
+import GuideTab from '../components/GuideTab';
 
 /* ── Card tilt handler ──────────────────────────────────── */
 function useTilt() {
@@ -58,6 +59,14 @@ const MoonIcon = () => (
     <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
+const BookIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="nav-icon">
+    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" strokeLinecap="round" strokeLinejoin="round" />
+    <line x1="9" y1="7" x2="15" y2="7" strokeLinecap="round" />
+    <line x1="9" y1="11" x2="13" y2="11" strokeLinecap="round" />
+  </svg>
+);
 
 /* ── Main component ─────────────────────────────────────── */
 export default function Dashboard() {
@@ -81,6 +90,7 @@ export default function Dashboard() {
   const NAV = [
     { id: 'licenses', label: t('nav.licenses'), icon: <KeyIcon /> },
     { id: 'accounts', label: t('nav.accounts'), icon: <MonitorIcon /> },
+    { id: 'guide',    label: t('nav.guide'),    icon: <BookIcon /> },
   ];
 
   /* Load session + memberships */
@@ -167,8 +177,8 @@ export default function Dashboard() {
 
   const email     = session.user?.email || session.email || '';
   const initial   = email[0]?.toUpperCase() || 'U';
-  const pageTitle    = tab === 'licenses' ? t('page.licenses.title') : t('page.accounts.title');
-  const pageSubtitle = tab === 'licenses' ? t('page.licenses.subtitle') : t('page.accounts.subtitle');
+  const pageTitle    = tab === 'licenses' ? t('page.licenses.title') : tab === 'accounts' ? t('page.accounts.title') : t('nav.guide');
+  const pageSubtitle = tab === 'licenses' ? t('page.licenses.subtitle') : tab === 'accounts' ? t('page.accounts.subtitle') : (lang === 'zh' ? 'MT5 专家顾问安装步骤指南' : 'Step-by-step guide to install the MT5 Expert Advisor');
 
   return (
     <>
@@ -461,6 +471,10 @@ export default function Dashboard() {
                 )}
               </div>
             )}
+
+            {/* ── MT5 Guide ── */}
+            {tab === 'guide' && <GuideTab lang={lang} />}
+
           </main>
         </div>
       </div>
