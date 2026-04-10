@@ -302,42 +302,63 @@ const Svg3 = () => {
   );
 };
 
-const Svg4 = () => (
-  <Win title="MQL5 › Experts">
-    {/* Address bar */}
-    <rect x="0" y="28" width={W} height="22" fill="#141414" />
-    <rect x="8" y="32" width="290" height="14" rx="3" fill="#0d0d0d" stroke="#252525" />
-    <text x="14" y="42" fill="#777" fontSize="7.5" fontFamily="system-ui,sans-serif">📁 MQL5  ›  Experts</text>
-    {/* Toolbar buttons */}
-    <rect x="306" y="32" width="40" height="14" rx="3" fill="#1a1a1a" stroke="#252525" />
-    <text x="326" y="42" textAnchor="middle" fill="#888" fontSize="7.5" fontFamily="system-ui,sans-serif">Paste</text>
-    {/* Files area */}
-    <rect x="0" y="50" width={W} height={H - 50} fill="#0d0d0d" />
-    {/* Existing file */}
-    <rect x="20" y="68" width="60" height="70" rx="4" fill="#151515" stroke="#222" />
-    <text x="50" y="100" textAnchor="middle" fill="#555" fontSize="20" fontFamily="system-ui,sans-serif">📄</text>
-    <text x="50" y="128" textAnchor="middle" fill="#555" fontSize="6.5" fontFamily="system-ui,sans-serif">SomeOther.ex5</text>
-    {/* New file being dropped */}
-    <rect x="100" y="62" width="70" height="80" rx="4" fill="rgba(201,168,76,0.08)" stroke="#C9A84C" strokeWidth="1.5" strokeDasharray="4,2" />
-    <text x="135" y="100" textAnchor="middle" fill="#C9A84C" fontSize="18">📥</text>
-    <text x="135" y="114" textAnchor="middle" fill="#C9A84C" fontSize="6.5" fontFamily="system-ui,sans-serif" fontWeight="600">LTE Gold</text>
-    <text x="135" y="124" textAnchor="middle" fill="#C9A84C" fontSize="6.5" fontFamily="system-ui,sans-serif" fontWeight="600">_GOLD.ex5</text>
-    <text x="135" y="136" textAnchor="middle" fill="#C9A84C" fontSize="7" fontFamily="system-ui,sans-serif">DROP HERE</text>
-    {/* Arrow */}
-    <path d="M250,95 Q220,95 186,95" stroke="#C9A84C" strokeWidth="1.5" strokeDasharray="4,2" markerEnd="url(#arr2)" />
-    <defs>
-      <marker id="arr2" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
-        <path d="M0,0 L0,6 L6,3 z" fill="#C9A84C" />
-      </marker>
-    </defs>
-    <text x="270" y="88" fill="#C9A84C" fontSize="8" fontFamily="system-ui,sans-serif" fontWeight="600">Paste .ex5 file</text>
-    <text x="270" y="100" fill="#777" fontSize="7.5" fontFamily="system-ui,sans-serif">here</text>
-    {/* Then refresh instruction */}
-    <rect x="196" y="145" width="196" height="28" rx="4" fill="#151515" stroke="#252525" />
-    <text x="206" y="157" fill="#888" fontSize="7.5" fontFamily="system-ui,sans-serif">Then in MT5 Navigator:</text>
-    <text x="206" y="168" fill="#C9A84C" fontSize="7.5" fontFamily="system-ui,sans-serif">Right-click Experts → Refresh</text>
-  </Win>
-);
+const Svg4 = () => {
+  const files = [
+    { name: 'Advisors',              date: '3/15/2026  12:29 AM', isFolder: true,  hi: false },
+    { name: 'Examples',              date: '2/24/2026   7:34 PM', isFolder: true,  hi: false },
+    { name: 'Free Robots',           date: '2/24/2026   7:34 PM', isFolder: true,  hi: false },
+    { name: 'SomeOther_EA 1.15.ex5', date: '3/26/2026   8:31 AM', isFolder: false, hi: false },
+    { name: 'LTE_Gold_v1.01.ex5',    date: '4/10/2026   6:16 PM', isFolder: false, hi: true  },
+  ];
+  const colDate = 270;
+  const rowH = 22, startY = 72;
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', borderRadius: 8, display: 'block' }}>
+      {/* Window bg */}
+      <rect width={W} height={H} rx="8" fill="#1e1e1e" stroke="#333" strokeWidth="1" />
+      {/* Title bar */}
+      <rect width={W} height="22" rx="8" fill="#2a2a2a" />
+      <rect y="14" width={W} height="8" fill="#2a2a2a" />
+      <circle cx="12" cy="11" r="4" fill="#E05252" opacity="0.8" />
+      <circle cx="24" cy="11" r="4" fill="#C9A84C" opacity="0.8" />
+      <circle cx="36" cy="11" r="4" fill="#3ECF8E" opacity="0.8" />
+      <text x={W / 2} y="15" textAnchor="middle" fill="#666" fontSize="8" fontFamily="system-ui,sans-serif">MQL5 › Experts</text>
+      {/* Address bar */}
+      <rect y="22" width={W} height="20" fill="#252525" />
+      <rect x="8" y="25" width="260" height="14" rx="3" fill="#1a1a1a" stroke="#333" />
+      <text x="14" y="35" fill="#888" fontSize="8" fontFamily="system-ui,sans-serif">  C: › ... › MQL5 › Experts</text>
+      {/* Column headers */}
+      <rect y="44" width={W} height="18" fill="#242424" />
+      <rect y="62" width={W} height="1" fill="#333" />
+      <text x="36" y="56" fill="#aaa" fontSize="8.5" fontFamily="system-ui,sans-serif" fontWeight="600">Name</text>
+      <text x={colDate} y="56" fill="#aaa" fontSize="8.5" fontFamily="system-ui,sans-serif" fontWeight="600">Date modified</text>
+      {/* File rows */}
+      {files.map(({ name, date, isFolder, hi }, i) => {
+        const y = startY + i * rowH;
+        return (
+          <g key={i}>
+            {hi
+              ? <rect x="0" y={y - 2} width={W} height={rowH} fill="#1a3a5c" />
+              : (i % 2 === 0 && <rect x="0" y={y - 2} width={W} height={rowH} fill="rgba(255,255,255,0.02)" />)
+            }
+            {/* Pin icon */}
+            <text x="8" y={y + 12} fill="#555" fontSize="9" fontFamily="system-ui,sans-serif">📌</text>
+            {/* Folder or EA icon */}
+            {isFolder
+              ? <text x="24" y={y + 12} fill="#e8a020" fontSize="10" fontFamily="system-ui,sans-serif">📁</text>
+              : <text x="24" y={y + 12} fill="#3ECF8E" fontSize="10" fontFamily="system-ui,sans-serif">✦</text>
+            }
+            <text x="38" y={y + 12} fill={hi ? '#ffffff' : isFolder ? '#cccccc' : '#aaaaaa'} fontSize="9" fontFamily={isFolder ? 'system-ui,sans-serif' : 'monospace'} fontWeight={hi ? '600' : '400'}>{name}</text>
+            <text x={colDate} y={y + 12} fill={hi ? '#aad4ff' : '#666'} fontSize="8.5" fontFamily="system-ui,sans-serif">{date}</text>
+          </g>
+        );
+      })}
+      {/* Gold callout */}
+      <rect x="4" y={startY + 4 * rowH - 2} width={W - 8} height={rowH} rx="2" fill="none" stroke="#C9A84C" strokeWidth="1.5" />
+      <text x={W - 10} y={startY + 4 * rowH + 10} textAnchor="end" fill="#C9A84C" fontSize="8.5" fontFamily="system-ui,sans-serif" fontWeight="700">← Paste file here</text>
+    </svg>
+  );
+};
 
 const Svg5 = () => (
   <Win title="MetaTrader 5 — Options">
