@@ -507,43 +507,94 @@ const Svg6 = () => {
   );
 };
 
-const Svg7 = () => (
-  <Win title="LTE Gold — EA Parameters">
-    <rect x="40" y="32" width="320" height="180" rx="6" fill="#141414" stroke="#2a2a2a" />
-    {/* Tabs */}
-    <rect x="40" y="32" width="320" height="22" fill="#0d0d0d" rx="6"/>
-    <rect y="46" x="40" width="320" height="8" fill="#0d0d0d"/>
-    {['Common','Inputs','Dependencies'].map((t, i) => (
-      <g key={t}>
-        {i === 1 && <rect x={42 + i * 80} y="32" width="80" height="22" rx="4" fill="#1e1e1e" />}
-        <text x={82 + i * 80} y="46" textAnchor="middle" fill={i === 1 ? '#C9A84C' : '#555'} fontSize="8" fontFamily="system-ui,sans-serif" fontWeight={i === 1 ? '600' : '400'}>{t}</text>
-      </g>
-    ))}
-    {/* Inputs table header */}
-    <rect x="40" y="54" width="320" height="16" fill="#0d0d0d" />
-    <text x="52" y="65" fill="#444" fontSize="7.5" fontFamily="system-ui,sans-serif" letterSpacing="0.5">VARIABLE</text>
-    <text x="230" y="65" fill="#444" fontSize="7.5" fontFamily="system-ui,sans-serif" letterSpacing="0.5">VALUE</text>
-    {/* Rows */}
-    {[
-      { name: 'InpLotSize',      val: '0.01',    hi: false },
-      { name: 'InpLicenseKey',   val: 'L-XXXXXX-XXXXXXXX-XXXXXXX', hi: true },
-      { name: 'InpMaxTrades',    val: '3',       hi: false },
-      { name: 'InpStopLoss',     val: '50',      hi: false },
-      { name: 'InpTakeProfit',   val: '100',     hi: false },
-    ].map(({ name, val, hi }, i) => (
-      <g key={name}>
-        {hi && <rect x="42" y={70 + i * 18} width="316" height="18" fill="rgba(201,168,76,0.08)" />}
-        <text x="52" y={82 + i * 18} fill={hi ? '#F5F0E8' : '#777'} fontSize="8" fontFamily="monospace">{name}</text>
-        <text x="232" y={82 + i * 18} fill={hi ? '#C9A84C' : '#555'} fontSize="8" fontFamily="monospace">{hi ? '●●●●●●●●●●' : val}</text>
-      </g>
-    ))}
-    <Highlight x="42" y="88" w="316" h="18" label="Paste your license key here" labelX="200" labelY="78" arrow="down" />
-    {/* OK button */}
-    <rect x="240" y="183" width="100" height="20" rx="4" fill="url(#gbtn3)" />
-    <defs><linearGradient id="gbtn3" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="#C9A84C"/><stop offset="100%" stopColor="#9B7B2F"/></linearGradient></defs>
-    <text x="290" y="196" textAnchor="middle" fill="#0a0a0a" fontSize="9" fontFamily="system-ui,sans-serif" fontWeight="700">OK</text>
-  </Win>
-);
+const Svg7 = () => {
+  const colVal = 280; // x position of Value column
+  const rows = [
+    { section: 'Licensing', items: [] },
+    { name: 'License key (paste your key here)', val: '',        hi: true  },
+    { name: 'Magic number (unique ID for EA)',   val: '20250101', hi: false },
+    { section: 'Risk Settings', items: [] },
+    { name: 'Fixed lot size',                   val: '0.01',    hi: false },
+    { name: 'Auto lot size',                     val: 'true',    hi: false },
+    { name: 'Risk % per trade',                  val: '1.0',     hi: false },
+    { name: 'Max daily drawdown %',              val: '0.0',     hi: false },
+    { section: 'Order Setting', items: [] },
+    { name: 'Stop Loss in pips',                 val: '10.0',    hi: false },
+    { name: 'Take Profit in pips',               val: '0.0',     hi: false },
+  ];
+  let rowY = 68;
+  const rowH = 14;
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', borderRadius: 8, display: 'block' }}>
+      {/* Light window */}
+      <rect width={W} height={H} rx="8" fill="#f0f0f0" stroke="#bbb" strokeWidth="1" />
+      {/* Title bar */}
+      <rect width={W} height="20" rx="8" fill="#e0e0e0" />
+      <rect y="13" width={W} height="7" fill="#e0e0e0" />
+      <text x="8" y="14" fill="#333" fontSize="8" fontFamily="system-ui,sans-serif">LTE_Gold_v1.01 (XAUUSD,H1)</text>
+      <text x={W - 36} y="14" fill="#666" fontSize="9" fontFamily="system-ui,sans-serif">─  □  ✕</text>
+      {/* Tabs */}
+      <rect y="20" width={W} height="18" fill="#dcdcdc" />
+      <rect y="37" width={W} height="1" fill="#bbb" />
+      {[{l:'Common',x:6},{l:'Inputs',x:46,active:true},{l:'Dependencies',x:84}].map(({l,x,active})=>(
+        <g key={l}>
+          {active && <>
+            <rect x={x-2} y="20" width="40" height="18" fill="#f0f0f0"/>
+            <rect x={x-2} y="37" width="40" height="1" fill="#f0f0f0"/>
+            <rect x={x-2} y="36" width="40" height="2" fill="#1a6fc4"/>
+          </>}
+          <text x={x} y="33" fill={active?'#1a6fc4':'#666'} fontSize="8.5" fontFamily="system-ui,sans-serif" fontWeight={active?'700':'400'} textDecoration={active?'underline':'none'}>{l}</text>
+        </g>
+      ))}
+      {/* Table area */}
+      <rect y="38" width={W} height={H-58} fill="#fff" />
+      {/* Column headers */}
+      <rect y="38" width={W} height="16" fill="#e8e8e8" />
+      <text x="10" y="50" fill="#333" fontSize="8" fontFamily="system-ui,sans-serif" fontWeight="600">Variable</text>
+      <text x={colVal} y="50" fill="#333" fontSize="8" fontFamily="system-ui,sans-serif" fontWeight="600">Value</text>
+      <rect x={colVal-2} y="38" width="1" height={H-58} fill="#ddd"/>
+      {/* Scrollbar */}
+      <rect x={W-10} y="38" width="10" height={H-58} fill="#e8e8e8"/>
+      <rect x={W-9} y="42" width="8" height="30" rx="3" fill="#bbb"/>
+      {/* Rows */}
+      {rows.map((row, i) => {
+        if (row.section !== undefined) {
+          const y = rowY; rowY += 13;
+          return (
+            <g key={i}>
+              <rect x="0" y={y} width={W-10} height="13" fill="#f5f5f5"/>
+              <text x="10" y={y+10} fill="#555" fontSize="8" fontFamily="system-ui,sans-serif" fontWeight="600">{row.section}</text>
+            </g>
+          );
+        }
+        const y = rowY; rowY += rowH;
+        return (
+          <g key={i}>
+            {row.hi
+              ? <rect x="0" y={y} width={W-10} height={rowH} fill="#1a6fc4"/>
+              : (i%2===0 && <rect x="0" y={y} width={W-10} height={rowH} fill="#fafafa"/>)
+            }
+            <rect x={colVal-2} y={y} width="1" height={rowH} fill="#ddd"/>
+            <text x="10" y={y+10} fill={row.hi?'#fff':'#333'} fontSize="8" fontFamily="system-ui,sans-serif">{row.name}</text>
+            <text x={colVal+4} y={y+10} fill={row.hi?'#aad4ff':'#333'} fontSize="8" fontFamily="monospace">{row.val}</text>
+          </g>
+        );
+      })}
+      {/* Gold callout */}
+      <rect x="2" y="81" width={W-14} height={rowH} fill="none" stroke="#C9A84C" strokeWidth="1.5"/>
+      <rect x="60" y="97" width="160" height="14" rx="3" fill="rgba(201,168,76,0.15)" stroke="#C9A84C" strokeWidth="1"/>
+      <text x="140" y="108" textAnchor="middle" fill="#C9A84C" fontSize="8" fontFamily="system-ui,sans-serif" fontWeight="700">↑ Paste your license key</text>
+      {/* Buttons */}
+      <rect y={H-18} width={W} height="18" fill="#e0e0e0"/>
+      <rect x={W-140} y={H-15} width="38" height="12" rx="2" fill="#1a6fc4"/>
+      <text x={W-121} y={H-6} textAnchor="middle" fill="#fff" fontSize="8" fontFamily="system-ui,sans-serif" fontWeight="700">OK</text>
+      <rect x={W-96} y={H-15} width="44" height="12" rx="2" fill="#e8e8e8" stroke="#bbb" strokeWidth="0.8"/>
+      <text x={W-74} y={H-6} textAnchor="middle" fill="#333" fontSize="8" fontFamily="system-ui,sans-serif">Cancel</text>
+      <rect x={W-46} y={H-15} width="38" height="12" rx="2" fill="#e8e8e8" stroke="#bbb" strokeWidth="0.8"/>
+      <text x={W-27} y={H-6} textAnchor="middle" fill="#333" fontSize="8" fontFamily="system-ui,sans-serif">Reset</text>
+    </svg>
+  );
+};
 
 const Svg8 = () => (
   <Win title="MetaTrader 5 — XAUUSD, H1">
