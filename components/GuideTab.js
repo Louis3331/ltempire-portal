@@ -289,10 +289,10 @@ const Svg3 = () => {
           </g>
         );
       })}
-      {/* Gold callout arrow from right side */}
-      <line x1={dropX + dropW + 55} y1="148" x2={dropX + dropW + 4} y2="148" stroke="#C9A84C" strokeWidth="1.5" markerEnd="url(#arr3)" />
-      <rect x={dropX + dropW + 58} y="138" width="88" height="20" rx="4" fill="rgba(201,168,76,0.12)" stroke="#C9A84C" strokeWidth="1" />
-      <text x={dropX + dropW + 102} y="151" textAnchor="middle" fill="#C9A84C" fontSize="9" fontFamily="system-ui,sans-serif" fontWeight="700">Click here</text>
+      {/* Gold callout arrow from right side — points at Open Data Folder row */}
+      <line x1={dropX + dropW + 55} y1="181" x2={dropX + dropW + 4} y2="181" stroke="#C9A84C" strokeWidth="1.5" markerEnd="url(#arr3)" />
+      <rect x={dropX + dropW + 58} y="171" width="88" height="20" rx="4" fill="rgba(201,168,76,0.12)" stroke="#C9A84C" strokeWidth="1" />
+      <text x={dropX + dropW + 102} y="184" textAnchor="middle" fill="#C9A84C" fontSize="9" fontFamily="system-ui,sans-serif" fontWeight="700">Click here</text>
       <defs>
         <marker id="arr3" markerWidth="6" markerHeight="6" refX="6" refY="3" orient="auto">
           <path d="M0,0 L6,3 L0,6 z" fill="#C9A84C" />
