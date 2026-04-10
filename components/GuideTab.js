@@ -14,7 +14,7 @@ const g = {
       },
       {
         title: 'Download EA from Whop',
-        desc:  'Log in to your Whop account and navigate to the LT Empire product page. Download the LouisTrading_GOLD.ex5 file from the Files section.',
+        desc:  'Log in to your Whop account and navigate to the LT Empire product page. Download the LTE_Gold_v1.01.ex5 file from the Files section.',
         tip:   'Only download from the official Whop page to ensure you have the latest version.',
         tipType: 'warn',
       },
@@ -25,7 +25,7 @@ const g = {
       },
       {
         title: 'Install the EA File',
-        desc:  'Inside the Data Folder navigate to MQL5 → Experts. Paste the LouisTrading_GOLD.ex5 file here. Then in MT5 right-click the Experts folder in Navigator and click Refresh.',
+        desc:  'Inside the Data Folder navigate to MQL5 → Experts. Paste the LTE_Gold_v1.01.ex5 file here. Then in MT5 right-click the Experts folder in Navigator and click Refresh.',
         tip:   'Do not rename the file. Keep the original filename.',
         tipType: 'warn',
       },
@@ -37,7 +37,7 @@ const g = {
       },
       {
         title: 'Attach EA to Chart',
-        desc:  'Open a XAUUSD chart (M15 or H1 timeframe recommended). In the Navigator panel find LouisTrading GOLD under Expert Advisors and double-click or drag it onto the chart.',
+        desc:  'Open a XAUUSD chart (M15 or H1 timeframe recommended). In the Navigator panel find LTE Gold under Expert Advisors and double-click or drag it onto the chart.',
         tip:   'Use M15 or H1 timeframe for best results.',
         tipType: 'info',
       },
@@ -81,7 +81,7 @@ const g = {
       },
       {
         title: '从 Whop 下载 EA',
-        desc:  '登录您的 Whop 账户并进入 LT Empire 产品页面，在文件区域下载 LouisTrading_GOLD.ex5 文件。',
+        desc:  '登录您的 Whop 账户并进入 LT Empire 产品页面，在文件区域下载 LTE_Gold_v1.01.ex5 文件。',
         tip:   '请仅从官方 Whop 页面下载，以确保获取最新版本。',
         tipType: 'warn',
       },
@@ -92,7 +92,7 @@ const g = {
       },
       {
         title: '安装 EA 文件',
-        desc:  '在数据文件夹中导航到 MQL5 → Experts，将 LouisTrading_GOLD.ex5 文件粘贴到此处。然后在 MT5 导航器中右键点击 Expert Advisors 文件夹并选择"刷新"。',
+        desc:  '在数据文件夹中导航到 MQL5 → Experts，将 LTE_Gold_v1.01.ex5 文件粘贴到此处。然后在 MT5 导航器中右键点击 Expert Advisors 文件夹并选择"刷新"。',
         tip:   '请勿重命名文件，保持原始文件名。',
         tipType: 'warn',
       },
@@ -104,7 +104,7 @@ const g = {
       },
       {
         title: '将 EA 附加到图表',
-        desc:  '打开 XAUUSD 图表（建议使用 M15 或 H1 时间框架），在导航器面板中找到 LouisTrading GOLD，双击或拖拽到图表上。',
+        desc:  '打开 XAUUSD 图表（建议使用 M15 或 H1 时间框架），在导航器面板中找到 LTE Gold，双击或拖拽到图表上。',
         tip:   '建议使用 M15 或 H1 时间框架以获得最佳效果。',
         tipType: 'info',
       },
@@ -215,7 +215,7 @@ const Svg2 = () => (
     {/* File icon */}
     <rect x="80" y="108" width="18" height="22" rx="2" fill="#1a1a1a" stroke="#333" />
     <text x="89" y="123" textAnchor="middle" fill="#C9A84C" fontSize="7" fontFamily="system-ui,sans-serif">.ex5</text>
-    <text x="104" y="116" fill="#ccc" fontSize="9" fontFamily="system-ui,sans-serif">LouisTrading_GOLD.ex5</text>
+    <text x="104" y="116" fill="#ccc" fontSize="9" fontFamily="system-ui,sans-serif">LTE_Gold_v1.01.ex5</text>
     <text x="104" y="128" fill="#555" fontSize="8" fontFamily="system-ui,sans-serif">245 KB · Latest version</text>
     {/* Download button */}
     <rect x="116" y="148" width="168" height="30" rx="6" fill="url(#gbtn)" />
@@ -273,7 +273,7 @@ const Svg4 = () => (
     {/* New file being dropped */}
     <rect x="100" y="62" width="70" height="80" rx="4" fill="rgba(201,168,76,0.08)" stroke="#C9A84C" strokeWidth="1.5" strokeDasharray="4,2" />
     <text x="135" y="100" textAnchor="middle" fill="#C9A84C" fontSize="18">📥</text>
-    <text x="135" y="114" textAnchor="middle" fill="#C9A84C" fontSize="6.5" fontFamily="system-ui,sans-serif" fontWeight="600">LouisTrading</text>
+    <text x="135" y="114" textAnchor="middle" fill="#C9A84C" fontSize="6.5" fontFamily="system-ui,sans-serif" fontWeight="600">LTE Gold</text>
     <text x="135" y="124" textAnchor="middle" fill="#C9A84C" fontSize="6.5" fontFamily="system-ui,sans-serif" fontWeight="600">_GOLD.ex5</text>
     <text x="135" y="136" textAnchor="middle" fill="#C9A84C" fontSize="7" fontFamily="system-ui,sans-serif">DROP HERE</text>
     {/* Arrow */}
@@ -335,7 +335,7 @@ const Svg6 = () => (
     <text x="8" y="58" fill="#555" fontSize="8" fontFamily="system-ui,sans-serif">▶ Indicators</text>
     <text x="8" y="72" fill="#C9A84C" fontSize="8" fontFamily="system-ui,sans-serif">▼ Expert Advisors</text>
     <rect x="6" y="76" width="98" height="16" rx="3" fill="rgba(201,168,76,0.12)" />
-    <text x="14" y="87" fill="#C9A84C" fontSize="8" fontFamily="system-ui,sans-serif" fontWeight="600">LouisTrading GOLD</text>
+    <text x="14" y="87" fill="#C9A84C" fontSize="8" fontFamily="system-ui,sans-serif" fontWeight="600">LTE Gold</text>
     <text x="8" y="108" fill="#555" fontSize="8" fontFamily="system-ui,sans-serif">▶ Scripts</text>
     {/* Drag arrow */}
     <path d="M104,84 Q135,84 155,110" stroke="#C9A84C" strokeWidth="1.5" strokeDasharray="4,2" markerEnd="url(#arr3)" />
@@ -372,7 +372,7 @@ const Svg6 = () => (
 );
 
 const Svg7 = () => (
-  <Win title="LouisTrading GOLD — EA Parameters">
+  <Win title="LTE Gold — EA Parameters">
     <rect x="40" y="32" width="320" height="180" rx="6" fill="#141414" stroke="#2a2a2a" />
     {/* Tabs */}
     <rect x="40" y="32" width="320" height="22" fill="#0d0d0d" rx="6"/>
@@ -442,7 +442,7 @@ const Svg8 = () => (
     <rect x="0" y={H - 26} width={W} height="26" fill="#0a0a0a" stroke="#1a1a1a" strokeWidth="1"/>
     <text x="10" y={H - 10} fill="#555" fontSize="7.5" fontFamily="system-ui,sans-serif">Toolbox:  Trade   History   </text>
     <text x="150" y={H - 10} fill="#C9A84C" fontSize="7.5" fontFamily="system-ui,sans-serif" fontWeight="600">Experts   Journal</text>
-    <text x="260" y={H - 10} fill="#3ECF8E" fontSize="7.5" fontFamily="system-ui,sans-serif">● LouisTrading GOLD: initialized</text>
+    <text x="260" y={H - 10} fill="#3ECF8E" fontSize="7.5" fontFamily="system-ui,sans-serif">● LTE Gold: initialized</text>
   </Win>
 );
 
