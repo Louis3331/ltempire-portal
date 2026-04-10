@@ -161,6 +161,12 @@ export default function Dashboard() {
 
         {sidebarOpen && <div className="overlay" onClick={() => setSidebarOpen(false)} />}
 
+        {/* Language toggle — fixed top right */}
+        <div className="lang-corner">
+          <button className={`lang-pill ${lang === 'en' ? 'lang-active' : ''}`} onClick={() => switchLang('en')}>EN</button>
+          <button className={`lang-pill ${lang === 'zh' ? 'lang-active' : ''}`} onClick={() => switchLang('zh')}>中文</button>
+        </div>
+
         {/* ── Sidebar ─────────────────────────────────── */}
         <aside className={`sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
 
@@ -186,15 +192,6 @@ export default function Dashboard() {
               </button>
             ))}
           </nav>
-
-          {/* Language toggle */}
-          <div className="theme-row">
-            <span className="theme-label">{t('lang.label')}</span>
-            <div className="lang-pills">
-              <button className={`lang-pill ${lang === 'en' ? 'lang-active' : ''}`} onClick={() => switchLang('en')}>EN</button>
-              <button className={`lang-pill ${lang === 'zh' ? 'lang-active' : ''}`} onClick={() => switchLang('zh')}>中文</button>
-            </div>
-          </div>
 
           {/* Theme toggle */}
           <div className="theme-row">
@@ -228,11 +225,6 @@ export default function Dashboard() {
             </button>
             <span className="mobile-brand">LT Empire</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              {/* Mobile lang toggle */}
-              <div className="lang-pills-sm">
-                <button className={`lang-pill-sm ${lang === 'en' ? 'lang-active' : ''}`} onClick={() => switchLang('en')}>EN</button>
-                <button className={`lang-pill-sm ${lang === 'zh' ? 'lang-active' : ''}`} onClick={() => switchLang('zh')}>中</button>
-              </div>
               <button className="theme-toggle-sm" onClick={toggleTheme} aria-label="Toggle theme">
                 {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
               </button>
@@ -559,7 +551,13 @@ export default function Dashboard() {
         .nav-pip { position: absolute; right: 10px; width: 6px; height: 6px; border-radius: 50%; background: var(--gold); }
         .nav-icon { width: 17px; height: 17px; flex-shrink: 0; }
 
-        /* ── Language pills ── */
+        /* ── Language corner (fixed top right) ── */
+        .lang-corner {
+          position: fixed; top: 14px; right: 20px; z-index: 30;
+          display: flex; gap: 5px;
+        }
+
+        /* ── Sidebar rows (theme only now) ── */
         .theme-row {
           display: flex; align-items: center; justify-content: space-between;
           padding: 10px 14px; border-top: 1px solid var(--border);
@@ -684,17 +682,11 @@ export default function Dashboard() {
         .overlay   { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 19; }
         .hamburger { background: transparent; border: none; cursor: pointer; color: var(--text-muted); padding: 4px; display: flex; align-items: center; }
 
-        /* ── Mobile theme + lang toggles ── */
+        /* ── Mobile theme toggle ── */
         .theme-toggle-sm {
           background: var(--avatar-bg); border: 1px solid var(--border);
           border-radius: 6px; padding: 6px; cursor: pointer;
           color: var(--gold); display: flex; align-items: center; justify-content: center;
-        }
-        .lang-pills-sm { display: flex; gap: 3px; }
-        .lang-pill-sm {
-          padding: 4px 8px; border-radius: 20px; font-size: 11px; font-weight: 600;
-          cursor: pointer; border: 1px solid var(--lang-border);
-          background: var(--lang-bg); color: var(--text-dim); transition: all 0.15s;
         }
 
         /* ── Responsive ── */
@@ -726,7 +718,8 @@ export default function Dashboard() {
 
         @media (max-width: 400px) {
           .logout-btn-sm { font-size: 11px; padding: 5px 10px; }
-          .lang-pill-sm  { font-size: 10px; padding: 3px 6px; }
+          .lang-corner { top: 10px; right: 12px; }
+          .lang-pill { font-size: 10px; padding: 3px 8px; }
         }
       `}</style>
     </>
