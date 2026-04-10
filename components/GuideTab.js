@@ -508,90 +508,88 @@ const Svg6 = () => {
 };
 
 const Svg7 = () => {
-  const colVal = 280; // x position of Value column
-  const rows = [
-    { section: 'Licensing', items: [] },
-    { name: 'License key (paste your key here)', val: '',        hi: true  },
-    { name: 'Magic number (unique ID for EA)',   val: '20250101', hi: false },
-    { section: 'Risk Settings', items: [] },
-    { name: 'Fixed lot size',                   val: '0.01',    hi: false },
-    { name: 'Auto lot size',                     val: 'true',    hi: false },
-    { name: 'Risk % per trade',                  val: '1.0',     hi: false },
-    { name: 'Max daily drawdown %',              val: '0.0',     hi: false },
-    { section: 'Order Setting', items: [] },
-    { name: 'Stop Loss in pips',                 val: '10.0',    hi: false },
-    { name: 'Take Profit in pips',               val: '0.0',     hi: false },
+  const cV = 272; // Value column x
+  const rH = 15;  // row height
+  // Pre-computed fixed y positions — no mutation
+  const S = 54; // table start y
+  // section header = 13px, data row = 15px
+  // Licensing(13) + LicKey(15) + MagicNum(15) + RiskSettings(13) + FixedLot(15) + AutoLot(15) + RiskPct(15) + MaxDD(15) + OrderSetting(13) + SL(15) + TP(15)
+  const items = [
+    { type:'sec', label:'Licensing',                             y: S },
+    { type:'row', label:'License key (whop.com → copy your key)', val:'',         hi:true,  y: S+13 },
+    { type:'row', label:'Magic number (unique ID for this EA)',    val:'20250101', hi:false, y: S+28 },
+    { type:'sec', label:'Risk Settings',                          y: S+43 },
+    { type:'row', label:'Fixed lot size',                         val:'0.01',     hi:false, y: S+56 },
+    { type:'row', label:'Auto lot size (false=use fixed lot size)',val:'true',     hi:false, y: S+71 },
+    { type:'row', label:'Risk % per trade',                       val:'1.0',      hi:false, y: S+86 },
+    { type:'row', label:'Max daily drawdown % (0=disabled)',       val:'0.0',      hi:false, y: S+101 },
+    { type:'sec', label:'Order Setting',                          y: S+116 },
+    { type:'row', label:'Stop Loss in pips (0=candle range)',      val:'10.0',     hi:false, y: S+129 },
+    { type:'row', label:'Take Profit in pips (0=disabled)',        val:'0.0',      hi:false, y: S+144 },
   ];
-  let rowY = 68;
-  const rowH = 14;
   return (
     <svg viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', borderRadius: 8, display: 'block' }}>
-      {/* Light window */}
+      {/* Light window bg */}
       <rect width={W} height={H} rx="8" fill="#f0f0f0" stroke="#bbb" strokeWidth="1" />
       {/* Title bar */}
       <rect width={W} height="20" rx="8" fill="#e0e0e0" />
       <rect y="13" width={W} height="7" fill="#e0e0e0" />
-      <text x="8" y="14" fill="#333" fontSize="8" fontFamily="system-ui,sans-serif">LTE_Gold_v1.01 (XAUUSD,H1)</text>
-      <text x={W - 36} y="14" fill="#666" fontSize="9" fontFamily="system-ui,sans-serif">─  □  ✕</text>
-      {/* Tabs */}
+      <text x="8" y="14" fill="#333" fontSize="7.5" fontFamily="system-ui,sans-serif">LTE_Gold_v1.01 (XAUUSD,H1)</text>
+      <text x={W-36} y="14" fill="#666" fontSize="9" fontFamily="system-ui,sans-serif">─  □  ✕</text>
+      {/* Tab strip */}
       <rect y="20" width={W} height="18" fill="#dcdcdc" />
       <rect y="37" width={W} height="1" fill="#bbb" />
-      {[{l:'Common',x:6},{l:'Inputs',x:46,active:true},{l:'Dependencies',x:84}].map(({l,x,active})=>(
-        <g key={l}>
-          {active && <>
-            <rect x={x-2} y="20" width="40" height="18" fill="#f0f0f0"/>
-            <rect x={x-2} y="37" width="40" height="1" fill="#f0f0f0"/>
-            <rect x={x-2} y="36" width="40" height="2" fill="#1a6fc4"/>
-          </>}
-          <text x={x} y="33" fill={active?'#1a6fc4':'#666'} fontSize="8.5" fontFamily="system-ui,sans-serif" fontWeight={active?'700':'400'} textDecoration={active?'underline':'none'}>{l}</text>
-        </g>
-      ))}
+      {/* Common tab */}
+      <text x="8" y="33" fill="#666" fontSize="8.5" fontFamily="system-ui,sans-serif">Common</text>
+      {/* Inputs tab — active */}
+      <rect x="52" y="20" width="36" height="18" fill="#f0f0f0" />
+      <rect x="52" y="36" width="36" height="2" fill="#1a6fc4" />
+      <text x="54" y="33" fill="#1a6fc4" fontSize="8.5" fontFamily="system-ui,sans-serif" fontWeight="700">Inputs</text>
+      {/* Dependencies tab */}
+      <text x="94" y="33" fill="#666" fontSize="8.5" fontFamily="system-ui,sans-serif">Dependencies</text>
       {/* Table area */}
       <rect y="38" width={W} height={H-58} fill="#fff" />
       {/* Column headers */}
-      <rect y="38" width={W} height="16" fill="#e8e8e8" />
-      <text x="10" y="50" fill="#333" fontSize="8" fontFamily="system-ui,sans-serif" fontWeight="600">Variable</text>
-      <text x={colVal} y="50" fill="#333" fontSize="8" fontFamily="system-ui,sans-serif" fontWeight="600">Value</text>
-      <rect x={colVal-2} y="38" width="1" height={H-58} fill="#ddd"/>
+      <rect y="38" width={W} height="16" fill="#e0e0e0" />
+      <line x1="0" y1="54" x2={W} y2="54" stroke="#ccc" strokeWidth="0.8" />
+      <text x="10" y="50" fill="#222" fontSize="8.5" fontFamily="system-ui,sans-serif" fontWeight="600">Variable</text>
+      <text x={cV+4} y="50" fill="#222" fontSize="8.5" fontFamily="system-ui,sans-serif" fontWeight="600">Value</text>
+      {/* Column divider */}
+      <line x1={cV} y1="38" x2={cV} y2={H-18} stroke="#ccc" strokeWidth="0.8" />
       {/* Scrollbar */}
-      <rect x={W-10} y="38" width="10" height={H-58} fill="#e8e8e8"/>
-      <rect x={W-9} y="42" width="8" height="30" rx="3" fill="#bbb"/>
-      {/* Rows */}
-      {rows.map((row, i) => {
-        if (row.section !== undefined) {
-          const y = rowY; rowY += 13;
-          return (
-            <g key={i}>
-              <rect x="0" y={y} width={W-10} height="13" fill="#f5f5f5"/>
-              <text x="10" y={y+10} fill="#555" fontSize="8" fontFamily="system-ui,sans-serif" fontWeight="600">{row.section}</text>
-            </g>
-          );
-        }
-        const y = rowY; rowY += rowH;
-        return (
-          <g key={i}>
-            {row.hi
-              ? <rect x="0" y={y} width={W-10} height={rowH} fill="#1a6fc4"/>
-              : (i%2===0 && <rect x="0" y={y} width={W-10} height={rowH} fill="#fafafa"/>)
-            }
-            <rect x={colVal-2} y={y} width="1" height={rowH} fill="#ddd"/>
-            <text x="10" y={y+10} fill={row.hi?'#fff':'#333'} fontSize="8" fontFamily="system-ui,sans-serif">{row.name}</text>
-            <text x={colVal+4} y={y+10} fill={row.hi?'#aad4ff':'#333'} fontSize="8" fontFamily="monospace">{row.val}</text>
-          </g>
-        );
-      })}
-      {/* Gold callout */}
-      <rect x="2" y="81" width={W-14} height={rowH} fill="none" stroke="#C9A84C" strokeWidth="1.5"/>
-      <rect x="60" y="97" width="160" height="14" rx="3" fill="rgba(201,168,76,0.15)" stroke="#C9A84C" strokeWidth="1"/>
-      <text x="140" y="108" textAnchor="middle" fill="#C9A84C" fontSize="8" fontFamily="system-ui,sans-serif" fontWeight="700">↑ Paste your license key</text>
+      <rect x={W-10} y="38" width="10" height={H-58} fill="#ececec" />
+      <rect x={W-9} y="44" width="8" height="28" rx="3" fill="#c0c0c0" />
+      {/* All rows — fixed positions */}
+      {items.map((item, i) => item.type === 'sec' ? (
+        <g key={i}>
+          <rect x="0" y={item.y} width={W-10} height="13" fill="#f0f0f0" />
+          <line x1="0" y1={item.y} x2={W-10} y2={item.y} stroke="#ddd" strokeWidth="0.5" />
+          <text x="10" y={item.y+10} fill="#444" fontSize="8" fontFamily="system-ui,sans-serif" fontWeight="700">{item.label}</text>
+        </g>
+      ) : (
+        <g key={i}>
+          {item.hi
+            ? <rect x="0" y={item.y} width={W-10} height={rH} fill="#1a6fc4" />
+            : <rect x="0" y={item.y} width={W-10} height={rH} fill={i%2===0?'#fafafa':'#fff'} />
+          }
+          <line x1="0" y1={item.y+rH} x2={W-10} y2={item.y+rH} stroke="#eee" strokeWidth="0.5" />
+          <line x1={cV} y1={item.y} x2={cV} y2={item.y+rH} stroke="#ddd" strokeWidth="0.8" />
+          <text x="10" y={item.y+11} fill={item.hi?'#fff':'#222'} fontSize="8" fontFamily="system-ui,sans-serif">{item.label}</text>
+          <text x={cV+6} y={item.y+11} fill={item.hi?'#aad4ff':'#333'} fontSize="8" fontFamily="monospace">{item.val}</text>
+        </g>
+      ))}
+      {/* Gold callout border around license key row */}
+      <rect x="1" y={S+13} width={W-12} height={rH} fill="none" stroke="#C9A84C" strokeWidth="1.5" />
+      <rect x="90" y={S+13+rH+3} width="170" height="13" rx="3" fill="rgba(201,168,76,0.18)" stroke="#C9A84C" strokeWidth="1" />
+      <text x="175" y={S+13+rH+13} textAnchor="middle" fill="#C9A84C" fontSize="8" fontFamily="system-ui,sans-serif" fontWeight="700">↑ Paste your license key here</text>
       {/* Buttons */}
-      <rect y={H-18} width={W} height="18" fill="#e0e0e0"/>
-      <rect x={W-140} y={H-15} width="38" height="12" rx="2" fill="#1a6fc4"/>
-      <text x={W-121} y={H-6} textAnchor="middle" fill="#fff" fontSize="8" fontFamily="system-ui,sans-serif" fontWeight="700">OK</text>
-      <rect x={W-96} y={H-15} width="44" height="12" rx="2" fill="#e8e8e8" stroke="#bbb" strokeWidth="0.8"/>
-      <text x={W-74} y={H-6} textAnchor="middle" fill="#333" fontSize="8" fontFamily="system-ui,sans-serif">Cancel</text>
-      <rect x={W-46} y={H-15} width="38" height="12" rx="2" fill="#e8e8e8" stroke="#bbb" strokeWidth="0.8"/>
-      <text x={W-27} y={H-6} textAnchor="middle" fill="#333" fontSize="8" fontFamily="system-ui,sans-serif">Reset</text>
+      <rect y={H-18} width={W} height="18" fill="#e0e0e0" />
+      <rect x={W-142} y={H-15} width="40" height="12" rx="2" fill="#1a6fc4" />
+      <text x={W-122} y={H-6} textAnchor="middle" fill="#fff" fontSize="8.5" fontFamily="system-ui,sans-serif" fontWeight="700">OK</text>
+      <rect x={W-96} y={H-15} width="46" height="12" rx="2" fill="#e8e8e8" stroke="#bbb" strokeWidth="0.8" />
+      <text x={W-73} y={H-6} textAnchor="middle" fill="#333" fontSize="8.5" fontFamily="system-ui,sans-serif">Cancel</text>
+      <rect x={W-44} y={H-15} width="38" height="12" rx="2" fill="#e8e8e8" stroke="#bbb" strokeWidth="0.8" />
+      <text x={W-25} y={H-6} textAnchor="middle" fill="#333" fontSize="8.5" fontFamily="system-ui,sans-serif">Reset</text>
     </svg>
   );
 };
