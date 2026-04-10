@@ -37,19 +37,11 @@ const MoonIcon = () => (
     <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
-const DownloadIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="nav-icon">
-    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" strokeLinecap="round" strokeLinejoin="round" />
-    <polyline points="7 10 12 15 17 10" strokeLinecap="round" strokeLinejoin="round" />
-    <line x1="12" y1="15" x2="12" y2="3" strokeLinecap="round" />
-  </svg>
-);
 
 /* ── Nav config ─────────────────────────────────────────── */
 const NAV = [
-  { id: 'licenses',  label: 'License Keys', icon: <KeyIcon /> },
-  { id: 'accounts',  label: 'Accounts',     icon: <MonitorIcon /> },
-  { id: 'downloads', label: 'Downloads',    icon: <DownloadIcon /> },
+  { id: 'licenses', label: 'License Keys', icon: <KeyIcon /> },
+  { id: 'accounts', label: 'Accounts',     icon: <MonitorIcon /> },
 ];
 
 /* ── Main component ─────────────────────────────────────── */
@@ -66,9 +58,6 @@ export default function Dashboard() {
   const [animKey,         setAnimKey]         = useState(0);
   const [slideDir,        setSlideDir]        = useState('right');
   const [theme,           setTheme]           = useState('dark');
-  const [downloads,       setDownloads]       = useState([]);
-  const [downloadsLoading,setDownloadsLoading]= useState(false);
-  const [downloadsCat,    setDownloadsCat]    = useState('all');
   const router = useRouter();
 
   /* Load session + memberships */
@@ -108,10 +97,6 @@ export default function Dashboard() {
     fetch('/api/accounts').then(r => r.json()).then(d => setAccounts(d.accounts || [])).catch(() => {}).finally(() => setAccountsLoading(false));
   };
 
-  const loadDownloads = () => {
-    setDownloadsLoading(true);
-    fetch('/api/downloads').then(r => r.json()).then(d => setDownloads(d.downloads || [])).catch(() => {}).finally(() => setDownloadsLoading(false));
-  };
 
   const deleteAccount = async (licenseKey, id) => {
     if (!confirm('Remove this account? The EA will be blocked on next validation.')) return;
@@ -130,7 +115,6 @@ export default function Dashboard() {
     setAnimKey(k => k + 1);
     setTab(newTab);
     if (newTab === 'accounts') loadAccounts();
-    if (newTab === 'downloads') loadDownloads();
     setSidebarOpen(false);
   };
 
@@ -240,9 +224,9 @@ export default function Dashboard() {
           <div className="page-header">
             <h1 className="page-title">{pageTitle}</h1>
             <p className="page-subtitle">
-              {tab === 'licenses'  ? 'Your active license keys and membership details'
-              : tab === 'accounts'  ? 'MT5 trading accounts linked to your license'
-              : 'EA files, guides and resources for members'}
+              {tab === 'licenses'
+                ? 'Your active license keys and membership details'
+                : 'MT5 trading accounts linked to your license'}
             </p>
           </div>
 
@@ -436,90 +420,6 @@ export default function Dashboard() {
                     No trading accounts registered yet.<br />
                     <span style={{ fontSize: 12, color: 'var(--text-dimmer)', marginTop: 6, display: 'block' }}>Accounts appear automatically when the EA runs on MT5.</span>
                   </div>
-                )}
-              </div>
-            )}
-            {/* ── Downloads Tab ── */}
-            {tab === 'downloads' && (
-              <div>
-                {/* Category filter */}
-                <div className="dl-cats">
-                  {['all', 'ea', 'guide', 'resource'].map(cat => (
-                    <button key={cat} className={`dl-cat-btn ${downloadsCat === cat ? 'dl-cat-active' : ''}`} onClick={() => setDownloadsCat(cat)}>
-                      {cat === 'all' ? 'All Files' : cat === 'ea' ? 'EA Files' : cat === 'guide' ? 'Guides' : 'Resources'}
-                    </button>
-                  ))}
-                </div>
-
-                {downloadsLoading ? (
-                  <div className="empty"><p style={{ color: 'var(--text-dim)' }}>Loading...</p></div>
-                ) : (
-                  (() => {
-                    const filtered = downloadsCat === 'all' ? downloads : downloads.filter(d => d.category === downloadsCat);
-                    if (filtered.length === 0) return (
-                      <div className="empty">
-                        <div className="empty-icon"><DownloadIcon /></div>
-                        <p style={{ color: 'var(--text-muted)', fontSize: 14, marginTop: 12 }}>
-                          {downloads.length === 0 ? 'No files available yet.' : 'No files in this category.'}
-                        </p>
-                      </div>
-                    );
-                    return (
-                      <div className="dl-grid">
-                        {filtered.map(f => (
-                          <div key={f.id} className="dl-card">
-                            <div className="dl-card-top">
-                              <div className="dl-icon-wrap">
-                                {f.category === 'ea' ? (
-                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" style={{ width: 22, height: 22 }}>
-                                    <rect x="2" y="3" width="20" height="14" rx="2" /><path d="M8 21h8M12 17v4" strokeLinecap="round" />
-                                    <path d="M8 10l2 2-2 2M13 12h3" strokeLinecap="round" strokeLinejoin="round" />
-                                  </svg>
-                                ) : f.category === 'guide' ? (
-                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" style={{ width: 22, height: 22 }}>
-                                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" strokeLinecap="round" />
-                                  </svg>
-                                ) : (
-                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" style={{ width: 22, height: 22 }}>
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" />
-                                  </svg>
-                                )}
-                              </div>
-                              <div style={{ flex: 1, minWidth: 0 }}>
-                                <div className="dl-name">{f.name}</div>
-                                <div className="dl-meta">
-                                  {f.version && <span className="dl-badge">v{f.version}</span>}
-                                  <span className="dl-cat-pill">{f.category === 'ea' ? 'EA File' : f.category === 'guide' ? 'Guide' : 'Resource'}</span>
-                                  {f.size && <span style={{ color: 'var(--text-dim)', fontSize: 11 }}>{f.size}</span>}
-                                </div>
-                              </div>
-                            </div>
-
-                            {f.description && <p className="dl-desc">{f.description}</p>}
-
-                            {f.changelog && (
-                              <div className="dl-changelog">
-                                <span className="dl-changelog-label">What&apos;s New</span>
-                                <span className="dl-changelog-text">{f.changelog}</span>
-                              </div>
-                            )}
-
-                            <div className="dl-footer">
-                              <span className="dl-date">{f.releaseDate} · {f.downloadCount || 0} downloads</span>
-                              <a href={`/api/downloads?download=${f.id}`} className="dl-btn" download={f.filename || f.name}>
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 14, height: 14 }}>
-                                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" strokeLinecap="round" />
-                                  <polyline points="7 10 12 15 17 10" strokeLinecap="round" />
-                                  <line x1="12" y1="15" x2="12" y2="3" strokeLinecap="round" />
-                                </svg>
-                                Download
-                              </a>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    );
-                  })()
                 )}
               </div>
             )}
@@ -803,62 +703,6 @@ export default function Dashboard() {
           .logout-btn-sm { font-size: 11px; padding: 5px 10px; }
         }
 
-        /* ── Download Center ── */
-        .dl-cats { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 20px; }
-        .dl-cat-btn {
-          padding: 7px 14px; border-radius: 20px; border: 1px solid var(--border);
-          background: transparent; color: var(--text-dim); font-size: 13px; font-weight: 500;
-          cursor: pointer; transition: all 0.15s;
-        }
-        .dl-cat-btn:hover { border-color: var(--gold); color: var(--gold); }
-        .dl-cat-active { background: var(--gold-alpha) !important; border-color: var(--gold) !important; color: var(--gold) !important; }
-
-        .dl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
-
-        .dl-card {
-          background: var(--bg-table); border: 1px solid var(--border);
-          border-radius: 12px; padding: 20px;
-          display: flex; flex-direction: column; gap: 12px;
-          transition: border-color 0.15s;
-        }
-        .dl-card:hover { border-color: rgba(201,168,76,0.25); }
-
-        .dl-card-top { display: flex; align-items: flex-start; gap: 14px; }
-        .dl-icon-wrap {
-          width: 46px; height: 46px; border-radius: 10px; flex-shrink: 0;
-          background: var(--gold-alpha); border: 1px solid rgba(201,168,76,0.2);
-          display: flex; align-items: center; justify-content: center; color: var(--gold);
-        }
-        .dl-name { font-size: 15px; font-weight: 700; color: var(--text); }
-        .dl-meta { display: flex; align-items: center; gap: 6px; margin-top: 5px; flex-wrap: wrap; }
-        .dl-badge { font-size: 11px; font-weight: 600; color: var(--gold); background: var(--gold-alpha); padding: 2px 8px; border-radius: 10px; }
-        .dl-cat-pill { font-size: 11px; color: var(--text-dim); background: var(--avatar-bg); padding: 2px 8px; border-radius: 10px; }
-
-        .dl-desc { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
-
-        .dl-changelog {
-          background: var(--avatar-bg); border-left: 2px solid var(--gold);
-          border-radius: 0 6px 6px 0; padding: 8px 12px;
-          display: flex; flex-direction: column; gap: 3px;
-        }
-        .dl-changelog-label { font-size: 10px; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 0.8px; }
-        .dl-changelog-text  { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
-
-        .dl-footer { display: flex; align-items: center; justify-content: space-between; margin-top: auto; padding-top: 4px; }
-        .dl-date   { font-size: 11px; color: var(--text-dim); }
-        .dl-btn {
-          display: inline-flex; align-items: center; gap: 6px;
-          padding: 8px 16px; background: linear-gradient(135deg, #C9A84C, #9B7B2F);
-          border-radius: 7px; color: #0A0A0A; font-size: 13px; font-weight: 700;
-          text-decoration: none; transition: opacity 0.15s;
-        }
-        .dl-btn:hover { opacity: 0.88; }
-
-        @media (max-width: 640px) {
-          .dl-grid { grid-template-columns: 1fr; }
-          .dl-cats { gap: 5px; }
-          .dl-cat-btn { font-size: 12px; padding: 6px 12px; }
-        }
       `}</style>
     </>
   );
