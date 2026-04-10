@@ -587,7 +587,7 @@ export default function Dashboard() {
           display: flex; gap: 5px;
         }
         /* Sidebar lang row hidden on desktop, visible on mobile */
-        .sidebar-lang-row { display: none; }
+        .theme-row.sidebar-lang-row { display: none; }
 
         /* ── Sidebar rows (theme only now) ── */
         .theme-row {
@@ -726,8 +726,8 @@ export default function Dashboard() {
 
         /* ── Responsive ── */
         @media (max-width: 768px) {
-          .lang-corner     { display: none; }
-          .sidebar-lang-row{ display: flex; }
+          .lang-corner                  { display: none; }
+          .theme-row.sidebar-lang-row   { display: flex; }
           .sidebar     { transform: translateX(-100%); }
           .sidebar-open{ transform: translateX(0) !important; }
           .main-wrap   { margin-left: 0; }
