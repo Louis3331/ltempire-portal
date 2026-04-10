@@ -192,7 +192,7 @@ const Svg1 = () => (
     <rect x="60" y="77" width="280" height="50" fill="#111111" />
 
     {/* Gold license key text */}
-    <text x="80" y="108" fill="#C9A84C" fontSize="13" fontFamily="monospace" fontWeight="500" letterSpacing="0.5">L-2D3106-336F6F77-C4FE93W</text>
+    <text x="80" y="108" fill="#C9A84C" fontSize="13" fontFamily="monospace" fontWeight="500" letterSpacing="0.5">L-XXXXXX-XXXXXXXX-XXXXXXX</text>
 
     {/* Copy button */}
     <rect x="294" y="96" width="26" height="20" rx="4" fill="#1a1a1a" stroke="#2a2a2a" strokeWidth="1" />
@@ -405,7 +405,7 @@ const Svg7 = () => (
     {/* Rows */}
     {[
       { name: 'InpLotSize',      val: '0.01',    hi: false },
-      { name: 'InpLicenseKey',   val: 'L-2D3186-336F6F77-C4FE98W', hi: true },
+      { name: 'InpLicenseKey',   val: 'L-XXXXXX-XXXXXXXX-XXXXXXX', hi: true },
       { name: 'InpMaxTrades',    val: '3',       hi: false },
       { name: 'InpStopLoss',     val: '50',      hi: false },
       { name: 'InpTakeProfit',   val: '100',     hi: false },
