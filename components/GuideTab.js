@@ -353,9 +353,11 @@ const Svg4 = () => {
           </g>
         );
       })}
-      {/* Gold callout */}
+      {/* Gold callout — border around highlighted row */}
       <rect x="4" y={startY + 4 * rowH - 2} width={W - 8} height={rowH} rx="2" fill="none" stroke="#C9A84C" strokeWidth="1.5" />
-      <text x={W - 10} y={startY + 4 * rowH + 10} textAnchor="end" fill="#C9A84C" fontSize="8.5" fontFamily="system-ui,sans-serif" fontWeight="700">← Paste file here</text>
+      {/* Label below the row */}
+      <rect x="130" y={startY + 5 * rowH + 4} width="140" height="18" rx="4" fill="rgba(201,168,76,0.15)" stroke="#C9A84C" strokeWidth="1" />
+      <text x="200" y={startY + 5 * rowH + 16} textAnchor="middle" fill="#C9A84C" fontSize="9" fontFamily="system-ui,sans-serif" fontWeight="700">↑ Paste your .ex5 file here</text>
     </svg>
   );
 };
