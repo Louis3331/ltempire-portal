@@ -93,18 +93,14 @@ const brokers = [
     badge: { en: 'Prop Firm', zh: '资金平台' },
     badgeColor: '#7c3aed',
     logo: (
-      <svg width="56" height="56" viewBox="0 0 56 56" xmlns="http://www.w3.org/2000/svg">
-        <rect width="56" height="56" rx="14" fill="#fff"/>
-        <rect width="56" height="56" rx="14" fill="none" stroke="#e8e8e8" strokeWidth="1"/>
-        {/* "5" with tick mark */}
-        <text x="6" y="38" fontSize="30" fontWeight="900" fontFamily="Arial Black,Arial,sans-serif" fill="#111">5</text>
-        {/* tick/apostrophe after the 5 */}
-        <line x1="25" y1="12" x2="29" y2="22" stroke="#111" strokeWidth="2.5" strokeLinecap="round"/>
-        {/* "ers" */}
-        <text x="27" y="38" fontSize="18" fontWeight="800" fontFamily="Arial,sans-serif" fill="#111">ers</text>
-        {/* dot under the s */}
-        <circle cx="50" cy="41" r="2.5" fill="#111"/>
-      </svg>
+      <div style={{
+        width: 56, height: 56, borderRadius: 14,
+        background: '#fff', border: '1px solid #e8e8e8',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        overflow: 'hidden', flexShrink: 0,
+      }}>
+        <img src="/the5ers-logo.png" alt="The5ers" style={{ width: 46, height: 'auto', objectFit: 'contain' }} />
+      </div>
     ),
     details: {
       en: [
