@@ -6,7 +6,7 @@ const brokerData = {
     openBtn:  'Open Account',
     note:     '* This is an affiliate link. We may earn a commission at no extra cost to you.',
     details: [
-      { label: 'Min. Deposit',  value: 'From $1' },
+      { label: 'Min. Deposit',  value: 'From $10' },
       { label: 'Leverage',      value: 'Up to 1:3000' },
       { label: 'Spread',        value: 'From 0.0 pips (Raw)' },
       { label: 'Platforms',     value: 'MT5 / MT4' },
@@ -14,14 +14,14 @@ const brokerData = {
       { label: 'Regulation',    value: 'FSA / CySEC' },
     ],
     accounts: [
-      { name: 'Standard',   deposit: '$1',    spread: 'From 0.3 pips', commission: 'No commission' },
-      { name: 'Pro',        deposit: '$100',  spread: 'From 0.1 pips', commission: 'No commission' },
-      { name: 'Raw Spread', deposit: '$100',  spread: 'From 0.0 pips', commission: '$6 / lot' },
+      { name: 'Standard',   deposit: '$10',   spread: 'From 0.3 pips', commission: 'No commission',       badge: 'Popular' },
+      { name: 'Pro',        deposit: '$200',  spread: 'From 0.1 pips', commission: 'No commission',       badge: '' },
+      { name: 'Raw Spread', deposit: '$200',  spread: 'From 0.0 pips', commission: '$3 each side / lot',  badge: '' },
     ],
     accountsTitle: 'Account Types',
     whyTitle: 'Why JustMarkets?',
     why: [
-      'Low minimum deposit — start from just $1',
+      'Low minimum deposit — start from just $10',
       'Ultra-high leverage up to 1:3000',
       'Raw Spread accounts with 0 pip spreads',
       'Fully compatible with MT5 and LTE Gold EA',
@@ -36,7 +36,7 @@ const brokerData = {
     openBtn:  '开设账户',
     note:     '* 这是一个联盟链接，您通过此链接注册不会产生任何额外费用。',
     details: [
-      { label: '最低入金',    value: '最低 $1' },
+      { label: '最低入金',    value: '最低 $10' },
       { label: '杠杆',        value: '高达 1:3000' },
       { label: '点差',        value: '最低 0.0 点（Raw）' },
       { label: '交易平台',    value: 'MT5 / MT4' },
@@ -44,9 +44,9 @@ const brokerData = {
       { label: '监管',        value: 'FSA / CySEC' },
     ],
     accounts: [
-      { name: 'Standard 标准',   deposit: '$1',    spread: '最低 0.3 点', commission: '无佣金' },
-      { name: 'Pro 专业',        deposit: '$100',  spread: '最低 0.1 点', commission: '无佣金' },
-      { name: 'Raw Spread 原始', deposit: '$100',  spread: '最低 0.0 点', commission: '$6 / 手' },
+      { name: 'Standard 标准',   deposit: '$10',   spread: '最低 0.3 点', commission: '无佣金',          badge: '热门' },
+      { name: 'Pro 专业',        deposit: '$200',  spread: '最低 0.1 点', commission: '无佣金',          badge: '' },
+      { name: 'Raw Spread 原始', deposit: '$200',  spread: '最低 0.0 点', commission: '$3 每边 / 手',    badge: '' },
     ],
     accountsTitle: '账户类型',
     whyTitle: '为什么选择 JustMarkets？',
@@ -95,15 +95,16 @@ export default function BrokersTab({ lang = 'en' }) {
           gap: 16,
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            {/* Logo placeholder */}
-            <div style={{
-              width: 56, height: 56, borderRadius: 12,
-              background: 'linear-gradient(135deg, #1a3a6e, #0d2147)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              flexShrink: 0,
-            }}>
-              <span style={{ fontSize: 11, fontWeight: 900, color: '#fff', letterSpacing: 0.5 }}>JM</span>
+            {/* JustMarkets Logo */}
+            <div style={{ flexShrink: 0 }}>
+              <svg width="56" height="56" viewBox="0 0 56 56" xmlns="http://www.w3.org/2000/svg">
+                <rect width="56" height="56" rx="14" fill="#fff"/>
+                <rect width="56" height="56" rx="14" fill="none" stroke="#e8e8e8" strokeWidth="1"/>
+                {/* J shape */}
+                <text x="7" y="38" fontSize="28" fontWeight="900" fontFamily="Arial,sans-serif" fill="#1a56db">J</text>
+                {/* M shape */}
+                <text x="24" y="38" fontSize="28" fontWeight="900" fontFamily="Arial,sans-serif" fill="#0ea271">M</text>
+              </svg>
             </div>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
@@ -179,7 +180,12 @@ export default function BrokersTab({ lang = 'en' }) {
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                 }}>
                   <div>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)', marginBottom: 2 }}>{a.name}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)' }}>{a.name}</span>
+                      {a.badge && (
+                        <span style={{ fontSize: 9, fontWeight: 700, color: '#0ea271', background: 'rgba(14,162,113,0.12)', border: '1px solid rgba(14,162,113,0.3)', borderRadius: 20, padding: '1px 6px' }}>{a.badge}</span>
+                      )}
+                    </div>
                     <div style={{ fontSize: 11, color: 'var(--text-dim)' }}>{a.spread} · {a.commission}</div>
                   </div>
                   <div style={{
