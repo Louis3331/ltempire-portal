@@ -378,8 +378,16 @@ export default function Dashboard() {
                             <td className="td" style={{ color: 'var(--gold)', fontSize: 13 }}>{m.plan?.name || t('label.none')}</td>
                             <td className="td" style={{ color: 'var(--text-muted)', fontSize: 13 }}>{fmt(m.renewal_period_start)}</td>
                             <td className="td" style={{ color: 'var(--text-muted)', fontSize: 13 }}>
-                              {fmt(m.renewal_period_end)}
-                              {(() => { const d = daysLeft(m.renewal_period_end); if (d === null) return null; const c = d < 7 ? '#E05252' : d < 30 ? '#C9A84C' : '#3ECF8E'; return <span style={{ display: 'inline-block', marginLeft: 6, fontSize: 10, fontWeight: 700, color: c, background: c + '18', borderRadius: 4, padding: '1px 6px' }}>{d > 0 ? `${d}d` : lang === 'zh' ? '已到期' : 'Expired'}</span>; })()}
+                              {m.renewal_period_end ? (
+                                <>
+                                  {fmt(m.renewal_period_end)}
+                                  {(() => { const d = daysLeft(m.renewal_period_end); if (d === null) return null; const c = d < 7 ? '#E05252' : d < 30 ? '#C9A84C' : '#3ECF8E'; return <span style={{ display: 'inline-block', marginLeft: 6, fontSize: 10, fontWeight: 700, color: c, background: c + '18', borderRadius: 4, padding: '1px 6px' }}>{d > 0 ? `${d}d` : lang === 'zh' ? '已到期' : 'Expired'}</span>; })()}
+                                </>
+                              ) : (
+                                <span style={{ fontSize: 11, fontWeight: 700, color: '#3ECF8E', background: 'rgba(62,207,142,0.1)', border: '1px solid rgba(62,207,142,0.25)', borderRadius: 4, padding: '2px 8px' }}>
+                                  {lang === 'zh' ? '终身' : 'Lifetime'}
+                                </span>
+                              )}
                             </td>
                             <td className="td">
                               <span style={{ color: m.valid ? '#3ECF8E' : '#E05252', fontWeight: 700, fontSize: 13 }}>
@@ -422,10 +430,16 @@ export default function Dashboard() {
                         </div>
                         <div className="mc-row">
                           <span className="mc-label">{t('th.expires')}</span>
-                          <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>{fmt(m.renewal_period_end)}</span>
-                            {(() => { const d = daysLeft(m.renewal_period_end); if (d === null) return null; const c = d < 7 ? '#E05252' : d < 30 ? '#C9A84C' : '#3ECF8E'; return <span style={{ fontSize: 10, fontWeight: 700, color: c, background: c + '18', borderRadius: 4, padding: '1px 6px' }}>{d > 0 ? `${d}d` : lang === 'zh' ? '已到期' : 'Expired'}</span>; })()}
-                          </span>
+                          {m.renewal_period_end ? (
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>{fmt(m.renewal_period_end)}</span>
+                              {(() => { const d = daysLeft(m.renewal_period_end); if (d === null) return null; const c = d < 7 ? '#E05252' : d < 30 ? '#C9A84C' : '#3ECF8E'; return <span style={{ fontSize: 10, fontWeight: 700, color: c, background: c + '18', borderRadius: 4, padding: '1px 6px' }}>{d > 0 ? `${d}d` : lang === 'zh' ? '已到期' : 'Expired'}</span>; })()}
+                            </span>
+                          ) : (
+                            <span style={{ fontSize: 11, fontWeight: 700, color: '#3ECF8E', background: 'rgba(62,207,142,0.1)', border: '1px solid rgba(62,207,142,0.25)', borderRadius: 4, padding: '2px 8px' }}>
+                              {lang === 'zh' ? '终身' : 'Lifetime'}
+                            </span>
+                          )}
                         </div>
                         <div className="mc-row">
                           <span className="mc-label">{t('th.valid')}</span>
