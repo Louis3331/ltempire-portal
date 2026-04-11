@@ -218,25 +218,19 @@ function ChevronIcon({ open }) {
   );
 }
 
-function FaqItem({ item, index }) {
+function FaqItem({ item, isLast }) {
   const [open, setOpen] = useState(false);
   return (
-    <div style={{
-      border: '1px solid var(--border)',
-      borderRadius: 10,
-      overflow: 'hidden',
-      transition: 'border-color 0.2s',
-      borderColor: open ? 'rgba(201,168,76,0.35)' : 'var(--border)',
-    }}>
+    <div style={{ borderBottom: isLast ? 'none' : '1px solid var(--border)' }}>
       <button
         onClick={() => setOpen(o => !o)}
         style={{
           width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          gap: 16, padding: '15px 18px', background: 'none', border: 'none', cursor: 'pointer',
+          gap: 16, padding: '15px 20px', background: 'none', border: 'none', cursor: 'pointer',
           textAlign: 'left',
         }}
       >
-        <span style={{ fontSize: 13, fontWeight: 600, color: open ? 'var(--gold)' : 'var(--text)', lineHeight: 1.4, transition: 'color 0.2s' }}>
+        <span style={{ fontSize: 13, fontWeight: 600, color: open ? 'var(--gold)' : 'var(--text)', lineHeight: 1.45, transition: 'color 0.2s' }}>
           {item.q}
         </span>
         <span style={{ color: open ? 'var(--gold)' : 'var(--text-dim)', transition: 'color 0.2s', flexShrink: 0 }}>
@@ -244,12 +238,8 @@ function FaqItem({ item, index }) {
         </span>
       </button>
       {open && (
-        <div style={{
-          padding: '0 18px 16px',
-          borderTop: '1px solid var(--border)',
-          background: 'var(--gold-alpha)',
-        }}>
-          <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.7, margin: '14px 0 0' }}>
+        <div style={{ padding: '0 20px 16px', borderTop: '1px solid var(--border)', background: 'var(--gold-alpha)' }}>
+          <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.75, margin: '14px 0 0' }}>
             {item.a}
           </p>
         </div>
@@ -260,7 +250,7 @@ function FaqItem({ item, index }) {
 
 export default function FaqTab({ lang = 'en' }) {
   const data = faq[lang] || faq.en;
-  const [openCat, setOpenCat] = useState(null);
+  const [openCat, setOpenCat] = useState(0);
 
   return (
     <div style={{ padding: '0 0 48px' }}>
@@ -274,48 +264,53 @@ export default function FaqTab({ lang = 'en' }) {
         </p>
       </div>
 
-      {/* Categories */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      {/* Single unified card */}
+      <div style={{
+        background: 'var(--bg-table)',
+        border: '1px solid var(--border)',
+        borderRadius: 14,
+        overflow: 'hidden',
+        boxShadow: '0 2px 20px rgba(0,0,0,0.12)',
+      }}>
         {data.map((cat, ci) => (
-          <div key={ci} style={{
-            background: 'var(--bg-table)',
-            border: '1px solid var(--border)',
-            borderRadius: 14,
-            overflow: 'hidden',
-            boxShadow: '0 2px 16px rgba(0,0,0,0.1)',
-          }}>
-            {/* Category header */}
+          <div key={ci} style={{ borderBottom: ci < data.length - 1 ? '1px solid var(--border)' : 'none' }}>
+
+            {/* Category row */}
             <button
               onClick={() => setOpenCat(openCat === ci ? null : ci)}
               style={{
                 width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                padding: '16px 20px', background: 'none', border: 'none', cursor: 'pointer',
+                padding: '16px 20px', background: openCat === ci ? 'var(--gold-alpha)' : 'none',
+                border: 'none', cursor: 'pointer', transition: 'background 0.2s',
                 borderBottom: openCat === ci ? '1px solid var(--border)' : 'none',
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <span style={{
-                  width: 24, height: 24, borderRadius: 6, background: 'var(--gold-alpha)',
-                  border: '1px solid rgba(201,168,76,0.2)',
+                  minWidth: 22, height: 22, borderRadius: 5,
+                  background: openCat === ci ? 'var(--gold)' : 'var(--gold-alpha)',
+                  border: '1px solid rgba(201,168,76,0.25)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 11, fontWeight: 800, color: 'var(--gold)', flexShrink: 0,
+                  fontSize: 10, fontWeight: 800,
+                  color: openCat === ci ? '#0A0A0A' : 'var(--gold)',
+                  transition: 'all 0.2s', flexShrink: 0,
                 }}>
                   {cat.items.length}
                 </span>
-                <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', letterSpacing: 0.2 }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: openCat === ci ? 'var(--gold)' : 'var(--text)', transition: 'color 0.2s' }}>
                   {cat.category}
                 </span>
               </div>
-              <span style={{ color: 'var(--text-dim)', transition: 'color 0.2s' }}>
+              <span style={{ color: openCat === ci ? 'var(--gold)' : 'var(--text-dim)', transition: 'color 0.2s' }}>
                 <ChevronIcon open={openCat === ci} />
               </span>
             </button>
 
-            {/* Items */}
+            {/* Questions */}
             {openCat === ci && (
-              <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div>
                 {cat.items.map((item, ii) => (
-                  <FaqItem key={ii} item={item} index={ii} />
+                  <FaqItem key={ii} item={item} isLast={ii === cat.items.length - 1} />
                 ))}
               </div>
             )}
