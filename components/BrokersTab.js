@@ -273,10 +273,6 @@ function BrokerCard({ broker, lang, ui }) {
         </div>
       </div>
 
-      {/* Disclaimer */}
-      <div style={{ padding: '10px 22px', borderTop: '1px solid var(--border)', background: 'rgba(0,0,0,0.12)' }}>
-        <p style={{ fontSize: 10, color: 'var(--text-dim)', margin: 0 }}>{ui.note}</p>
-      </div>
     </div>
   );
 }
@@ -287,7 +283,8 @@ export default function BrokersTab({ lang = 'en' }) {
     <div style={{ padding: '0 0 48px' }}>
       <div style={{ marginBottom: 24 }}>
         <h2 style={{ fontSize: 13, fontWeight: 700, color: 'var(--gold)', letterSpacing: 2, textTransform: 'uppercase', margin: '0 0 4px' }}>{tx.heading}</h2>
-        <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0 }}>{tx.subhead}</p>
+        <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: '0 0 8px' }}>{tx.subhead}</p>
+        <p style={{ fontSize: 11, color: 'var(--text-dim)', margin: 0 }}>{tx.note}</p>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
         {brokers.map(b => <BrokerCard key={b.id} broker={b} lang={lang} ui={tx} />)}
