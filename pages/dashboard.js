@@ -260,6 +260,20 @@ export default function Dashboard() {
               <div className="user-avatar">{initial}</div>
               <div className="user-email">{email}</div>
             </div>
+            <div className="social-links">
+              <a href="https://www.youtube.com/channel/UCJJ2W0jG0SQPV4_z0wMjL8Q/" target="_blank" rel="noopener noreferrer" className="social-btn social-yt" title="YouTube">
+                <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: 15, height: 15 }}>
+                  <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8zM9.7 15.5V8.5l6.3 3.5-6.3 3.5z"/>
+                </svg>
+                YouTube
+              </a>
+              <a href="https://discord.gg/zxPSumfwxt" target="_blank" rel="noopener noreferrer" className="social-btn social-dc" title="Discord">
+                <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: 15, height: 15 }}>
+                  <path d="M20.3 4.4A19.7 19.7 0 0 0 15.5 3c-.2.4-.5.9-.6 1.3a18.3 18.3 0 0 0-5.7 0A13 13 0 0 0 8.5 3a19.6 19.6 0 0 0-4.8 1.4C.5 9.1-.3 13.7.1 18.2a19.9 19.9 0 0 0 6 3 14.7 14.7 0 0 0 1.3-2.1 12.9 12.9 0 0 1-2-.9l.5-.4a14.2 14.2 0 0 0 12.2 0l.5.4a13 13 0 0 1-2 1 14.7 14.7 0 0 0 1.3 2A19.8 19.8 0 0 0 24 18.2c.4-5.1-.9-9.6-3.7-13.8zM8 15.4c-1.2 0-2.3-1.1-2.3-2.5S6.7 10.4 8 10.4s2.3 1.1 2.3 2.5S9.3 15.4 8 15.4zm8 0c-1.2 0-2.3-1.1-2.3-2.5s1-2.5 2.3-2.5 2.3 1.1 2.3 2.5-1 2.5-2.3 2.5z"/>
+                </svg>
+                Discord
+              </a>
+            </div>
             <button className="logout-btn" onClick={() => { window.location.href = '/api/auth/logout'; }}>
               {t('sidebar.logout')}
             </button>
@@ -668,6 +682,15 @@ export default function Dashboard() {
           font-size: 12px; font-weight: 700; color: var(--gold);
         }
         .user-email { font-size: 11px; color: var(--text-dim); word-break: break-all; line-height: 1.3; }
+        .social-links { display: flex; gap: 7px; }
+        .social-btn {
+          flex: 1; display: flex; align-items: center; justify-content: center; gap: 5px;
+          padding: 7px 6px; border-radius: 6px; font-size: 11px; font-weight: 600;
+          text-decoration: none; transition: opacity 0.15s; white-space: nowrap;
+        }
+        .social-yt  { background: rgba(255,0,0,0.1); border: 1px solid rgba(255,0,0,0.25); color: #ff4444; }
+        .social-dc  { background: rgba(88,101,242,0.1); border: 1px solid rgba(88,101,242,0.3); color: #7289da; }
+        .social-btn:hover { opacity: 0.75; }
         .logout-btn {
           width: 100%; padding: 8px; background: rgba(224,82,82,0.07);
           border: 1px solid rgba(224,82,82,0.2); border-radius: 6px;
