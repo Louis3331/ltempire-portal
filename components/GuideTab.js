@@ -595,75 +595,132 @@ const Svg7 = () => {
 };
 
 const Svg8 = () => {
+  // Layout constants
+  const tbY = 46;   // toolbar y
+  const tbH = 24;   // toolbar height
+  const cX  = 0;    // chart x
+  const cY  = tbY + tbH; // chart start y = 70
+  const cW  = 305;  // chart width
+  const cH  = 118;  // chart height
+  const pX  = cW;   // panel x
+  const pW  = W - cW; // panel width = 95
+  const bY  = cY + cH; // bottom bar y = 188
+  const midY = cY + cH * 0.48;
+
   const candles = [
-    [0,1],[1,1],[2,-1],[3,1],[4,1],[5,-1],[6,1],[7,-1],[8,1],[9,1],[10,-1],[11,1],[12,1],[13,-1],[14,1],[15,1],
+    {d:1,s:8},{d:-1,s:10},{d:1,s:12},{d:1,s:9},{d:-1,s:11},{d:1,s:8},
+    {d:1,s:13},{d:-1,s:9},{d:1,s:10},{d:1,s:12},{d:-1,s:8},{d:1,s:11},
+    {d:1,s:14},{d:-1,s:10},{d:1,s:9},{d:1,s:12},{d:-1,s:11},{d:1,s:10},
   ];
-  const chartX = 0, chartY = 54, chartW = W - 90, chartH = 118;
-  const midY = chartY + chartH * 0.5;
-  const cW = Math.floor(chartW / candles.length);
+  const cW2 = Math.floor(cW / candles.length);
+
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', borderRadius: 8, display: 'block' }}>
-      {/* Window */}
-      <rect width={W} height={H} rx="8" fill="#f0f0f0" stroke="#bbb" strokeWidth="1" />
-      {/* Title bar */}
-      <rect width={W} height="18" rx="8" fill="#e0e0e0" />
-      <rect y="12" width={W} height="6" fill="#e0e0e0" />
-      <text x="6" y="13" fill="#444" fontSize="7" fontFamily="system-ui,sans-serif">Just Global Markets Ltd. - [XAUUSD.ecn,H1]</text>
-      <text x={W-36} y="13" fill="#666" fontSize="9" fontFamily="system-ui,sans-serif">─  □  ✕</text>
+    <svg viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', borderRadius: 10, display: 'block' }}>
+      <defs>
+        <linearGradient id="titleGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#2a2a2a"/>
+          <stop offset="100%" stopColor="#1a1a1a"/>
+        </linearGradient>
+        <linearGradient id="toolbarGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#f7f7f7"/>
+          <stop offset="100%" stopColor="#ebebeb"/>
+        </linearGradient>
+        <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#0f1117"/>
+          <stop offset="100%" stopColor="#131722"/>
+        </linearGradient>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="1.5" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+
+      {/* ── Window frame ── */}
+      <rect width={W} height={H} rx="10" fill="#1a1a1a" stroke="#333" strokeWidth="1"/>
+
+      {/* Title bar — dark premium */}
+      <rect width={W} height={tbY} rx="10" fill="url(#titleGrad)"/>
+      <rect y={tbY-8} width={W} height="8" fill="#1a1a1a"/>
+      {/* Traffic lights */}
+      <circle cx="14" cy="14" r="5" fill="#ff5f57"/>
+      <circle cx="28" cy="14" r="5" fill="#febc2e"/>
+      <circle cx="42" cy="14" r="5" fill="#28c840"/>
+      <text x={W/2} y="17" textAnchor="middle" fill="#888" fontSize="8" fontFamily="system-ui,sans-serif">Just Global Markets Ltd. — XAUUSD.ecn, H1</text>
+      <text x={W-10} y="17" textAnchor="end" fill="#555" fontSize="8" fontFamily="system-ui,sans-serif">✕</text>
+
       {/* Menu bar */}
-      <rect y="18" width={W} height="14" fill="#e8e8e8" />
+      <rect y="26" width={W} height="14" fill="#222"/>
       {['Insert','Charts','Tools','Window','Help'].map((m,i)=>(
-        <text key={m} x={6+i*48} y="29" fill="#333" fontSize="8" fontFamily="system-ui,sans-serif">{m}</text>
+        <text key={m} x={58+i*46} y="37" fill="#aaa" fontSize="8" fontFamily="system-ui,sans-serif">{m}</text>
       ))}
+
       {/* Toolbar */}
-      <rect y="32" width={W} height="22" fill="#f5f5f5" stroke="#ddd" strokeWidth="0.5" />
-      {/* Toolbar icons (generic grey boxes) */}
-      {[6,22,38,54,70,86].map(x=>(
-        <rect key={x} x={x} y="35" width="14" height="14" rx="2" fill="#e0e0e0" stroke="#ccc" strokeWidth="0.5"/>
+      <rect y={tbY} width={W} height={tbH} fill="url(#toolbarGrad)" stroke="#d8d8d8" strokeWidth="0.5"/>
+      {/* Generic icon buttons */}
+      {[4,20,36,52,68].map(x=>(
+        <rect key={x} x={x} y={tbY+4} width="14" height="14" rx="2" fill="#e2e2e2" stroke="#ccc" strokeWidth="0.5"/>
       ))}
-      {/* Algo Trading button — green/active */}
-      <rect x="108" y="34" width="72" height="16" rx="2" fill="#e8f5e9" stroke="#4caf50" strokeWidth="1.2"/>
-      <text x="112" y="45" fill="#2e7d32" fontSize="8" fontFamily="system-ui,sans-serif" fontWeight="700">▶ Algo Trading</text>
-      {/* Gold callout above Algo Trading */}
-      <rect x="90" y="22" width="110" height="12" rx="3" fill="rgba(201,168,76,0.18)" stroke="#C9A84C" strokeWidth="1"/>
-      <text x="145" y="31" textAnchor="middle" fill="#C9A84C" fontSize="7.5" fontFamily="system-ui,sans-serif" fontWeight="700">↓ Click to enable (green)</text>
-      {/* New Order button */}
-      <rect x="186" y="34" width="56" height="16" rx="2" fill="#e8e8e8" stroke="#ccc" strokeWidth="0.5"/>
-      <text x="214" y="45" textAnchor="middle" fill="#333" fontSize="8" fontFamily="system-ui,sans-serif">＋ New Order</text>
-      {/* Chart area */}
-      <rect x={chartX} y={chartY} width={chartW} height={chartH} fill="#131722"/>
-      {/* Grid */}
+      {/* Separator */}
+      <line x1="88" y1={tbY+5} x2="88" y2={tbY+19} stroke="#ccc" strokeWidth="0.8"/>
+      {/* Algo Trading button — GREEN, premium style */}
+      <rect x="92" y={tbY+3} width="80" height="18" rx="4" fill="#1b5e20" stroke="#43a047" strokeWidth="1.2"/>
+      <rect x="93" y={tbY+3} width="79" height="9" rx="4" fill="rgba(255,255,255,0.07)"/>
+      <text x="132" y={tbY+15} textAnchor="middle" fill="#66bb6a" fontSize="8.5" fontFamily="system-ui,sans-serif" fontWeight="700">▶  Algo Trading</text>
+      {/* Separator */}
+      <line x1="178" y1={tbY+5} x2="178" y2={tbY+19} stroke="#ccc" strokeWidth="0.8"/>
+      {/* New Order */}
+      <rect x="182" y={tbY+4} width="60" height="16" rx="3" fill="#e8e8e8" stroke="#ccc" strokeWidth="0.5"/>
+      <text x="212" y={tbY+15} textAnchor="middle" fill="#444" fontSize="8" fontFamily="system-ui,sans-serif">＋ New Order</text>
+
+      {/* Gold callout pointing DOWN at Algo Trading */}
+      <rect x="88" y={tbY+24} width="92" height="14" rx="4" fill="rgba(201,168,76,0.18)" stroke="#C9A84C" strokeWidth="1.2"/>
+      <text x="134" y={tbY+34} textAnchor="middle" fill="#C9A84C" fontSize="8" fontFamily="system-ui,sans-serif" fontWeight="700">↑ Enable AutoTrading</text>
+
+      {/* ── Chart area ── */}
+      <rect x={cX} y={cY} width={cW} height={cH} fill="url(#chartGrad)"/>
+      {/* Subtle grid */}
       {[0.25,0.5,0.75].map(f=>(
-        <line key={f} x1={chartX} y1={chartY+chartH*f} x2={chartX+chartW} y2={chartY+chartH*f} stroke="#1e2433" strokeWidth="0.8"/>
+        <line key={f} x1={cX} y1={cY+cH*f} x2={cX+cW} y2={cY+cH*f} stroke="#1c2030" strokeWidth="0.8"/>
       ))}
-      {/* Candles */}
-      {candles.map(([i,dir])=>{
-        const x = chartX + i*cW + cW/2;
-        const clr = dir>0?'#26a69a':'#ef5350';
-        const bodyH = 10 + (i%4)*2;
-        const top = midY - (dir>0?bodyH:0) - (i%3)*4;
+      {[0.2,0.4,0.6,0.8].map(f=>(
+        <line key={f} x1={cX+cW*f} y1={cY} x2={cX+cW*f} y2={cY+cH} stroke="#1c2030" strokeWidth="0.8"/>
+      ))}
+      {/* Candlesticks */}
+      {candles.map(({d,s},i)=>{
+        const x = cX + i*cW2 + cW2/2;
+        const clr = d>0 ? '#26a69a' : '#ef5350';
+        const offset = ((i*7+s)%20) - 10;
+        const top = midY + offset - (d>0?s:0);
         return (
           <g key={i}>
-            <line x1={x} y1={top-5} x2={x} y2={top+bodyH+5} stroke={clr} strokeWidth="0.8" opacity="0.6"/>
-            <rect x={x-4} y={top} width="8" height={bodyH} fill={clr} opacity="0.9"/>
+            <line x1={x} y1={top-4} x2={x} y2={top+s+5} stroke={clr} strokeWidth="0.8" opacity="0.5"/>
+            <rect x={x-4} y={top} width="8" height={s} fill={clr} rx="0.5"/>
           </g>
         );
       })}
-      {/* EA info panel — top right of chart */}
-      <rect x={chartW+2} y={chartY} width="88" height={chartH} fill="#f0f0f0" stroke="#ddd" strokeWidth="0.5"/>
-      <text x={chartW+6} y={chartY+12} fill="#333" fontSize="7.5" fontFamily="system-ui,sans-serif" fontWeight="700">LTE Gold v1.01</text>
-      <rect x={chartW+2} y={chartY+14} width="88" height="0.5" fill="#ddd"/>
-      <text x={chartW+6} y={chartY+24} fill="#666" fontSize="6.5" fontFamily="system-ui,sans-serif">Current P&amp;L:</text>
-      <text x={chartW+6} y={chartY+34} fill="#2e7d32" fontSize="6.5" fontFamily="system-ui,sans-serif">Daily profit:</text>
-      <text x={chartW+6} y={chartY+44} fill="#555" fontSize="6.5" fontFamily="system-ui,sans-serif">EA is cu...</text>
-      {/* Smiley on chart top-right corner */}
-      <rect x={chartW-40} y={chartY+4} width="36" height="14" rx="2" fill="rgba(38,166,154,0.15)" stroke="#26a69a" strokeWidth="0.8"/>
-      <text x={chartW-22} y={chartY+14} textAnchor="middle" fill="#26a69a" fontSize="9" fontFamily="system-ui,sans-serif">☺</text>
-      {/* Bottom toolbox */}
-      <rect x="0" y={chartY+chartH} width={W} height={H-(chartY+chartH)} fill="#e8e8e8" stroke="#ddd" strokeWidth="0.5"/>
-      <text x="6" y={chartY+chartH+11} fill="#666" fontSize="7.5" fontFamily="system-ui,sans-serif">Trade   History   Experts   Journal</text>
-      <rect x="0" y={chartY+chartH+13} width={W} height="1" fill="#ddd"/>
-      <text x="6" y={H-5} fill="#2e7d32" fontSize="7.5" fontFamily="system-ui,sans-serif">● LTE Gold: EA initialized successfully</text>
+      {/* Smiley badge on chart — top right */}
+      <rect x={cW-50} y={cY+6} width="46" height="18" rx="4" fill="rgba(38,166,154,0.12)" stroke="#26a69a" strokeWidth="1" filter="url(#glow)"/>
+      <text x={cW-27} y={cY+19} textAnchor="middle" fill="#26a69a" fontSize="13" fontFamily="system-ui,sans-serif">☺</text>
+
+      {/* ── EA info panel ── */}
+      <rect x={pX} y={cY} width={pW} height={cH} fill="#0d0d0d" stroke="#222" strokeWidth="0.5"/>
+      <rect x={pX} y={cY} width={pW} height="20" fill="#141414"/>
+      <text x={pX+pW/2} y={cY+13} textAnchor="middle" fill="#C9A84C" fontSize="8" fontFamily="system-ui,sans-serif" fontWeight="700">LTE Gold v1.01</text>
+      <line x1={pX} y1={cY+20} x2={pX+pW} y2={cY+20} stroke="#222" strokeWidth="0.8"/>
+      <text x={pX+5} y={cY+32} fill="#555" fontSize="7" fontFamily="system-ui,sans-serif">Current P&amp;L:</text>
+      <text x={pX+5} y={cY+44} fill="#3ECF8E" fontSize="7" fontFamily="system-ui,sans-serif">Daily profit:</text>
+      <text x={pX+5} y={cY+56} fill="#555" fontSize="7" fontFamily="system-ui,sans-serif">EA is active</text>
+      <line x1={pX} y1={cY+62} x2={pX+pW} y2={cY+62} stroke="#1a1a1a" strokeWidth="0.5"/>
+
+      {/* ── Bottom bar ── */}
+      <rect x={cX} y={bY} width={W} height={H-bY} rx="0" fill="#111"/>
+      <rect x={cX} y={bY} width={W} height="1" fill="#222"/>
+      {['Trade','History','Experts','Journal'].map((t,i)=>(
+        <text key={t} x={8+i*54} y={bY+11} fill={t==='Experts'?'#C9A84C':'#444'} fontSize="8" fontFamily="system-ui,sans-serif" fontWeight={t==='Experts'?'600':'400'}>{t}</text>
+      ))}
+      <line x1={cX} y1={bY+14} x2={W} y2={bY+14} stroke="#1a1a1a" strokeWidth="0.8"/>
+      <circle cx="8" cy={bY+23} r="3" fill="#26a69a"/>
+      <text x="14" y={bY+26} fill="#26a69a" fontSize="7.5" fontFamily="system-ui,sans-serif">LTE Gold: EA initialized successfully</text>
     </svg>
   );
 };
