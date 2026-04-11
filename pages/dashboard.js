@@ -517,8 +517,8 @@ export default function Dashboard() {
           --border-row:       #161616;
           --text:             #F5F0E8;
           --text-muted:       #888;
-          --text-dim:         #555;
-          --text-dimmer:      #444;
+          --text-dim:         #777;
+          --text-dimmer:      #666;
           --gold:             #C9A84C;
           --gold-dark:        #9B7B2F;
           --gold-glow:        rgba(201,168,76,0.2);
@@ -535,30 +535,30 @@ export default function Dashboard() {
           --lang-border:      #2a2a2a;
         }
         html[data-theme="light"] {
-          --bg:               #F2F0EB;
-          --bg-sidebar:       #FFFFFF;
-          --bg-table:         #FFFFFF;
-          --bg-table-hd:      #FAFAF7;
-          --border:           #E4E0D8;
-          --border-row:       #EDEAE3;
-          --text:             #1A1817;
-          --text-muted:       #7A7570;
-          --text-dim:         #9A9590;
-          --text-dimmer:      #B0ABA5;
-          --gold:             #8B6010;
-          --gold-dark:        #6B4A0A;
-          --gold-glow:        rgba(139,96,16,0.15);
-          --gold-alpha:       rgba(139,96,16,0.08);
-          --gold-grid:        rgba(139,96,16,0.05);
-          --row-hover:        rgba(139,96,16,0.03);
-          --nav-label:        #D0CBC3;
-          --avatar-bg:        #F0EDE6;
-          --avatar-border:    #E0DDD6;
-          --toggle-bg:        #DDD9D0;
-          --toggle-on-bg:     #F0E8D0;
-          --shadow-sidebar:   2px 0 12px rgba(0,0,0,0.06);
-          --lang-bg:          #F0EDE6;
-          --lang-border:      #E0DDD6;
+          --bg:               #E8E3D8;
+          --bg-sidebar:       #F9F6F0;
+          --bg-table:         #F9F6F0;
+          --bg-table-hd:      #EEE9DF;
+          --border:           #CEC9BC;
+          --border-row:       #E0DBD0;
+          --text:             #141210;
+          --text-muted:       #6A6560;
+          --text-dim:         #8A8580;
+          --text-dimmer:      #A8A49F;
+          --gold:             #7A5010;
+          --gold-dark:        #5C3C08;
+          --gold-glow:        rgba(122,80,16,0.22);
+          --gold-alpha:       rgba(122,80,16,0.1);
+          --gold-grid:        rgba(122,80,16,0.07);
+          --row-hover:        rgba(122,80,16,0.05);
+          --nav-label:        #A09890;
+          --avatar-bg:        #EDE8DF;
+          --avatar-border:    #D4CEBC;
+          --toggle-bg:        #CEC9BC;
+          --toggle-on-bg:     #E8DEC0;
+          --shadow-sidebar:   2px 0 24px rgba(0,0,0,0.12);
+          --lang-bg:          #EDE8DF;
+          --lang-border:      #D4CEBC;
         }
 
         /* ── Reset ── */
@@ -702,10 +702,10 @@ export default function Dashboard() {
         /* ── Main ── */
         .main-wrap { margin-left: 220px; flex: 1; min-width: 0; display: flex; flex-direction: column; position: relative; z-index: 1; }
         .mobile-header { display: none; }
-        .page-header   { padding: 28px 32px 0; }
-        .page-title    { font-size: 22px; font-weight: 700; color: var(--text); }
+        .page-header   { padding: 28px 32px 16px; border-bottom: 1px solid var(--border); margin-bottom: 4px; }
+        .page-title    { font-size: 22px; font-weight: 700; color: var(--text); letter-spacing: -0.3px; }
         .page-subtitle { font-size: 13px; color: var(--text-dim); margin-top: 4px; }
-        .main          { padding: 20px 32px 40px; }
+        .main          { padding: 24px 32px 40px; }
 
         /* ── Error ── */
         .error-box {
