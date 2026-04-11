@@ -344,7 +344,12 @@ const Svg4 = () => {
             {/* Folder or EA icon */}
             {isFolder
               ? <text x="12" y={y + 12} fill="#e8a020" fontSize="10" fontFamily="system-ui,sans-serif">📁</text>
-              : <text x="12" y={y + 12} fontSize="10" fontFamily="system-ui,sans-serif">🎓</text>
+              : <g transform={`translate(12, ${y + 2})`}>
+                  {/* Graduation cap — grey when inactive, blue when active (hi) */}
+                  <polygon points="6,3 12,6 6,9 0,6" fill={hi ? '#4d9de0' : '#777'} />
+                  <rect x="9.5" y="5.5" width="1" height="4" fill={hi ? '#4d9de0' : '#777'} />
+                  <rect x="8.5" y="9" width="3" height="1.5" rx="0.5" fill={hi ? '#4d9de0' : '#777'} />
+                </g>
             }
             <text x="26" y={y + 12} fill={hi ? '#ffffff' : isFolder ? '#cccccc' : '#aaaaaa'} fontSize="9" fontFamily={isFolder ? 'system-ui,sans-serif' : 'monospace'} fontWeight={hi ? '600' : '400'}>{name}</text>
             <text x={colDate} y={y + 12} fill={hi ? '#aad4ff' : '#666'} fontSize="8.5" fontFamily="system-ui,sans-serif">{date}</text>
@@ -459,7 +464,13 @@ const Svg6 = () => {
       <text x="6" y="63" fill="#C9A84C" fontSize="8" fontFamily="system-ui,sans-serif">▼ Expert Advisors</text>
       {/* LTE Gold row highlighted */}
       <rect x="4" y="66" width={chartX - 8} height="15" rx="2" fill="rgba(201,168,76,0.14)" stroke="#C9A84C" strokeWidth="0.8" />
-      <text x="10" y="77" fill="#C9A84C" fontSize="8" fontFamily="system-ui,sans-serif" fontWeight="700">🎓 LTE Gold</text>
+      {/* Blue cap = EA active in navigator */}
+      <g transform="translate(10, 68)">
+        <polygon points="5,2 10,5 5,8 0,5" fill="#4d9de0" />
+        <rect x="8" y="4.5" width="1" height="3.5" fill="#4d9de0" />
+        <rect x="7" y="7.5" width="2.5" height="1.5" rx="0.5" fill="#4d9de0" />
+      </g>
+      <text x="23" y="77" fill="#C9A84C" fontSize="8" fontFamily="system-ui,sans-serif" fontWeight="700">LTE Gold</text>
       <text x="6" y="93" fill="#444" fontSize="8" fontFamily="system-ui,sans-serif">▶ Scripts</text>
 
       {/* Drag arrow */}
