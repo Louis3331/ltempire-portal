@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { useLang } from '../lib/useLang';
 import GuideTab from '../components/GuideTab';
+import BrokersTab from '../components/BrokersTab';
 
 /* ── Card tilt handler ──────────────────────────────────── */
 function useTilt() {
@@ -59,6 +60,14 @@ const MoonIcon = () => (
     <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
+const BrokerIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="nav-icon">
+    <rect x="2" y="7" width="20" height="14" rx="2" />
+    <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" strokeLinecap="round" />
+    <line x1="12" y1="12" x2="12" y2="16" strokeLinecap="round" />
+    <line x1="10" y1="14" x2="14" y2="14" strokeLinecap="round" />
+  </svg>
+);
 const BookIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="nav-icon">
     <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" strokeLinecap="round" strokeLinejoin="round" />
@@ -91,6 +100,7 @@ export default function Dashboard() {
     { id: 'licenses', label: t('nav.licenses'), icon: <KeyIcon /> },
     { id: 'accounts', label: t('nav.accounts'), icon: <MonitorIcon /> },
     { id: 'guide',    label: t('nav.guide'),    icon: <BookIcon /> },
+    { id: 'brokers',  label: t('nav.brokers'),  icon: <BrokerIcon /> },
   ];
 
   /* Load session + memberships */
@@ -177,8 +187,8 @@ export default function Dashboard() {
 
   const email     = session.user?.email || session.email || '';
   const initial   = email[0]?.toUpperCase() || 'U';
-  const pageTitle    = tab === 'licenses' ? t('page.licenses.title') : tab === 'accounts' ? t('page.accounts.title') : t('nav.guide');
-  const pageSubtitle = tab === 'licenses' ? t('page.licenses.subtitle') : tab === 'accounts' ? t('page.accounts.subtitle') : (lang === 'zh' ? 'MT5 专家顾问安装步骤指南' : 'Step-by-step guide to install the MT5 Expert Advisor');
+  const pageTitle    = tab === 'licenses' ? t('page.licenses.title') : tab === 'accounts' ? t('page.accounts.title') : tab === 'brokers' ? t('nav.brokers') : t('nav.guide');
+  const pageSubtitle = tab === 'licenses' ? t('page.licenses.subtitle') : tab === 'accounts' ? t('page.accounts.subtitle') : tab === 'brokers' ? (lang === 'zh' ? '经测试推荐与 LTE Gold EA 配合使用的经纪商' : 'Brokers tested and approved to work with LTE Gold EA') : (lang === 'zh' ? 'MT5 专家顾问安装步骤指南' : 'Step-by-step guide to install the MT5 Expert Advisor');
 
   return (
     <>
@@ -474,6 +484,9 @@ export default function Dashboard() {
 
             {/* ── MT5 Guide ── */}
             {tab === 'guide' && <GuideTab lang={lang} />}
+
+            {/* ── Brokers ── */}
+            {tab === 'brokers' && <BrokersTab lang={lang} />}
 
           </main>
         </div>
