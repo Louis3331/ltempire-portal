@@ -210,10 +210,18 @@ const faq = {
   ],
 };
 
-const catIcons = {
-  en: ['🚀', '⚙️', '🏦', '🔧', '👤'],
-  zh: ['🚀', '⚙️', '🏦', '🔧', '👤'],
-};
+const catIcons = [
+  /* Getting Started */
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" style={{ width: 15, height: 15, flexShrink: 0 }}><path d="M12 2L2 7l10 5 10-5-10-5z" strokeLinecap="round" strokeLinejoin="round"/><path d="M2 17l10 5 10-5" strokeLinecap="round" strokeLinejoin="round"/><path d="M2 12l10 5 10-5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+  /* Installation */
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" style={{ width: 15, height: 15, flexShrink: 0 }}><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14" strokeLinecap="round"/></svg>,
+  /* Brokers */
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" style={{ width: 15, height: 15, flexShrink: 0 }}><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" strokeLinecap="round"/><line x1="12" y1="12" x2="12" y2="16" strokeLinecap="round"/><line x1="10" y1="14" x2="14" y2="14" strokeLinecap="round"/></svg>,
+  /* Troubleshooting */
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" style={{ width: 15, height: 15, flexShrink: 0 }}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65" strokeLinecap="round"/></svg>,
+  /* Membership */
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" style={{ width: 15, height: 15, flexShrink: 0 }}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" strokeLinecap="round"/><circle cx="12" cy="7" r="4"/></svg>,
+];
 
 function ChevronIcon({ open }) {
   return (
@@ -298,7 +306,7 @@ export default function FaqTab({ lang = 'en' }) {
                 transition: 'all 0.18s',
               }}
             >
-              <span style={{ fontSize: 15, lineHeight: 1 }}>{catIcons.en[ci]}</span>
+              <span style={{ color: activeCat === ci ? 'var(--gold)' : 'var(--text-dim)', transition: 'color 0.18s', display: 'flex' }}>{catIcons[ci]}</span>
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: 12, fontWeight: 700, color: activeCat === ci ? 'var(--gold)' : 'var(--text)', lineHeight: 1.3, transition: 'color 0.18s' }}>
                   {c.category}
@@ -324,7 +332,7 @@ export default function FaqTab({ lang = 'en' }) {
             background: 'linear-gradient(135deg, var(--gold-alpha), transparent)',
             display: 'flex', alignItems: 'center', gap: 10,
           }}>
-            <span style={{ fontSize: 18 }}>{catIcons.en[activeCat]}</span>
+            <span style={{ color: 'var(--gold)', display: 'flex' }}>{catIcons[activeCat]}</span>
             <div>
               <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{cat.category}</div>
               <div style={{ fontSize: 11, color: 'var(--text-dim)', marginTop: 1 }}>
