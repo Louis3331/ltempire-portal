@@ -91,6 +91,7 @@ export default function Dashboard() {
   const [animKey,         setAnimKey]         = useState(0);
   const [slideDir,        setSlideDir]        = useState('right');
   const [theme,           setTheme]           = useState('dark');
+  const [toast,           setToast]           = useState(null);
   const { lang, setLang, t } = useLang();
   const tilt = useTilt();
   const router = useRouter();
@@ -148,11 +149,22 @@ export default function Dashboard() {
   const deleteAccount = async (licenseKey, id) => {
     if (!confirm(t('accounts.confirmDelete'))) return;
     await fetch(`/api/accounts?licenseKey=${encodeURIComponent(licenseKey)}&id=${id}`, { method: 'DELETE' });
+    showToast(lang === 'zh' ? '账户已删除' : 'Account removed');
     loadAccounts();
   };
 
+  const showToast = (msg, type = 'success') => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 2500);
+  };
+
   const copy = async (text, id) => {
-    try { await navigator.clipboard.writeText(text); setCopied(id); setTimeout(() => setCopied(null), 2000); } catch {}
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(id);
+      showToast(lang === 'zh' ? '已复制到剪贴板' : 'Copied to clipboard!');
+      setTimeout(() => setCopied(null), 2000);
+    } catch {}
   };
 
   const switchTab = (newTab) => {
@@ -175,6 +187,11 @@ export default function Dashboard() {
     return new Date(ms).toLocaleDateString(lang === 'zh' ? 'zh-CN' : 'en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
   };
 
+  const daysLeft = (ts) => {
+    if (!ts) return null;
+    return Math.ceil((ts * 1000 - Date.now()) / 86400000);
+  };
+
   const statusColor = (s) => ({ active: '#3ECF8E', trialing: '#C9A84C', expired: '#E05252', canceled: '#E05252' }[s] || '#888');
   const statusLabel = (s) => ({
     active: t('status.active'), trialing: t('status.trial'),
@@ -195,6 +212,7 @@ export default function Dashboard() {
       <Head>
         <title>LT Empire | Dashboard</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
       </Head>
 
       <div className="layout">
@@ -299,6 +317,7 @@ export default function Dashboard() {
           </header>
 
           <div className="page-header">
+            <div className="page-welcome">{lang === 'zh' ? `欢迎回来，${email.split('@')[0]}` : `Welcome back, ${email.split('@')[0]}`}</div>
             <h1 className="page-title">{pageTitle}</h1>
             <p className="page-subtitle">{pageSubtitle}</p>
           </div>
@@ -358,7 +377,10 @@ export default function Dashboard() {
                             </td>
                             <td className="td" style={{ color: 'var(--gold)', fontSize: 13 }}>{m.plan?.name || t('label.none')}</td>
                             <td className="td" style={{ color: 'var(--text-muted)', fontSize: 13 }}>{fmt(m.renewal_period_start)}</td>
-                            <td className="td" style={{ color: 'var(--text-muted)', fontSize: 13 }}>{fmt(m.renewal_period_end)}</td>
+                            <td className="td" style={{ color: 'var(--text-muted)', fontSize: 13 }}>
+                              {fmt(m.renewal_period_end)}
+                              {(() => { const d = daysLeft(m.renewal_period_end); if (d === null) return null; const c = d < 7 ? '#E05252' : d < 30 ? '#C9A84C' : '#3ECF8E'; return <span style={{ display: 'inline-block', marginLeft: 6, fontSize: 10, fontWeight: 700, color: c, background: c + '18', borderRadius: 4, padding: '1px 6px' }}>{d > 0 ? `${d}d` : lang === 'zh' ? '已到期' : 'Expired'}</span>; })()}
+                            </td>
                             <td className="td">
                               <span style={{ color: m.valid ? '#3ECF8E' : '#E05252', fontWeight: 700, fontSize: 13 }}>
                                 {m.valid ? t('label.yes') : t('label.no')}
@@ -400,7 +422,10 @@ export default function Dashboard() {
                         </div>
                         <div className="mc-row">
                           <span className="mc-label">{t('th.expires')}</span>
-                          <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>{fmt(m.renewal_period_end)}</span>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>{fmt(m.renewal_period_end)}</span>
+                            {(() => { const d = daysLeft(m.renewal_period_end); if (d === null) return null; const c = d < 7 ? '#E05252' : d < 30 ? '#C9A84C' : '#3ECF8E'; return <span style={{ fontSize: 10, fontWeight: 700, color: c, background: c + '18', borderRadius: 4, padding: '1px 6px' }}>{d > 0 ? `${d}d` : lang === 'zh' ? '已到期' : 'Expired'}</span>; })()}
+                          </span>
                         </div>
                         <div className="mc-row">
                           <span className="mc-label">{t('th.valid')}</span>
@@ -427,7 +452,11 @@ export default function Dashboard() {
                     </thead>
                     <tbody>
                       {accountsLoading ? (
-                        <tr><td colSpan={7} className="td" style={{ textAlign: 'center', padding: '48px 0', color: 'var(--text-dim)' }}>{t('label.loading')}</td></tr>
+                        Array.from({ length: 3 }).map((_, i) => (
+                          <tr key={i}>{Array.from({ length: 7 }).map((_, j) => (
+                            <td key={j} className="td"><div className="skeleton" style={{ height: 13, borderRadius: 4, width: j === 0 ? 110 : j === 6 ? 52 : [80,70,90,80,80][j-1] || 80 }} /></td>
+                          ))}</tr>
+                        ))
                       ) : accounts.length === 0 ? (
                         <tr>
                           <td colSpan={7} className="td" style={{ textAlign: 'center', padding: '48px 0', color: 'var(--text-dim)', fontSize: 14 }}>
@@ -485,7 +514,18 @@ export default function Dashboard() {
                   </div>
                 )}
                 {accountsLoading && (
-                  <div className="mobile-cards" style={{ padding: '32px 16px', textAlign: 'center', color: 'var(--text-dim)' }}>{t('label.loading')}</div>
+                  <div className="mobile-cards">
+                    {Array.from({ length: 2 }).map((_, i) => (
+                      <div key={i} className="mobile-card">
+                        {Array.from({ length: 4 }).map((_, j) => (
+                          <div key={j} className="mc-row">
+                            <div className="skeleton" style={{ height: 11, width: 60, borderRadius: 3 }} />
+                            <div className="skeleton" style={{ height: 13, width: 100, borderRadius: 3 }} />
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
                 )}
                 {!accountsLoading && accounts.length === 0 && (
                   <div className="mobile-cards" style={{ padding: '40px 16px', textAlign: 'center', color: 'var(--text-dim)', fontSize: 14 }}>
@@ -505,6 +545,14 @@ export default function Dashboard() {
           </main>
         </div>
       </div>
+
+      {/* ── Toast ── */}
+      {toast && (
+        <div className="toast" style={{ borderColor: toast.type === 'error' ? '#E0525240' : '#3ECF8E40', color: toast.type === 'error' ? '#E05252' : '#3ECF8E', background: toast.type === 'error' ? 'rgba(224,82,82,0.12)' : 'rgba(62,207,142,0.12)' }}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: 14, height: 14, flexShrink: 0 }}><polyline points="20 6 9 17 4 12" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          {toast.msg}
+        </div>
+      )}
 
       <style>{`
         /* ── CSS Variables ── */
@@ -703,9 +751,30 @@ export default function Dashboard() {
         .main-wrap { margin-left: 220px; flex: 1; min-width: 0; display: flex; flex-direction: column; position: relative; z-index: 1; }
         .mobile-header { display: none; }
         .page-header   { padding: 28px 32px 16px; border-bottom: 1px solid var(--border); margin-bottom: 4px; }
+        .page-welcome  { font-size: 11px; font-weight: 600; color: var(--gold); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 6px; opacity: 0.8; }
         .page-title    { font-size: 22px; font-weight: 700; color: var(--text); letter-spacing: -0.3px; }
         .page-subtitle { font-size: 13px; color: var(--text-dim); margin-top: 4px; }
         .main          { padding: 24px 32px 40px; }
+
+        /* ── Skeleton ── */
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        .skeleton {
+          background: linear-gradient(90deg, var(--border) 25%, var(--border-row) 50%, var(--border) 75%);
+          background-size: 200% 100%;
+          animation: shimmer 1.5s infinite;
+        }
+
+        /* ── Toast ── */
+        @keyframes slideUp { from { opacity: 0; transform: translateX(-50%) translateY(12px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+        .toast {
+          position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+          border: 1px solid; border-radius: 8px; padding: 10px 18px;
+          font-size: 13px; font-weight: 600; z-index: 9999;
+          box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+          display: flex; align-items: center; gap: 8px;
+          animation: slideUp 0.2s ease; white-space: nowrap;
+          backdrop-filter: blur(8px);
+        }
 
         /* ── Error ── */
         .error-box {
