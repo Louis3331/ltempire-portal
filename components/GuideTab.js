@@ -717,7 +717,13 @@ const Svg8 = () => {
       {/* ── EA info panel ── */}
       <rect x={pX} y={cY} width={pW} height={cH} fill="#0d0d0d" stroke="#222" strokeWidth="0.5"/>
       <rect x={pX} y={cY} width={pW} height="20" fill="#141414"/>
-      <text x={pX+pW/2} y={cY+13} textAnchor="middle" fill="#C9A84C" fontSize="8" fontFamily="system-ui,sans-serif" fontWeight="700">LTE Gold v1.01</text>
+      {/* Blue graduation cap — EA active */}
+      <g transform={`translate(${pX+6}, ${cY+5})`}>
+        <polygon points="5,2 11,5 5,8 0,5" fill="#4d9de0"/>
+        <rect x="8.5" y="4.5" width="1" height="3.5" fill="#4d9de0"/>
+        <rect x="7.5" y="7.5" width="2.5" height="1.5" rx="0.5" fill="#4d9de0"/>
+      </g>
+      <text x={pX+pW/2+4} y={cY+13} textAnchor="middle" fill="#C9A84C" fontSize="8" fontFamily="system-ui,sans-serif" fontWeight="700">LTE Gold v1.01</text>
       <line x1={pX} y1={cY+20} x2={pX+pW} y2={cY+20} stroke="#222" strokeWidth="0.8"/>
       <text x={pX+5} y={cY+32} fill="#555" fontSize="7" fontFamily="system-ui,sans-serif">Current P&amp;L:</text>
       <text x={pX+5} y={cY+44} fill="#3ECF8E" fontSize="7" fontFamily="system-ui,sans-serif">Daily profit:</text>
