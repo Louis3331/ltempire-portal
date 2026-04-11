@@ -94,9 +94,16 @@ const brokers = [
     badgeColor: '#7c3aed',
     logo: (
       <svg width="56" height="56" viewBox="0 0 56 56" xmlns="http://www.w3.org/2000/svg">
-        <rect width="56" height="56" rx="14" fill="#0f0f1a"/>
-        <rect width="56" height="56" rx="14" fill="none" stroke="#2a2a3a" strokeWidth="1"/>
-        <text x="28" y="40" textAnchor="middle" fontSize="34" fontWeight="900" fontFamily="Arial,sans-serif" fill="#7c3aed">5</text>
+        <rect width="56" height="56" rx="14" fill="#fff"/>
+        <rect width="56" height="56" rx="14" fill="none" stroke="#e8e8e8" strokeWidth="1"/>
+        {/* "5" with tick mark */}
+        <text x="6" y="38" fontSize="30" fontWeight="900" fontFamily="Arial Black,Arial,sans-serif" fill="#111">5</text>
+        {/* tick/apostrophe after the 5 */}
+        <line x1="25" y1="12" x2="29" y2="22" stroke="#111" strokeWidth="2.5" strokeLinecap="round"/>
+        {/* "ers" */}
+        <text x="27" y="38" fontSize="18" fontWeight="800" fontFamily="Arial,sans-serif" fill="#111">ers</text>
+        {/* dot under the s */}
+        <circle cx="50" cy="41" r="2.5" fill="#111"/>
       </svg>
     ),
     details: {
@@ -119,14 +126,14 @@ const brokers = [
     },
     accounts: {
       en: [
-        { name: 'Hyper Growth',  fee: '$74–$270',  info: '1-Step · Up to 100% split',  badge: 'Popular' },
-        { name: 'High Stakes',   fee: '$19–$35',   info: '2-Step · 80–100% split',      badge: '' },
-        { name: 'Bootcamp',      fee: 'Custom',    info: '3-Step · $20K + scaling',     badge: '' },
+        { name: 'Hyper Growth',  fee: '$51–$850',   info: '1-Step · Up to 100% split',  badge: 'Popular' },
+        { name: 'High Stakes',   fee: '$19–$545',  info: '2-Step · 80–100% split',      badge: '' },
+        { name: 'Bootcamp',      fee: '$22–$225',  info: '3-Step · $20K + scaling',     badge: '' },
       ],
       zh: [
-        { name: 'Hyper Growth',  fee: '$74–$270',  info: '1阶段 · 最高100%分润',       badge: '热门' },
-        { name: 'High Stakes',   fee: '$19–$35',   info: '2阶段 · 80–100%分润',        badge: '' },
-        { name: 'Bootcamp',      fee: '按需',      info: '3阶段 · $20K + 扩大规模',    badge: '' },
+        { name: 'Hyper Growth',  fee: '$51–$850',   info: '1阶段 · 最高100%分润',       badge: '热门' },
+        { name: 'High Stakes',   fee: '$19–$545',  info: '2阶段 · 80–100%分润',        badge: '' },
+        { name: 'Bootcamp',      fee: '$22–$225',  info: '3阶段 · $20K + 扩大规模',    badge: '' },
       ],
     },
     accountsLabel: { en: 'Funded Plans', zh: '资金计划' },
