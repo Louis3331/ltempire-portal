@@ -589,10 +589,11 @@ const Svg7 = () => {
           <text x={cV+6} y={item.y+11} fill={item.hi?'#aad4ff':'#333'} fontSize="8" fontFamily="monospace">{item.val}</text>
         </g>
       ))}
-      {/* Gold callout border around license key row */}
-      <rect x="1" y={S+13} width={W-12} height={rH} fill="none" stroke="#C9A84C" strokeWidth="1.5" />
-      <rect x="90" y={S+13+rH+3} width="170" height="13" rx="3" fill="rgba(201,168,76,0.18)" stroke="#C9A84C" strokeWidth="1" />
-      <text x="175" y={S+13+rH+13} textAnchor="middle" fill="#C9A84C" fontSize="8" fontFamily="system-ui,sans-serif" fontWeight="700">↑ Paste your license key here</text>
+      {/* Gold border on license key row */}
+      <rect x="1" y={S+13} width={W-12} height={rH} fill="none" stroke="#C9A84C" strokeWidth="2" />
+      {/* Solid gold callout badge — above buttons, full width, high contrast */}
+      <rect x="0" y={H-36} width={W} height="18" fill="#C9A84C" />
+      <text x={W/2} y={H-24} textAnchor="middle" fill="#1a0a00" fontSize="9.5" fontFamily="system-ui,sans-serif" fontWeight="800">↑ Paste your license key into the blue highlighted row</text>
       {/* Buttons */}
       <rect y={H-18} width={W} height="18" fill="#e0e0e0" />
       <rect x={W-142} y={H-15} width="40" height="12" rx="2" fill="#1a6fc4" />
