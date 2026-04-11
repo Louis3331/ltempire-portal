@@ -641,10 +641,10 @@ export default function Dashboard() {
 
         /* ── Animations ── */
         @keyframes spin       { to { transform: rotate(360deg); } }
-        @keyframes slideRight { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: translateX(0); } }
-        @keyframes slideLeft  { from { opacity: 0; transform: translateX(-28px); } to { opacity: 1; transform: translateX(0); } }
-        .slide-right { animation: slideRight 0.28s cubic-bezier(0.25,0.46,0.45,0.94); }
-        .slide-left  { animation: slideLeft  0.28s cubic-bezier(0.25,0.46,0.45,0.94); }
+        @keyframes pageEnterRight { from { opacity: 0; transform: translateX(22px) scale(0.985); } to { opacity: 1; transform: translateX(0) scale(1); } }
+        @keyframes pageEnterLeft  { from { opacity: 0; transform: translateX(-22px) scale(0.985); } to { opacity: 1; transform: translateX(0) scale(1); } }
+        .slide-right { animation: pageEnterRight 0.32s cubic-bezier(0.22,1,0.36,1); }
+        .slide-left  { animation: pageEnterLeft  0.32s cubic-bezier(0.22,1,0.36,1); }
 
         /* ── Grid ── */
         .grid {
@@ -689,10 +689,16 @@ export default function Dashboard() {
           background: transparent; border: none;
           color: var(--text-dim); font-size: 13px; font-weight: 500;
           cursor: pointer; text-align: left; width: 100%; position: relative;
-          transition: background 0.15s, color 0.15s;
+          transition: background 0.2s, color 0.2s, transform 0.12s;
         }
-        .nav-item:hover { background: var(--gold-grid); color: var(--text-muted); }
+        .nav-item:hover { background: var(--gold-alpha); color: var(--text-muted); }
+        .nav-item:active { transform: scale(0.97); }
         .nav-active { background: var(--gold-alpha) !important; color: var(--gold) !important; }
+        .nav-active::before {
+          content: ''; position: absolute; left: 0; top: 20%; bottom: 20%;
+          width: 3px; border-radius: 0 3px 3px 0;
+          background: var(--gold);
+        }
         .nav-pip { position: absolute; right: 10px; width: 6px; height: 6px; border-radius: 50%; background: var(--gold); }
         .nav-icon { width: 17px; height: 17px; flex-shrink: 0; }
 
