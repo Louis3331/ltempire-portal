@@ -4,6 +4,7 @@ import Head from 'next/head';
 import { useLang } from '../lib/useLang';
 import GuideTab from '../components/GuideTab';
 import BrokersTab from '../components/BrokersTab';
+import FaqTab from '../components/FaqTab';
 
 /* ── Card tilt handler ──────────────────────────────────── */
 function useTilt() {
@@ -76,6 +77,13 @@ const BookIcon = () => (
     <line x1="9" y1="11" x2="13" y2="11" strokeLinecap="round" />
   </svg>
 );
+const FaqIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="nav-icon">
+    <circle cx="12" cy="12" r="10" />
+    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" strokeLinecap="round" strokeLinejoin="round" />
+    <line x1="12" y1="17" x2="12.01" y2="17" strokeLinecap="round" />
+  </svg>
+);
 
 /* ── Main component ─────────────────────────────────────── */
 export default function Dashboard() {
@@ -102,6 +110,7 @@ export default function Dashboard() {
     { id: 'accounts', label: t('nav.accounts'), icon: <MonitorIcon /> },
     { id: 'guide',    label: t('nav.guide'),    icon: <BookIcon /> },
     { id: 'brokers',  label: t('nav.brokers'),  icon: <BrokerIcon /> },
+    { id: 'faq',      label: t('nav.faq'),      icon: <FaqIcon /> },
   ];
 
   /* Load session + memberships */
@@ -204,8 +213,8 @@ export default function Dashboard() {
 
   const email     = session.user?.email || session.email || '';
   const initial   = email[0]?.toUpperCase() || 'U';
-  const pageTitle    = tab === 'licenses' ? t('page.licenses.title') : tab === 'accounts' ? t('page.accounts.title') : tab === 'brokers' ? t('nav.brokers') : t('nav.guide');
-  const pageSubtitle = tab === 'licenses' ? t('page.licenses.subtitle') : tab === 'accounts' ? t('page.accounts.subtitle') : tab === 'brokers' ? (lang === 'zh' ? '经测试推荐与 LTE Gold EA 配合使用的经纪商' : 'Brokers tested and approved to work with LTE Gold EA') : (lang === 'zh' ? 'MT5 专家顾问安装步骤指南' : 'Step-by-step guide to install the MT5 Expert Advisor');
+  const pageTitle    = tab === 'licenses' ? t('page.licenses.title') : tab === 'accounts' ? t('page.accounts.title') : tab === 'brokers' ? t('nav.brokers') : tab === 'faq' ? t('nav.faq') : t('nav.guide');
+  const pageSubtitle = tab === 'licenses' ? t('page.licenses.subtitle') : tab === 'accounts' ? t('page.accounts.subtitle') : tab === 'brokers' ? (lang === 'zh' ? '经测试推荐与 LTE Gold EA 配合使用的经纪商' : 'Brokers tested and approved to work with LTE Gold EA') : tab === 'faq' ? (lang === 'zh' ? '关于 LTE Gold EA 的常见问题解答' : 'Common questions about LTE Gold EA answered') : (lang === 'zh' ? 'MT5 专家顾问安装步骤指南' : 'Step-by-step guide to install the MT5 Expert Advisor');
 
   return (
     <>
@@ -555,6 +564,9 @@ export default function Dashboard() {
 
             {/* ── Brokers ── */}
             {tab === 'brokers' && <BrokersTab lang={lang} />}
+
+            {/* ── FAQ ── */}
+            {tab === 'faq' && <FaqTab lang={lang} />}
 
           </main>
         </div>
