@@ -344,7 +344,7 @@ const Svg4 = () => {
             {/* Folder or EA icon */}
             {isFolder
               ? <text x="12" y={y + 12} fill="#e8a020" fontSize="10" fontFamily="system-ui,sans-serif">📁</text>
-              : <text x="12" y={y + 12} fill="#3ECF8E" fontSize="10" fontFamily="system-ui,sans-serif">✦</text>
+              : <text x="12" y={y + 12} fontSize="10" fontFamily="system-ui,sans-serif">🎓</text>
             }
             <text x="26" y={y + 12} fill={hi ? '#ffffff' : isFolder ? '#cccccc' : '#aaaaaa'} fontSize="9" fontFamily={isFolder ? 'system-ui,sans-serif' : 'monospace'} fontWeight={hi ? '600' : '400'}>{name}</text>
             <text x={colDate} y={y + 12} fill={hi ? '#aad4ff' : '#666'} fontSize="8.5" fontFamily="system-ui,sans-serif">{date}</text>
@@ -459,7 +459,7 @@ const Svg6 = () => {
       <text x="6" y="63" fill="#C9A84C" fontSize="8" fontFamily="system-ui,sans-serif">▼ Expert Advisors</text>
       {/* LTE Gold row highlighted */}
       <rect x="4" y="66" width={chartX - 8} height="15" rx="2" fill="rgba(201,168,76,0.14)" stroke="#C9A84C" strokeWidth="0.8" />
-      <text x="10" y="77" fill="#C9A84C" fontSize="8" fontFamily="system-ui,sans-serif" fontWeight="700">✦ LTE Gold</text>
+      <text x="10" y="77" fill="#C9A84C" fontSize="8" fontFamily="system-ui,sans-serif" fontWeight="700">🎓 LTE Gold</text>
       <text x="6" y="93" fill="#444" fontSize="8" fontFamily="system-ui,sans-serif">▶ Scripts</text>
 
       {/* Drag arrow */}
