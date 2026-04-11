@@ -216,28 +216,48 @@ const Svg1 = () => (
 );
 
 const Svg2 = () => (
-  <Win title="Whop — LT Empire">
-    {/* Page bg */}
-    <rect x="0" y="28" width={W} height={H - 28} fill="#111" />
-    {/* Header bar */}
-    <rect x="0" y="28" width={W} height="28" fill="#0d0d0d" stroke="#1a1a1a" strokeWidth="1" />
-    <text x="16" y="46" fill="#C9A84C" fontSize="11" fontFamily="system-ui,sans-serif" fontWeight="700">whop</text>
-    <text x="280" y="46" fill="#777" fontSize="9" fontFamily="system-ui,sans-serif">LT Empire Community</text>
-    {/* Card */}
-    <rect x="60" y="70" width="280" height="120" rx="8" fill="#0d0d0d" stroke="#222" strokeWidth="1" />
-    <text x="80" y="96" fill="#888" fontSize="8" fontFamily="system-ui,sans-serif" letterSpacing="0.5">FILES</text>
-    <rect x="72" y="102" width="256" height="34" rx="5" fill="#151515" stroke="#252525" />
-    {/* File icon */}
-    <rect x="80" y="108" width="18" height="22" rx="2" fill="#1a1a1a" stroke="#333" />
-    <text x="89" y="123" textAnchor="middle" fill="#C9A84C" fontSize="7" fontFamily="system-ui,sans-serif">.ex5</text>
-    <text x="104" y="116" fill="#ccc" fontSize="9" fontFamily="system-ui,sans-serif">LTE_Gold_v1.01.ex5</text>
-    <text x="104" y="128" fill="#555" fontSize="8" fontFamily="system-ui,sans-serif">245 KB · Latest version</text>
-    {/* Download button */}
-    <rect x="116" y="148" width="168" height="30" rx="6" fill="url(#gbtn)" />
-    <defs><linearGradient id="gbtn" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="#C9A84C"/><stop offset="100%" stopColor="#9B7B2F"/></linearGradient></defs>
-    <text x="200" y="168" textAnchor="middle" fill="#0a0a0a" fontSize="11" fontFamily="system-ui,sans-serif" fontWeight="700">↓ Download</text>
-    <Highlight x="114" y="146" w="172" h="34" label="Click Download" labelX="200" labelY="136" arrow="down" />
-  </Win>
+  <svg viewBox={`0 0 ${W} ${H}`} xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', borderRadius: 8, display: 'block' }}>
+    {/* White page bg */}
+    <rect width={W} height={H} rx="8" fill="#ffffff" stroke="#e0e0e0" strokeWidth="1"/>
+
+    {/* Search bar row */}
+    <rect x="16" y="16" width="240" height="26" rx="6" fill="#f5f5f5" stroke="#e0e0e0" strokeWidth="1"/>
+    {/* Search icon */}
+    <circle cx="34" cy="29" r="5" fill="none" stroke="#aaa" strokeWidth="1.5"/>
+    <line x1="38" y1="33" x2="41" y2="36" stroke="#aaa" strokeWidth="1.5" strokeLinecap="round"/>
+    <text x="48" y="33" fill="#bbb" fontSize="9" fontFamily="system-ui,sans-serif">Search files</text>
+    {/* Add File button */}
+    <rect x="268" y="16" width="56" height="26" rx="6" fill="#2563eb"/>
+    <text x="296" y="33" textAnchor="middle" fill="#fff" fontSize="9" fontFamily="system-ui,sans-serif" fontWeight="700">Add File</text>
+
+    {/* Sort row */}
+    <text x="16" y="60" fill="#111" fontSize="8.5" fontFamily="system-ui,sans-serif" fontWeight="700">Name (A-Z) ∨</text>
+    {/* Grid icon */}
+    <rect x="374" y="51" width="14" height="14" rx="2" fill="none" stroke="#bbb" strokeWidth="1.2"/>
+    <line x1="381" y1="51" x2="381" y2="65" stroke="#bbb" strokeWidth="1"/>
+    <line x1="374" y1="58" x2="388" y2="58" stroke="#bbb" strokeWidth="1"/>
+
+    {/* Divider */}
+    <line x1="16" y1="68" x2={W-16} y2="68" stroke="#e8e8e8" strokeWidth="1"/>
+
+    {/* File row */}
+    <rect x="16" y="80" width={W-32} height="50" rx="4" fill="#fff"/>
+    {/* EX5 badge */}
+    <rect x="16" y="86" width="36" height="24" rx="6" fill="#f0f4ff" stroke="#dce6ff" strokeWidth="1"/>
+    <text x="34" y="102" textAnchor="middle" fill="#2563eb" fontSize="8" fontFamily="system-ui,sans-serif" fontWeight="800">EX5</text>
+    {/* File name */}
+    <text x="62" y="101" fill="#2563eb" fontSize="10" fontFamily="system-ui,sans-serif" fontWeight="700">LTE_Gold_v1.01.ex5</text>
+    <text x="62" y="115" fill="#aaa" fontSize="8" fontFamily="system-ui,sans-serif">EX5  •  Apr 11, 2026, 3:24 PM</text>
+    {/* Three dots menu */}
+    <text x={W-24} y="107" fill="#ccc" fontSize="14" fontFamily="system-ui,sans-serif">⋮</text>
+
+    {/* Divider */}
+    <line x1="16" y1="132" x2={W-16} y2="132" stroke="#f0f0f0" strokeWidth="1"/>
+
+    {/* Gold callout arrow pointing at file row */}
+    <rect x="80" y="148" width="240" height="20" rx="5" fill="rgba(201,168,76,0.12)" stroke="#C9A84C" strokeWidth="1.2"/>
+    <text x="200" y="162" textAnchor="middle" fill="#C9A84C" fontSize="9" fontFamily="system-ui,sans-serif" fontWeight="700">↑ Click the file name to download</text>
+  </svg>
 );
 
 const Svg3 = () => {
