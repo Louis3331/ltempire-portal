@@ -103,7 +103,7 @@ export default function BrokersTab({ lang = 'en' }) {
                 {/* J shape */}
                 <text x="7" y="38" fontSize="28" fontWeight="900" fontFamily="Arial,sans-serif" fill="#1a56db">J</text>
                 {/* M shape */}
-                <text x="24" y="38" fontSize="28" fontWeight="900" fontFamily="Arial,sans-serif" fill="#0ea271">M</text>
+                <text x="24" y="38" fontSize="28" fontWeight="900" fontFamily="Arial,sans-serif" fill="#1a56db">M</text>
               </svg>
             </div>
             <div>
