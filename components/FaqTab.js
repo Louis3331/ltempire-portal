@@ -210,9 +210,15 @@ const faq = {
   ],
 };
 
+const catIcons = {
+  en: ['🚀', '⚙️', '🏦', '🔧', '👤'],
+  zh: ['🚀', '⚙️', '🏦', '🔧', '👤'],
+};
+
 function ChevronIcon({ open }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 16, height: 16, flexShrink: 0, transition: 'transform 0.25s', transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+      style={{ width: 14, height: 14, flexShrink: 0, transition: 'transform 0.25s', transform: open ? 'rotate(180deg)' : 'rotate(0)' }}>
       <polyline points="6 9 12 15 18 9" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
@@ -221,25 +227,29 @@ function ChevronIcon({ open }) {
 function FaqItem({ item, isLast }) {
   const [open, setOpen] = useState(false);
   return (
-    <div style={{ borderBottom: isLast ? 'none' : '1px solid var(--border)' }}>
+    <div style={{
+      borderBottom: isLast ? 'none' : '1px solid var(--border)',
+      borderLeft: open ? '3px solid var(--gold)' : '3px solid transparent',
+      transition: 'border-color 0.2s',
+    }}>
       <button
         onClick={() => setOpen(o => !o)}
         style={{
-          width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          gap: 16, padding: '15px 20px', background: 'none', border: 'none', cursor: 'pointer',
-          textAlign: 'left',
+          width: '100%', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
+          gap: 14, padding: '16px 20px', background: open ? 'var(--gold-alpha)' : 'none',
+          border: 'none', cursor: 'pointer', textAlign: 'left', transition: 'background 0.2s',
         }}
       >
-        <span style={{ fontSize: 13, fontWeight: 600, color: open ? 'var(--gold)' : 'var(--text)', lineHeight: 1.45, transition: 'color 0.2s' }}>
+        <span style={{ fontSize: 13, fontWeight: 600, color: open ? 'var(--gold)' : 'var(--text)', lineHeight: 1.5, transition: 'color 0.2s' }}>
           {item.q}
         </span>
-        <span style={{ color: open ? 'var(--gold)' : 'var(--text-dim)', transition: 'color 0.2s', flexShrink: 0 }}>
+        <span style={{ color: open ? 'var(--gold)' : 'var(--text-dim)', transition: 'color 0.2s', marginTop: 2, flexShrink: 0 }}>
           <ChevronIcon open={open} />
         </span>
       </button>
       {open && (
-        <div style={{ padding: '0 20px 16px', borderTop: '1px solid var(--border)', background: 'var(--gold-alpha)' }}>
-          <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.75, margin: '14px 0 0' }}>
+        <div style={{ padding: '0 20px 18px 20px', background: 'var(--gold-alpha)' }}>
+          <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.8, margin: 0, paddingTop: 2 }}>
             {item.a}
           </p>
         </div>
@@ -250,73 +260,88 @@ function FaqItem({ item, isLast }) {
 
 export default function FaqTab({ lang = 'en' }) {
   const data = faq[lang] || faq.en;
-  const [openCat, setOpenCat] = useState(0);
+  const [activeCat, setActiveCat] = useState(0);
+  const cat = data[activeCat];
 
   return (
     <div style={{ padding: '0 0 48px' }}>
       {/* Header */}
-      <div style={{ marginBottom: 28 }}>
+      <div style={{ marginBottom: 24 }}>
         <h2 style={{ fontSize: 13, fontWeight: 700, color: 'var(--gold)', letterSpacing: 2, textTransform: 'uppercase', margin: '0 0 4px' }}>
           {lang === 'zh' ? '常见问题' : 'Frequently Asked Questions'}
         </h2>
         <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0 }}>
-          {lang === 'zh' ? '找不到答案？加入我们的 Discord 社区获取帮助。' : "Can't find an answer? Join our Discord community for support."}
+          {lang === 'zh' ? '找不到答案？通过侧边栏加入我们的 Discord 社区。' : "Can't find an answer? Join our Discord via the sidebar."}
         </p>
       </div>
 
-      {/* Single unified card */}
-      <div style={{
-        background: 'var(--bg-table)',
-        border: '1px solid var(--border)',
-        borderRadius: 14,
-        overflow: 'hidden',
-        boxShadow: '0 2px 20px rgba(0,0,0,0.12)',
-      }}>
-        {data.map((cat, ci) => (
-          <div key={ci} style={{ borderBottom: ci < data.length - 1 ? '1px solid var(--border)' : 'none' }}>
+      {/* Two-column layout */}
+      <style>{`@media(max-width:640px){.faq-grid{grid-template-columns:1fr!important}}`}</style>
+      <div className="faq-grid" style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: 16, alignItems: 'start' }}>
 
-            {/* Category row */}
+        {/* Left — category list */}
+        <div style={{
+          background: 'var(--bg-table)', border: '1px solid var(--border)',
+          borderRadius: 12, overflow: 'hidden',
+          boxShadow: '0 2px 16px rgba(0,0,0,0.1)',
+        }}>
+          {data.map((c, ci) => (
             <button
-              onClick={() => setOpenCat(openCat === ci ? null : ci)}
+              key={ci}
+              onClick={() => setActiveCat(ci)}
               style={{
-                width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                padding: '16px 20px', background: openCat === ci ? 'var(--gold-alpha)' : 'none',
-                border: 'none', cursor: 'pointer', transition: 'background 0.2s',
-                borderBottom: openCat === ci ? '1px solid var(--border)' : 'none',
+                width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+                padding: '13px 14px', border: 'none', cursor: 'pointer', textAlign: 'left',
+                background: activeCat === ci ? 'var(--gold-alpha)' : 'transparent',
+                borderLeft: activeCat === ci ? '3px solid var(--gold)' : '3px solid transparent',
+                borderBottom: ci < data.length - 1 ? '1px solid var(--border)' : 'none',
+                transition: 'all 0.18s',
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{
-                  minWidth: 22, height: 22, borderRadius: 5,
-                  background: openCat === ci ? 'var(--gold)' : 'var(--gold-alpha)',
-                  border: '1px solid rgba(201,168,76,0.25)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 10, fontWeight: 800,
-                  color: openCat === ci ? '#0A0A0A' : 'var(--gold)',
-                  transition: 'all 0.2s', flexShrink: 0,
-                }}>
-                  {cat.items.length}
-                </span>
-                <span style={{ fontSize: 13, fontWeight: 700, color: openCat === ci ? 'var(--gold)' : 'var(--text)', transition: 'color 0.2s' }}>
-                  {cat.category}
-                </span>
+              <span style={{ fontSize: 15, lineHeight: 1 }}>{catIcons.en[ci]}</span>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: activeCat === ci ? 'var(--gold)' : 'var(--text)', lineHeight: 1.3, transition: 'color 0.18s' }}>
+                  {c.category}
+                </div>
+                <div style={{ fontSize: 10, color: 'var(--text-dim)', marginTop: 2 }}>
+                  {c.items.length} {lang === 'zh' ? '个问题' : 'questions'}
+                </div>
               </div>
-              <span style={{ color: openCat === ci ? 'var(--gold)' : 'var(--text-dim)', transition: 'color 0.2s' }}>
-                <ChevronIcon open={openCat === ci} />
-              </span>
             </button>
+          ))}
+        </div>
 
-            {/* Questions */}
-            {openCat === ci && (
-              <div>
-                {cat.items.map((item, ii) => (
-                  <FaqItem key={ii} item={item} isLast={ii === cat.items.length - 1} />
-                ))}
+        {/* Right — questions */}
+        <div style={{
+          background: 'var(--bg-table)', border: '1px solid var(--border)',
+          borderRadius: 12, overflow: 'hidden',
+          boxShadow: '0 2px 16px rgba(0,0,0,0.1)',
+        }}>
+          {/* Category header */}
+          <div style={{
+            padding: '14px 20px',
+            borderBottom: '1px solid var(--border)',
+            background: 'linear-gradient(135deg, var(--gold-alpha), transparent)',
+            display: 'flex', alignItems: 'center', gap: 10,
+          }}>
+            <span style={{ fontSize: 18 }}>{catIcons.en[activeCat]}</span>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{cat.category}</div>
+              <div style={{ fontSize: 11, color: 'var(--text-dim)', marginTop: 1 }}>
+                {cat.items.length} {lang === 'zh' ? '个问题' : 'questions'}
               </div>
-            )}
+            </div>
           </div>
-        ))}
+
+          {/* Q&A list */}
+          <div>
+            {cat.items.map((item, ii) => (
+              <FaqItem key={`${activeCat}-${ii}`} item={item} isLast={ii === cat.items.length - 1} />
+            ))}
+          </div>
+        </div>
       </div>
+
     </div>
   );
 }
