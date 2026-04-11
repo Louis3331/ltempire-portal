@@ -527,7 +527,7 @@ const Svg7 = () => {
   // Licensing(13) + LicKey(15) + MagicNum(15) + RiskSettings(13) + FixedLot(15) + AutoLot(15) + RiskPct(15) + MaxDD(15) + OrderSetting(13) + SL(15) + TP(15)
   const items = [
     { type:'sec', label:'Licensing',                             y: S },
-    { type:'row', label:'License key (whop.com → Software → copy your key)', val:'', hi:true,  y: S+13 },
+    { type:'row', label:'License key (ltempire.com → copy your key)', val:'', hi:true,  y: S+13 },
     { type:'row', label:'Magic number (unique ID for this EA)',    val:'20250101', hi:false, y: S+28 },
     { type:'sec', label:'Risk Settings',                          y: S+43 },
     { type:'row', label:'Fixed lot size',                         val:'0.01',     hi:false, y: S+56 },
