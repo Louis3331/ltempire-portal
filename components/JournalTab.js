@@ -1,106 +1,159 @@
 import { useState, useEffect, useCallback } from 'react';
 
-/* ── MT5 CSV parser ─────────────────────────────────────────
-   Supports MT5 Statement / Detailed Report CSV formats.
-   Looks for closed positions by matching column headers.
-──────────────────────────────────────────────────────────── */
-function parseMT5CSV(text) {
-  const lines = text.split(/\r?\n/).filter(l => l.trim());
-  if (lines.length < 2) return [];
+/* ── Shared trade builder ───────────────────────────────── */
+function buildTrade(raw) {
+  const {
+    ticket, openTime, closeTime, symbol, type,
+    lots, openPrice, closePrice, profit, commission, swap, comment,
+  } = raw;
 
-  // find header row (contains "ticket" or "position" or "deal")
-  let headerIdx = -1;
-  let headers = [];
-  for (let i = 0; i < Math.min(10, lines.length); i++) {
-    const cols = lines[i].split('\t').map(c => c.replace(/^"|"$/g, '').trim().toLowerCase());
-    if (cols.some(c => c.includes('ticket') || c.includes('position') || c.includes('deal') || c.includes('order'))) {
-      headerIdx = i;
-      headers = cols;
-      break;
-    }
-  }
-  if (headerIdx === -1) return [];
+  if (!ticket || !closeTime) return null;
+  const closeTs = new Date(closeTime);
+  if (isNaN(closeTs.getTime())) return null;
 
-  const col = (name) => {
-    const patterns = {
-      ticket:     ['ticket', 'position', 'deal', 'order'],
-      openTime:   ['open time', 'time open', 'open'],
-      closeTime:  ['close time', 'time close', 'close time', 'time'],
-      symbol:     ['symbol', 'item'],
-      type:       ['type', 'direction'],
-      lots:       ['volume', 'lots', 'size', 'quantity'],
-      openPrice:  ['open price', 'price open', 'price (open)', 'open'],
-      closePrice: ['close price', 'price close', 'price (close)', 'price'],
-      profit:     ['profit'],
-      commission: ['commission'],
-      swap:       ['swap'],
-      comment:    ['comment'],
-    };
-    const candidates = patterns[name] || [name];
-    for (const p of candidates) {
-      const idx = headers.findIndex(h => h === p || h.startsWith(p));
-      if (idx !== -1) return idx;
+  const t = (type || '').toLowerCase();
+  if (t.includes('balance') || t.includes('deposit') || t.includes('withdrawal') || t.includes('credit')) return null;
+  if (!symbol) return null;
+
+  const dir      = t.includes('sell') ? 'sell' : 'buy';
+  const diff     = (parseFloat(closePrice) || 0) - (parseFloat(openPrice) || 0);
+  const pipSize  = symbol.toUpperCase().includes('JPY') ? 0.01
+                 : (symbol.toUpperCase().includes('XAU') || symbol.toUpperCase().includes('GOLD')) ? 0.1
+                 : 0.0001;
+  const rawPips  = diff / pipSize;
+  const pips     = dir === 'sell' ? -rawPips : rawPips;
+  const p        = parseFloat(profit)     || 0;
+  const c        = parseFloat(commission) || 0;
+  const s        = parseFloat(swap)       || 0;
+
+  return {
+    ticket:     String(ticket),
+    openTime:   openTime ? normaliseDate(String(openTime)) : normaliseDate(String(closeTime)),
+    closeTime:  normaliseDate(String(closeTime)),
+    symbol:     symbol.toUpperCase(),
+    type:       dir,
+    lots:       parseFloat(lots) || 0,
+    openPrice:  parseFloat(openPrice)  || 0,
+    closePrice: parseFloat(closePrice) || 0,
+    profit:     Math.round(p * 100) / 100,
+    commission: Math.round(c * 100) / 100,
+    swap:       Math.round(s * 100) / 100,
+    pips:       Math.round(pips * 10) / 10,
+    net:        Math.round((p + c + s) * 100) / 100,
+    win:        p > 0,
+    notes:      comment || '',
+  };
+}
+
+function normaliseDate(str) {
+  return str.replace(/\./g, '-').replace(' ', 'T');
+}
+
+/* ── Column mapper (shared by HTML + XLSX parsers) ──────── */
+function makeColMapper(headers) {
+  const h = headers.map(s => String(s || '').trim().toLowerCase());
+  const find = (...patterns) => {
+    for (const p of patterns) {
+      const i = h.findIndex(c => c === p || c.startsWith(p));
+      if (i !== -1) return i;
     }
     return -1;
   };
+  return {
+    ticket:     find('ticket', 'position', 'deal', 'order'),
+    openTime:   find('open time', 'time open'),
+    closeTime:  find('close time', 'time close', 'time'),
+    symbol:     find('symbol', 'item'),
+    type:       find('type', 'direction'),
+    lots:       find('volume', 'lots', 'size', 'quantity'),
+    openPrice:  find('open price', 'price open', 'price (open)'),
+    closePrice: find('close price', 'price close', 'price (close)', 'price'),
+    profit:     find('profit'),
+    commission: find('commission'),
+    swap:       find('swap'),
+    comment:    find('comment'),
+  };
+}
 
+function rowToTrade(row, map) {
+  const g = (k) => map[k] >= 0 ? String(row[map[k]] ?? '').trim() : '';
+  return buildTrade({
+    ticket: g('ticket'), openTime: g('openTime'), closeTime: g('closeTime'),
+    symbol: g('symbol'), type: g('type'), lots: g('lots'),
+    openPrice: g('openPrice'), closePrice: g('closePrice'),
+    profit: g('profit'), commission: g('commission'), swap: g('swap'), comment: g('comment'),
+  });
+}
+
+/* ── MT5 HTML parser ─────────────────────────────────────── */
+function parseMT5HTML(text) {
+  const parser = new DOMParser();
+  const doc    = parser.parseFromString(text, 'text/html');
+  const tables = Array.from(doc.querySelectorAll('table'));
   const trades = [];
-  for (let i = headerIdx + 1; i < lines.length; i++) {
-    const row = lines[i].split('\t').map(c => c.replace(/^"|"$/g, '').trim());
-    if (row.length < 4) continue;
 
-    const get = (name) => { const idx = col(name); return idx >= 0 ? row[idx] || '' : ''; };
+  for (const table of tables) {
+    const rows = Array.from(table.querySelectorAll('tr'));
+    if (rows.length < 2) continue;
 
-    const ticket     = get('ticket');
-    const closeTime  = get('closeTime');
-    const symbol     = get('symbol');
-    const type       = get('type').toLowerCase();
-    const lots       = parseFloat(get('lots'))       || 0;
-    const openPrice  = parseFloat(get('openPrice'))  || 0;
-    const closePrice = parseFloat(get('closePrice')) || 0;
-    const profit     = parseFloat(get('profit'))     || 0;
-    const commission = parseFloat(get('commission')) || 0;
-    const swap       = parseFloat(get('swap'))       || 0;
-    const openTime   = get('openTime') || closeTime;
-    const comment    = get('comment');
+    // find header row
+    let headerRow = null, headerIdx = -1;
+    for (let i = 0; i < Math.min(5, rows.length); i++) {
+      const cells = Array.from(rows[i].querySelectorAll('td,th')).map(c => c.textContent.trim().toLowerCase());
+      if (cells.some(c => c.includes('ticket') || c.includes('position') || c.includes('deal'))) {
+        headerRow = cells;
+        headerIdx = i;
+        break;
+      }
+    }
+    if (!headerRow) continue;
 
-    // skip header repeats, balance/deposit lines, empty rows
-    if (!ticket || !closeTime || isNaN(new Date(closeTime).getTime())) continue;
-    if (type.includes('balance') || type.includes('deposit') || type.includes('withdrawal') || type.includes('credit')) continue;
-    if (!symbol) continue;
-
-    // calc pips for XAUUSD (pip = 0.1) or forex (pip = 0.0001)
-    const diff = closePrice - openPrice;
-    const pipSize = symbol.includes('JPY') ? 0.01 : symbol.toUpperCase().includes('XAU') || symbol.toUpperCase().includes('GOLD') ? 0.1 : 0.0001;
-    const rawPips = diff / pipSize;
-    const pips = type.includes('sell') ? -rawPips : rawPips;
-    const isWin = profit > 0;
-    const dir = type.includes('sell') ? 'sell' : 'buy';
-
-    trades.push({
-      ticket,
-      openTime:   normaliseDate(openTime),
-      closeTime:  normaliseDate(closeTime),
-      symbol:     symbol.toUpperCase(),
-      type:       dir,
-      lots,
-      openPrice,
-      closePrice,
-      profit:     Math.round(profit     * 100) / 100,
-      commission: Math.round(commission * 100) / 100,
-      swap:       Math.round(swap       * 100) / 100,
-      pips:       Math.round(pips       * 10)  / 10,
-      net:        Math.round((profit + commission + swap) * 100) / 100,
-      win:        isWin,
-      notes:      comment || '',
-    });
+    const map = makeColMapper(headerRow);
+    for (let i = headerIdx + 1; i < rows.length; i++) {
+      const cells = Array.from(rows[i].querySelectorAll('td,th')).map(c => c.textContent.trim());
+      if (cells.length < 4) continue;
+      const t = rowToTrade(cells, map);
+      if (t) trades.push(t);
+    }
   }
   return trades;
 }
 
-function normaliseDate(str) {
-  // MT5 uses "2024.01.15 09:30:00" or "2024-01-15 09:30:00"
-  return str.replace(/\./g, '-').replace(' ', 'T');
+/* ── MT5 XLSX parser ─────────────────────────────────────── */
+async function parseMT5XLSX(file) {
+  const XLSX = (await import('xlsx')).default;
+  const buf  = await file.arrayBuffer();
+  const wb   = XLSX.read(buf, { type: 'array', cellDates: true });
+  const trades = [];
+
+  for (const sheetName of wb.SheetNames) {
+    const ws   = wb.Sheets[sheetName];
+    const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+    if (rows.length < 2) continue;
+
+    // find header row
+    let headerIdx = -1;
+    for (let i = 0; i < Math.min(10, rows.length); i++) {
+      const cells = rows[i].map(c => String(c || '').toLowerCase());
+      if (cells.some(c => c.includes('ticket') || c.includes('position') || c.includes('deal'))) {
+        headerIdx = i;
+        break;
+      }
+    }
+    if (headerIdx === -1) continue;
+
+    const map = makeColMapper(rows[headerIdx]);
+    for (let i = headerIdx + 1; i < rows.length; i++) {
+      const row = rows[i].map(c => {
+        // xlsx may parse dates as Date objects
+        if (c instanceof Date) return c.toISOString().replace('T', ' ').substring(0, 19);
+        return String(c ?? '').trim();
+      });
+      const t = rowToTrade(row, map);
+      if (t) trades.push(t);
+    }
+  }
+  return trades;
 }
 
 /* ── Helpers ─────────────────────────────────────────────── */
@@ -529,15 +582,31 @@ export default function JournalTab({ lang = 'en' }) {
 
   useEffect(() => { load(); }, [load]);
 
-  const handleCSV = async (e) => {
+  const handleImport = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setImporting(true);
     setImportMsg(null);
-    const text = await file.text();
-    const parsed = parseMT5CSV(text);
+
+    let parsed = [];
+    const ext = file.name.split('.').pop().toLowerCase();
+    try {
+      if (ext === 'html' || ext === 'htm') {
+        const text = await file.text();
+        parsed = parseMT5HTML(text);
+      } else if (ext === 'xlsx' || ext === 'xls') {
+        parsed = await parseMT5XLSX(file);
+      } else {
+        // fallback: try HTML parse on unknown text files
+        const text = await file.text();
+        parsed = parseMT5HTML(text);
+      }
+    } catch {
+      parsed = [];
+    }
+
     if (!parsed.length) {
-      setImportMsg({ type: 'error', text: lang === 'zh' ? '无法解析文件，请确认是 MT5 历史报告 CSV。' : 'Could not parse file. Make sure it is an MT5 history report CSV.' });
+      setImportMsg({ type: 'error', text: lang === 'zh' ? '无法解析文件，请确认是 MT5 报告（HTML 或 XLSX）。' : 'Could not parse file. Please export as HTML or XLSX from MT5 History tab.' });
       setImporting(false);
       e.target.value = '';
       return;
@@ -586,8 +655,8 @@ export default function JournalTab({ lang = 'en' }) {
             cursor: importing ? 'wait' : 'pointer', whiteSpace: 'nowrap',
           }}>
             <UploadIcon />
-            {importing ? (lang === 'zh' ? '导入中...' : 'Importing...') : (lang === 'zh' ? '导入 MT5 CSV' : 'Import MT5 CSV')}
-            <input type="file" accept=".csv,.tsv,.txt" onChange={handleCSV} style={{ display: 'none' }} disabled={importing} />
+            {importing ? (lang === 'zh' ? '导入中...' : 'Importing...') : (lang === 'zh' ? '导入 MT5 文件' : 'Import MT5 File')}
+            <input type="file" accept=".html,.htm,.xlsx,.xls" onChange={handleImport} style={{ display: 'none' }} disabled={importing} />
           </label>
           {/* Manual add */}
           <button onClick={() => setShowManual(true)} style={{
