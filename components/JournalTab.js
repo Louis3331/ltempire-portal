@@ -666,6 +666,267 @@ function TradeLog({ trades, onDelete, onRefresh, lang }) {
   );
 }
 
+/* ── Performance helpers ─────────────────────────────────── */
+function fmtDur(ms) {
+  if (!ms || ms <= 0) return '—';
+  const m = Math.floor(ms / 60000);
+  if (m < 1) return '<1m';
+  if (m < 60) return `${m}m`;
+  const h = Math.floor(m / 60), rm = m % 60;
+  return rm ? `${h}h ${rm}m` : `${h}h`;
+}
+
+// Zero-centred horizontal P&L bar
+function PnLBar({ label, value, maxAbs }) {
+  const pct = maxAbs > 0 ? (Math.abs(value) / maxAbs) * 46 : 0;
+  const isPos = value >= 0;
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 9 }}>
+      <div style={{ width: 76, fontSize: 11, color: 'var(--text-dim)', textAlign: 'right', flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</div>
+      <div style={{ flex: 1, position: 'relative', height: 20 }}>
+        <div style={{ position: 'absolute', inset: 0, background: 'var(--bg)', borderRadius: 4 }} />
+        {value !== 0 && (
+          <div style={{
+            position: 'absolute', top: 3, bottom: 3,
+            left: isPos ? '50%' : `${50 - pct}%`,
+            width: `${pct}%`,
+            background: isPos ? 'rgba(62,207,142,0.75)' : 'rgba(224,82,82,0.75)',
+            borderRadius: isPos ? '0 4px 4px 0' : '4px 0 0 4px',
+            transition: 'width 0.4s ease',
+          }} />
+        )}
+        <div style={{ position: 'absolute', left: '50%', top: 0, bottom: 0, width: 1, background: 'var(--border)' }} />
+      </div>
+      <div style={{ width: 68, fontSize: 11, fontWeight: 700, color: clr(value), textAlign: 'right', flexShrink: 0 }}>{fmtPnL(value)}</div>
+    </div>
+  );
+}
+
+// Left-to-right count bar (gold)
+function CountBar({ label, value, maxVal }) {
+  const pct = maxVal > 0 ? (value / maxVal) * 92 : 0;
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 9 }}>
+      <div style={{ width: 76, fontSize: 11, color: 'var(--text-dim)', textAlign: 'right', flexShrink: 0 }}>{label}</div>
+      <div style={{ flex: 1, position: 'relative', height: 20 }}>
+        <div style={{ position: 'absolute', inset: 0, background: 'var(--bg)', borderRadius: 4 }} />
+        <div style={{ position: 'absolute', top: 3, bottom: 3, left: 0, width: `${pct}%`, background: 'rgba(201,168,76,0.5)', borderRadius: 4, transition: 'width 0.4s ease' }} />
+      </div>
+      <div style={{ width: 28, fontSize: 11, fontWeight: 700, color: 'var(--text-dim)', textAlign: 'right', flexShrink: 0 }}>{value}</div>
+    </div>
+  );
+}
+
+/* ── Performance view ────────────────────────────────────── */
+function PerformanceView({ trades, lang }) {
+  if (!trades.length) {
+    return (
+      <div style={{ textAlign: 'center', padding: 64, color: 'var(--text-dim)', fontSize: 13 }}>
+        {lang === 'zh' ? '暂无交易数据' : 'No trade data yet. Import your MT5 history to see performance analytics.'}
+      </div>
+    );
+  }
+
+  // ── Core stats ──
+  const sorted  = [...trades].sort((a, b) => new Date(a.closeTime) - new Date(b.closeTime));
+  const wins    = trades.filter(t => t.net > 0);
+  const losses  = trades.filter(t => t.net <= 0);
+  const avgWin  = wins.length   ? wins.reduce((s, t) => s + t.net, 0)   / wins.length   : 0;
+  const avgLoss = losses.length ? losses.reduce((s, t) => s + t.net, 0) / losses.length : 0;
+
+  const grossWin  = wins.reduce((s, t) => s + t.net, 0);
+  const grossLoss = Math.abs(losses.reduce((s, t) => s + t.net, 0));
+  const pf        = grossLoss > 0 ? (grossWin / grossLoss).toFixed(2) : '∞';
+  const pfNum     = grossLoss > 0 ? grossWin / grossLoss : 99;
+
+  // Max drawdown
+  let cumPnl = 0, peak = 0, maxDD = 0;
+  for (const t of sorted) {
+    cumPnl += t.net;
+    if (cumPnl > peak) peak = cumPnl;
+    const dd = peak - cumPnl;
+    if (dd > maxDD) maxDD = dd;
+  }
+
+  // Best / worst single trade
+  const byNet = [...trades].sort((a, b) => b.net - a.net);
+  const best  = byNet[0];
+  const worst = byNet[byNet.length - 1];
+
+  // Current streak (most recent trades first)
+  const recent = [...sorted].reverse();
+  let streak = 0;
+  if (recent.length) {
+    const dir = recent[0].net > 0 ? 1 : -1;
+    for (const t of recent) {
+      if ((t.net > 0 ? 1 : -1) === dir) streak += dir; else break;
+    }
+  }
+
+  // Avg holding time (winners vs losers)
+  const hold  = t => Math.max(0, new Date(t.closeTime) - new Date(t.openTime || t.closeTime));
+  const wHold = wins.length   ? wins.reduce((s, t) => s + hold(t), 0)   / wins.length   : 0;
+  const lHold = losses.length ? losses.reduce((s, t) => s + hold(t), 0) / losses.length : 0;
+
+  // P&L by weekday
+  const WD_LABELS = lang === 'zh'
+    ? ['一', '二', '三', '四', '五', '六', '日']
+    : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const wdData = WD_LABELS.map(label => ({ label, pnl: 0, count: 0 }));
+  for (const t of trades) {
+    const idx = (new Date(t.closeTime).getDay() + 6) % 7;
+    wdData[idx].pnl   += t.net;
+    wdData[idx].count += 1;
+  }
+  const maxWdAbs   = Math.max(...wdData.map(w => Math.abs(w.pnl)), 1);
+  const maxWdCount = Math.max(...wdData.map(w => w.count), 1);
+
+  // P&L by symbol
+  const symMap = {};
+  for (const t of trades) {
+    if (!symMap[t.symbol]) symMap[t.symbol] = { pnl: 0, count: 0, wins: 0 };
+    symMap[t.symbol].pnl   += t.net;
+    symMap[t.symbol].count += 1;
+    if (t.net > 0) symMap[t.symbol].wins += 1;
+  }
+  const symRows  = Object.entries(symMap).map(([sym, v]) => ({ label: sym, ...v })).sort((a, b) => Math.abs(b.pnl) - Math.abs(a.pnl)).slice(0, 7);
+  const maxSymAbs = Math.max(...symRows.map(s => Math.abs(s.pnl)), 1);
+
+  // Best / worst 5 trades
+  const top5        = byNet.slice(0, 5);
+  const bot5        = byNet.slice(-5).reverse();
+  const maxTradeAbs = Math.max(Math.abs(top5[0]?.net || 0), Math.abs(bot5[0]?.net || 0), 1);
+
+  const card = { background: 'var(--bg-table)', border: '1px solid var(--border)', borderRadius: 12, padding: '18px 20px', boxShadow: '0 2px 12px rgba(0,0,0,0.07)' };
+  const sectionTitle = (txt, color = 'var(--gold)') => (
+    <div style={{ fontSize: 10, fontWeight: 700, color, letterSpacing: 1.2, textTransform: 'uppercase', marginBottom: 16, paddingBottom: 10, borderBottom: '1px solid var(--border)' }}>{txt}</div>
+  );
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+      {/* ── KPI row ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6,1fr)', gap: 12 }}>
+
+        {/* Avg Win / Loss */}
+        <div style={{ ...card, position: 'relative', overflow: 'hidden' }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1.2, marginBottom: 10 }}>AVG TRADE</div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: '#3ECF8E', marginBottom: 3 }}>+${Math.abs(avgWin).toFixed(2)}</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#E05252' }}>-${Math.abs(avgLoss).toFixed(2)}</div>
+          <div style={{ fontSize: 9, color: 'var(--text-dim)', marginTop: 8 }}>Win avg · Loss avg</div>
+          <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 3, background: 'linear-gradient(180deg,#3ECF8E,#E05252)', borderRadius: '12px 0 0 12px' }} />
+        </div>
+
+        {/* Max Drawdown */}
+        <div style={{ ...card, position: 'relative', overflow: 'hidden' }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1.2, marginBottom: 10 }}>MAX DRAWDOWN</div>
+          <div style={{ fontSize: 20, fontWeight: 800, color: maxDD > 0 ? '#E05252' : 'var(--text)' }}>-${maxDD.toFixed(2)}</div>
+          <div style={{ fontSize: 9, color: 'var(--text-dim)', marginTop: 8 }}>Peak-to-trough</div>
+          <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 3, background: '#E05252', borderRadius: '12px 0 0 12px' }} />
+        </div>
+
+        {/* Profit Factor */}
+        <div style={{ ...card, position: 'relative', overflow: 'hidden' }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1.2, marginBottom: 10 }}>PROFIT FACTOR</div>
+          <div style={{ fontSize: 22, fontWeight: 800, color: pfNum >= 1.5 ? '#3ECF8E' : pfNum >= 1 ? 'var(--gold)' : '#E05252' }}>{pf}</div>
+          <div style={{ fontSize: 9, color: 'var(--text-dim)', marginTop: 8 }}>Gross win ÷ loss</div>
+          <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 3, background: pfNum >= 1 ? 'var(--gold)' : '#E05252', borderRadius: '12px 0 0 12px' }} />
+        </div>
+
+        {/* Best / Worst */}
+        <div style={{ ...card, position: 'relative', overflow: 'hidden' }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1.2, marginBottom: 10 }}>BEST · WORST</div>
+          <div style={{ fontSize: 14, fontWeight: 800, color: '#3ECF8E', marginBottom: 4 }}>+${best?.net.toFixed(2)}</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: '#E05252' }}>-${Math.abs(worst?.net || 0).toFixed(2)}</div>
+          <div style={{ fontSize: 9, color: 'var(--text-dim)', marginTop: 8 }}>Single trade</div>
+          <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 3, background: 'linear-gradient(180deg,#3ECF8E,#E05252)', borderRadius: '12px 0 0 12px' }} />
+        </div>
+
+        {/* Current streak */}
+        <div style={{ ...card, position: 'relative', overflow: 'hidden' }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1.2, marginBottom: 10 }}>STREAK</div>
+          <div style={{ fontSize: 26, fontWeight: 800, color: streak > 0 ? '#3ECF8E' : streak < 0 ? '#E05252' : 'var(--text)', lineHeight: 1 }}>
+            {streak > 0 ? '+' : ''}{streak}
+          </div>
+          <div style={{ fontSize: 9, color: 'var(--text-dim)', marginTop: 8 }}>
+            {streak > 1 ? 'win streak' : streak < -1 ? 'loss streak' : streak === 1 ? 'last win' : streak === -1 ? 'last loss' : 'neutral'}
+          </div>
+          <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 3, background: streak > 0 ? '#3ECF8E' : streak < 0 ? '#E05252' : 'var(--border)', borderRadius: '12px 0 0 12px' }} />
+        </div>
+
+        {/* Avg hold time */}
+        <div style={{ ...card, position: 'relative', overflow: 'hidden' }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1.2, marginBottom: 10 }}>AVG HOLD TIME</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+            <span style={{ fontSize: 9, padding: '2px 6px', borderRadius: 4, background: 'rgba(62,207,142,0.15)', color: '#3ECF8E', fontWeight: 800 }}>W</span>
+            <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{fmtDur(wHold)}</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ fontSize: 9, padding: '2px 6px', borderRadius: 4, background: 'rgba(224,82,82,0.15)', color: '#E05252', fontWeight: 800 }}>L</span>
+            <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{fmtDur(lHold)}</span>
+          </div>
+          <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 3, background: 'var(--gold)', borderRadius: '12px 0 0 12px' }} />
+        </div>
+      </div>
+
+      {/* ── Charts row ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
+
+        {/* Weekday P&L + count */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div style={card}>
+            {sectionTitle(lang === 'zh' ? '按星期盈亏' : 'P&L by Weekday')}
+            {wdData.map((w, i) => <PnLBar key={i} label={w.label} value={w.pnl} maxAbs={maxWdAbs} />)}
+          </div>
+          <div style={card}>
+            {sectionTitle(lang === 'zh' ? '按星期交易数' : 'Trades by Weekday')}
+            {wdData.map((w, i) => <CountBar key={i} label={w.label} value={w.count} maxVal={maxWdCount} />)}
+          </div>
+        </div>
+
+        {/* Best / worst 5 trades */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div style={card}>
+            {sectionTitle(lang === 'zh' ? '最佳5笔' : 'Best 5 Trades', '#3ECF8E')}
+            {top5.map((t, i) => <PnLBar key={i} label={t.symbol} value={t.net} maxAbs={maxTradeAbs} />)}
+          </div>
+          <div style={card}>
+            {sectionTitle(lang === 'zh' ? '最差5笔' : 'Worst 5 Trades', '#E05252')}
+            {bot5.map((t, i) => <PnLBar key={i} label={t.symbol} value={t.net} maxAbs={maxTradeAbs} />)}
+          </div>
+        </div>
+
+        {/* Symbol breakdown */}
+        <div style={card}>
+          {sectionTitle(lang === 'zh' ? '按品种分析' : 'P&L by Symbol')}
+          {symRows.map((s, i) => (
+            <div key={i} style={{ marginBottom: 16 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                <div>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)' }}>{s.label}</span>
+                  <span style={{ fontSize: 10, color: 'var(--text-dim)', marginLeft: 8 }}>{s.count} trades · {((s.wins/s.count)*100).toFixed(0)}% W</span>
+                </div>
+                <span style={{ fontSize: 12, fontWeight: 800, color: clr(s.pnl) }}>{fmtPnL(s.pnl)}</span>
+              </div>
+              <div style={{ height: 6, background: 'var(--bg)', borderRadius: 3, overflow: 'hidden' }}>
+                <div style={{
+                  height: '100%',
+                  width: `${(Math.abs(s.pnl) / maxSymAbs) * 100}%`,
+                  background: s.pnl >= 0
+                    ? 'linear-gradient(90deg, rgba(62,207,142,0.9), rgba(62,207,142,0.3))'
+                    : 'linear-gradient(90deg, rgba(224,82,82,0.9), rgba(224,82,82,0.3))',
+                  borderRadius: 3,
+                  transition: 'width 0.5s ease',
+                }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ── Main component ──────────────────────────────────────── */
 export default function JournalTab({ lang = 'en' }) {
   const [trades,      setTrades]      = useState([]);
@@ -674,7 +935,7 @@ export default function JournalTab({ lang = 'en' }) {
   const [clearing,    setClearing]    = useState(false);
   const [showManual,  setShowManual]  = useState(false);
   const [importMsg,   setImportMsg]   = useState(null);
-  const [view,        setView]        = useState('calendar'); // 'calendar' | 'log'
+  const [view,        setView]        = useState('calendar'); // 'calendar' | 'log' | 'performance'
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -813,7 +1074,11 @@ export default function JournalTab({ lang = 'en' }) {
 
           {/* View toggle */}
           <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
-            {[['calendar', lang === 'zh' ? '📅 日历' : 'Calendar'], ['log', lang === 'zh' ? '📋 交易记录' : 'Trade Log']].map(([v, label]) => (
+            {[
+              ['calendar',    lang === 'zh' ? 'Calendar' : 'Calendar'],
+              ['log',         lang === 'zh' ? 'Trade Log' : 'Trade Log'],
+              ['performance', lang === 'zh' ? 'Performance' : 'Performance'],
+            ].map(([v, label]) => (
               <button key={v} onClick={() => setView(v)} style={{
                 padding: '7px 16px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer',
                 border: '1px solid', transition: 'all 0.15s',
@@ -824,8 +1089,9 @@ export default function JournalTab({ lang = 'en' }) {
             ))}
           </div>
 
-          {view === 'calendar' && <Calendar trades={trades} lang={lang} />}
-          {view === 'log'      && <TradeLog trades={trades} onDelete={deleteTrade} onRefresh={load} lang={lang} />}
+          {view === 'calendar'    && <Calendar        trades={trades} lang={lang} />}
+          {view === 'log'         && <TradeLog        trades={trades} onDelete={deleteTrade} onRefresh={load} lang={lang} />}
+          {view === 'performance' && <PerformanceView trades={trades} lang={lang} />}
         </>
       )}
 
