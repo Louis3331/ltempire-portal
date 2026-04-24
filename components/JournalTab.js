@@ -17,8 +17,10 @@ function buildTrade(raw) {
 
   const dir      = t.includes('sell') ? 'sell' : 'buy';
   const diff     = (parseFloat(closePrice) || 0) - (parseFloat(openPrice) || 0);
-  const pipSize  = symbol.toUpperCase().includes('JPY') ? 0.01
-                 : (symbol.toUpperCase().includes('XAU') || symbol.toUpperCase().includes('GOLD')) ? 0.1
+  const sym      = symbol.toUpperCase();
+  const pipSize  = sym.includes('JPY') ? 0.01
+                 : (sym.includes('XAU') || sym.includes('GOLD')) ? 0.01
+                 : sym.includes('US30') || sym.includes('US100') || sym.includes('NAS') || sym.includes('SPX') ? 1
                  : 0.0001;
   const rawPips  = diff / pipSize;
   const pips     = dir === 'sell' ? -rawPips : rawPips;
@@ -120,69 +122,37 @@ function parseMT5HTML(text) {
     const rows = Array.from(table.querySelectorAll('tr'));
     if (rows.length < 2) continue;
 
-    // find header row — accept any row that has symbol + profit, or ticket/deal/position
-    let headerRow = null, headerIdx = -1;
+    // Find header row
+    let headerIdx = -1;
     for (let i = 0; i < Math.min(8, rows.length); i++) {
       const cells = Array.from(rows[i].querySelectorAll('td,th')).map(c => c.textContent.trim().toLowerCase());
-      const hasId     = cells.some(c => c === 'ticket' || c === '#' || c === 'deal' || c === 'position' || c === 'order');
-      const hasSymbol = cells.some(c => c === 'symbol' || c.includes('symbol'));
-      const hasProfit = cells.some(c => c === 'profit' || c.includes('profit'));
-      if (hasId || (hasSymbol && hasProfit)) {
-        headerRow = cells;
-        headerIdx = i;
-        break;
-      }
-    }
-    if (!headerRow) continue;
-
-    const map = makeColMapper(headerRow);
-    for (let i = headerIdx + 1; i < rows.length; i++) {
-      const cells = Array.from(rows[i].querySelectorAll('td,th')).map(c => c.textContent.trim());
-      if (cells.length < 4) continue;
-      const t = rowToTrade(cells, map);
-      if (t) trades.push(t);
-    }
-    if (trades.length > 0) break; // found the right table
-  }
-  return trades;
-}
-
-/* ── MT5 XLSX parser ─────────────────────────────────────── */
-async function parseMT5XLSX(file) {
-  const XLSX = (await import('xlsx')).default;
-  const buf  = await file.arrayBuffer();
-  const wb   = XLSX.read(buf, { type: 'array', cellDates: true });
-  const trades = [];
-
-  for (const sheetName of wb.SheetNames) {
-    const ws   = wb.Sheets[sheetName];
-    const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
-    if (rows.length < 2) continue;
-
-    // find header row
-    let headerIdx = -1;
-    for (let i = 0; i < Math.min(10, rows.length); i++) {
-      const cells = rows[i].map(c => String(c || '').toLowerCase());
-      if (cells.some(c => c.includes('ticket') || c.includes('position') || c.includes('deal'))) {
-        headerIdx = i;
-        break;
-      }
+      const hasId     = cells.some(c => c === 'position' || c === 'ticket' || c === '#' || c === 'deal');
+      const hasSymbol = cells.some(c => c === 'symbol');
+      const hasProfit = cells.some(c => c === 'profit');
+      if ((hasId || hasSymbol) && hasProfit) { headerIdx = i; break; }
     }
     if (headerIdx === -1) continue;
 
-    const map = makeColMapper(rows[headerIdx]);
+    // Build map from header — strip hidden cells from header too
+    const headerCells = Array.from(rows[headerIdx].querySelectorAll('td,th'))
+      .filter(c => !c.className.includes('hidden'))
+      .map(c => c.textContent.trim().toLowerCase());
+    const map = makeColMapper(headerCells);
+
     for (let i = headerIdx + 1; i < rows.length; i++) {
-      const row = rows[i].map(c => {
-        // xlsx may parse dates as Date objects
-        if (c instanceof Date) return c.toISOString().replace('T', ' ').substring(0, 19);
-        return String(c ?? '').trim();
-      });
-      const t = rowToTrade(row, map);
+      // Strip hidden cells — MT5 embeds <td class="hidden" colspan="8"> in each data row
+      const cells = Array.from(rows[i].querySelectorAll('td,th'))
+        .filter(c => !c.className.includes('hidden'))
+        .map(c => c.textContent.trim());
+      if (cells.length < 8) continue;
+      const t = rowToTrade(cells, map);
       if (t) trades.push(t);
     }
+    if (trades.length > 0) break;
   }
   return trades;
 }
+
 
 /* ── Helpers ─────────────────────────────────────────────── */
 function fmtDate(iso) {
@@ -619,19 +589,14 @@ export default function JournalTab({ lang = 'en' }) {
     let parsed = [];
     const ext = file.name.split('.').pop().toLowerCase();
     try {
-      if (ext === 'xlsx' || ext === 'xls') {
-        parsed = await parseMT5XLSX(file);
-      } else {
-        // HTML or unknown — use UTF-16 aware reader
-        const text = await readFileText(file);
-        parsed = parseMT5HTML(text);
-      }
+      const text = await readFileText(file);
+      parsed = parseMT5HTML(text);
     } catch {
       parsed = [];
     }
 
     if (!parsed.length) {
-      setImportMsg({ type: 'error', text: lang === 'zh' ? '无法解析文件，请确认是 MT5 报告（HTML 或 XLSX）。' : 'Could not parse file. Please export as HTML or XLSX from MT5 History tab.' });
+      setImportMsg({ type: 'error', text: lang === 'zh' ? '无法解析文件，请确认是 MT5 HTML 历史报告。' : 'Could not parse file. Please export as HTML from MT5 History tab (right-click → Save as Report).' });
       setImporting(false);
       e.target.value = '';
       return;
@@ -680,8 +645,8 @@ export default function JournalTab({ lang = 'en' }) {
             cursor: importing ? 'wait' : 'pointer', whiteSpace: 'nowrap',
           }}>
             <UploadIcon />
-            {importing ? (lang === 'zh' ? '导入中...' : 'Importing...') : (lang === 'zh' ? '导入 MT5 文件' : 'Import MT5 File')}
-            <input type="file" accept=".html,.htm,.xlsx,.xls" onChange={handleImport} style={{ display: 'none' }} disabled={importing} />
+            {importing ? (lang === 'zh' ? '导入中...' : 'Importing...') : (lang === 'zh' ? '导入 MT5 HTML' : 'Import MT5 HTML')}
+            <input type="file" accept=".html,.htm" onChange={handleImport} style={{ display: 'none' }} disabled={importing} />
           </label>
           {/* Manual add */}
           <button onClick={() => setShowManual(true)} style={{
