@@ -74,7 +74,7 @@ function makeColMapper(headers) {
   const closeTimeCol = timeIndices.length >= 2 ? timeIndices[timeIndices.length - 1] : find('close time', 'time close', 'time');
 
   return {
-    ticket:     find('ticket', '#', 'position', 'deal', 'order'),
+    ticket:     find('position', 'ticket', '#', 'deal', 'order'),
     openTime:   openTimeCol,
     closeTime:  closeTimeCol,
     symbol:     find('symbol', 'item'),
@@ -97,6 +97,16 @@ function rowToTrade(row, map) {
     openPrice: g('openPrice'), closePrice: g('closePrice'),
     profit: g('profit'), commission: g('commission'), swap: g('swap'), comment: g('comment'),
   });
+}
+
+/* ── UTF-16 aware file reader ────────────────────────────── */
+async function readFileText(file) {
+  const buf   = await file.arrayBuffer();
+  const bytes = new Uint8Array(buf);
+  // Detect UTF-16 BOM: FF FE (LE) or FE FF (BE)
+  if (bytes[0] === 0xFF && bytes[1] === 0xFE) return new TextDecoder('utf-16le').decode(buf);
+  if (bytes[0] === 0xFE && bytes[1] === 0xFF) return new TextDecoder('utf-16be').decode(buf);
+  return new TextDecoder('utf-8').decode(buf);
 }
 
 /* ── MT5 HTML parser ─────────────────────────────────────── */
@@ -609,14 +619,11 @@ export default function JournalTab({ lang = 'en' }) {
     let parsed = [];
     const ext = file.name.split('.').pop().toLowerCase();
     try {
-      if (ext === 'html' || ext === 'htm') {
-        const text = await file.text();
-        parsed = parseMT5HTML(text);
-      } else if (ext === 'xlsx' || ext === 'xls') {
+      if (ext === 'xlsx' || ext === 'xls') {
         parsed = await parseMT5XLSX(file);
       } else {
-        // fallback: try HTML parse on unknown text files
-        const text = await file.text();
+        // HTML or unknown — use UTF-16 aware reader
+        const text = await readFileText(file);
         parsed = parseMT5HTML(text);
       }
     } catch {
