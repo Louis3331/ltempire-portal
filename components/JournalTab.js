@@ -13,11 +13,12 @@ function buildTrade(raw) {
   // Skip still-open positions (close price = 0 or missing)
   if (!closePrice || parseFloat(closePrice) === 0) return null;
 
-  const t = (type || '').toLowerCase();
-  if (t.includes('balance') || t.includes('deposit') || t.includes('withdrawal') || t.includes('credit')) return null;
+  const t = (type || '').toLowerCase().trim();
+  // Only accept fully-closed market orders — reject pending types, balance rows, etc.
+  if (t !== 'buy' && t !== 'sell') return null;
   if (!symbol) return null;
 
-  const dir      = t.includes('sell') ? 'sell' : 'buy';
+  const dir      = t === 'sell' ? 'sell' : 'buy';
   const diff     = (parseFloat(closePrice) || 0) - (parseFloat(openPrice) || 0);
   const sym      = symbol.toUpperCase();
   const pipSize  = sym.includes('JPY') ? 0.01
