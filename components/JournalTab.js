@@ -10,6 +10,8 @@ function buildTrade(raw) {
   if (!ticket || !closeTime) return null;
   const closeTs = new Date(closeTime);
   if (isNaN(closeTs.getTime())) return null;
+  // Skip still-open positions (close price = 0 or missing)
+  if (!closePrice || parseFloat(closePrice) === 0) return null;
 
   const t = (type || '').toLowerCase();
   if (t.includes('balance') || t.includes('deposit') || t.includes('withdrawal') || t.includes('credit')) return null;
@@ -200,8 +202,8 @@ const PlusIcon = () => (
     <line x1="5" y1="12" x2="19" y2="12" strokeLinecap="round"/>
   </svg>
 );
-const TrashIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 13, height: 13 }}>
+const TrashIcon = ({ size = 13 }) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: size, height: size }}>
     <polyline points="3 6 5 6 21 6" strokeLinecap="round"/>
     <path d="M19 6l-1 14H6L5 6" strokeLinecap="round"/>
     <path d="M10 11v6M14 11v6" strokeLinecap="round"/>
@@ -566,6 +568,7 @@ export default function JournalTab({ lang = 'en' }) {
   const [trades,      setTrades]      = useState([]);
   const [loading,     setLoading]     = useState(true);
   const [importing,   setImporting]   = useState(false);
+  const [clearing,    setClearing]    = useState(false);
   const [showManual,  setShowManual]  = useState(false);
   const [importMsg,   setImportMsg]   = useState(null);
   const [view,        setView]        = useState('calendar'); // 'calendar' | 'log'
@@ -624,6 +627,15 @@ export default function JournalTab({ lang = 'en' }) {
     setTrades(ts => ts.filter(t => t.ticket !== ticket));
   };
 
+  const clearAll = async () => {
+    if (!confirm(lang === 'zh' ? '确定清除全部交易记录？此操作无法撤销。' : 'Clear ALL trade history? This cannot be undone.')) return;
+    setClearing(true);
+    await fetch('/api/journal?all=true', { method: 'DELETE' });
+    setTrades([]);
+    setImportMsg(null);
+    setClearing(false);
+  };
+
   return (
     <div style={{ paddingBottom: 48 }}>
       {/* Header row */}
@@ -658,6 +670,18 @@ export default function JournalTab({ lang = 'en' }) {
             <PlusIcon />
             {lang === 'zh' ? '手动添加' : 'Add Manual'}
           </button>
+          {/* Clear all */}
+          {trades.length > 0 && (
+            <button onClick={clearAll} disabled={clearing} style={{
+              display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px',
+              background: 'rgba(224,82,82,0.08)', border: '1px solid rgba(224,82,82,0.25)',
+              borderRadius: 8, fontSize: 12, fontWeight: 600, color: '#E05252',
+              cursor: clearing ? 'wait' : 'pointer', whiteSpace: 'nowrap',
+            }}>
+              <TrashIcon size={13} />
+              {clearing ? '...' : (lang === 'zh' ? '清除全部' : 'Clear All')}
+            </button>
+          )}
         </div>
       </div>
 
