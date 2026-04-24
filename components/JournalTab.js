@@ -10,8 +10,9 @@ function buildTrade(raw) {
   if (!ticket || !closeTime) return null;
   const closeTs = new Date(closeTime);
   if (isNaN(closeTs.getTime())) return null;
-  // Skip still-open positions (close price = 0 or missing)
-  if (!closePrice || parseFloat(closePrice) === 0) return null;
+  // Skip rows where close price is missing, zero, or non-numeric (e.g. "filled", "canceled" from orders section)
+  const closePriceVal = parseFloat(closePrice);
+  if (!closePrice || isNaN(closePriceVal) || closePriceVal <= 0) return null;
 
   const t = (type || '').toLowerCase().trim();
   // Only accept fully-closed market orders — reject pending types, balance rows, etc.
@@ -39,7 +40,7 @@ function buildTrade(raw) {
     type:       dir,
     lots:       parseFloat(lots) || 0,
     openPrice:  parseFloat(openPrice)  || 0,
-    closePrice: parseFloat(closePrice) || 0,
+    closePrice: closePriceVal,
     profit:     Math.round(p * 100) / 100,
     commission: Math.round(c * 100) / 100,
     swap:       Math.round(s * 100) / 100,
