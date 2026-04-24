@@ -52,22 +52,36 @@ function normaliseDate(str) {
 /* ── Column mapper (shared by HTML + XLSX parsers) ──────── */
 function makeColMapper(headers) {
   const h = headers.map(s => String(s || '').trim().toLowerCase());
+
   const find = (...patterns) => {
     for (const p of patterns) {
-      const i = h.findIndex(c => c === p || c.startsWith(p));
+      const i = h.findIndex(c => c === p || c.includes(p));
       if (i !== -1) return i;
     }
     return -1;
   };
+
+  // MT5 uses "Price" for BOTH open price and close price columns — handle by position
+  const priceIndices = h.reduce((a, c, i) => { if (c === 'price') a.push(i); return a; }, []);
+  const openPriceCol  = priceIndices.length >= 2 ? priceIndices[0]
+                      : find('open price', 'price open', 'price (open)');
+  const closePriceCol = priceIndices.length >= 2 ? priceIndices[priceIndices.length - 1]
+                      : find('close price', 'price close', 'price (close)', 'price');
+
+  // MT5 "Deals" view uses "Time" twice (open and close) — handle by position
+  const timeIndices = h.reduce((a, c, i) => { if (c === 'time') a.push(i); return a; }, []);
+  const openTimeCol  = timeIndices.length >= 2 ? timeIndices[0]  : find('open time', 'time open');
+  const closeTimeCol = timeIndices.length >= 2 ? timeIndices[timeIndices.length - 1] : find('close time', 'time close', 'time');
+
   return {
-    ticket:     find('ticket', 'position', 'deal', 'order'),
-    openTime:   find('open time', 'time open'),
-    closeTime:  find('close time', 'time close', 'time'),
+    ticket:     find('ticket', '#', 'position', 'deal', 'order'),
+    openTime:   openTimeCol,
+    closeTime:  closeTimeCol,
     symbol:     find('symbol', 'item'),
     type:       find('type', 'direction'),
     lots:       find('volume', 'lots', 'size', 'quantity'),
-    openPrice:  find('open price', 'price open', 'price (open)'),
-    closePrice: find('close price', 'price close', 'price (close)', 'price'),
+    openPrice:  openPriceCol,
+    closePrice: closePriceCol,
     profit:     find('profit'),
     commission: find('commission'),
     swap:       find('swap'),
@@ -96,11 +110,14 @@ function parseMT5HTML(text) {
     const rows = Array.from(table.querySelectorAll('tr'));
     if (rows.length < 2) continue;
 
-    // find header row
+    // find header row — accept any row that has symbol + profit, or ticket/deal/position
     let headerRow = null, headerIdx = -1;
-    for (let i = 0; i < Math.min(5, rows.length); i++) {
+    for (let i = 0; i < Math.min(8, rows.length); i++) {
       const cells = Array.from(rows[i].querySelectorAll('td,th')).map(c => c.textContent.trim().toLowerCase());
-      if (cells.some(c => c.includes('ticket') || c.includes('position') || c.includes('deal'))) {
+      const hasId     = cells.some(c => c === 'ticket' || c === '#' || c === 'deal' || c === 'position' || c === 'order');
+      const hasSymbol = cells.some(c => c === 'symbol' || c.includes('symbol'));
+      const hasProfit = cells.some(c => c === 'profit' || c.includes('profit'));
+      if (hasId || (hasSymbol && hasProfit)) {
         headerRow = cells;
         headerIdx = i;
         break;
@@ -115,6 +132,7 @@ function parseMT5HTML(text) {
       const t = rowToTrade(cells, map);
       if (t) trades.push(t);
     }
+    if (trades.length > 0) break; // found the right table
   }
   return trades;
 }
