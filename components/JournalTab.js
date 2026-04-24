@@ -645,34 +645,87 @@ function Calendar({ trades, lang }) {
       </div>{/* end overflowX scroll */}
 
       {/* ── Selected day detail ── */}
-      {selectedData && (
-        <div style={{ borderTop: '1px solid var(--border)', padding: '16px 24px', background: 'rgba(201,168,76,0.06)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-            <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--text)' }}>
-              {MONTHS[month]} {selected}
-            </div>
-            <div style={{ height: 14, width: 1, background: 'var(--border)' }} />
-            <div style={{ fontSize: 12, color: 'var(--text-dim)' }}>{selectedTrades.length} {lang === 'zh' ? '笔交易' : 'trades'}</div>
-            <div style={{ marginLeft: 'auto', fontSize: 14, fontWeight: 800, color: clr(selectedData.pnl) }}>{fmtPnL(selectedData.pnl)}</div>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {selectedTrades.map(t => (
-              <div key={t.ticket} style={{
-                display: 'flex', alignItems: 'center', gap: 10, fontSize: 12,
-                background: 'var(--bg-table)', border: '1px solid var(--border)',
-                borderRadius: 8, padding: '8px 12px',
-              }}>
-                <span style={{ padding: '2px 8px', borderRadius: 5, fontSize: 10, fontWeight: 700, background: t.type === 'buy' ? 'rgba(62,207,142,0.12)' : 'rgba(224,82,82,0.12)', color: t.type === 'buy' ? '#3ECF8E' : '#E05252' }}>{t.type.toUpperCase()}</span>
-                <span style={{ color: 'var(--text)', fontWeight: 700 }}>{t.symbol}</span>
-                <span style={{ color: 'var(--text-dim)' }}>{t.lots} lots</span>
-                <span style={{ color: 'var(--text-dim)', fontSize: 11 }}>{fmtTime(t.closeTime)}</span>
-                <span style={{ color: clr(t.pips), fontSize: 11, marginLeft: 'auto' }}>{t.pips > 0 ? '+' : ''}{t.pips} pips</span>
-                <span style={{ color: clr(t.net), fontWeight: 800, fontSize: 13, minWidth: 72, textAlign: 'right' }}>{fmtPnL(t.net)}</span>
+      {selectedData && (() => {
+        const dayWins   = selectedTrades.filter(t => t.net > 0);
+        const dayLosses = selectedTrades.filter(t => t.net <= 0);
+        const dayGross  = dayWins.reduce((s, t) => s + t.net, 0);
+        const dayLoss   = Math.abs(dayLosses.reduce((s, t) => s + t.net, 0));
+        return (
+          <div style={{ borderTop: '1px solid var(--border)', background: 'var(--bg)' }}>
+            {/* Day header */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 0, padding: '12px 20px', borderBottom: '1px solid var(--border)', background: 'linear-gradient(90deg,rgba(201,168,76,0.07),transparent)' }}>
+              <div style={{ marginRight: 16 }}>
+                <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>{MONTHS[month]} {selected}</span>
+                <span style={{ fontSize: 11, color: 'var(--text-dim)', marginLeft: 10 }}>{selectedTrades.length} {lang === 'zh' ? '笔' : 'trades'}</span>
               </div>
-            ))}
+              {/* win/loss pills */}
+              <div style={{ display: 'flex', gap: 6 }}>
+                <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: 'rgba(62,207,142,0.12)', color: '#3ECF8E' }}>
+                  {dayWins.length}W
+                </span>
+                <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: 'rgba(224,82,82,0.12)', color: '#E05252' }}>
+                  {dayLosses.length}L
+                </span>
+              </div>
+              {/* win bar */}
+              <div style={{ flex: 1, margin: '0 16px', height: 4, background: 'var(--border)', borderRadius: 2, overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${selectedTrades.length > 0 ? (dayWins.length / selectedTrades.length) * 100 : 0}%`, background: 'linear-gradient(90deg,#3ECF8E,rgba(62,207,142,0.4))', borderRadius: 2, transition: 'width 0.4s ease' }} />
+              </div>
+              <div style={{ fontSize: 16, fontWeight: 800, color: clr(selectedData.pnl) }}>{fmtPnL(selectedData.pnl)}</div>
+            </div>
+
+            {/* Trade rows */}
+            <div style={{ maxHeight: 340, overflowY: 'auto' }}>
+              {/* Column header */}
+              <div style={{ display: 'grid', gridTemplateColumns: '36px 1fr 60px 64px 70px 80px', gap: 0, padding: '6px 20px', borderBottom: '1px solid var(--border)', background: 'var(--bg-table-hd)' }}>
+                {['', 'Symbol', 'Lots', 'Time', 'Pips', 'P&L'].map((h, i) => (
+                  <div key={i} style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 0.8, textAlign: i >= 4 ? 'right' : 'left' }}>{h}</div>
+                ))}
+              </div>
+              {selectedTrades.map((t, idx) => (
+                <div key={t.ticket} style={{
+                  display: 'grid', gridTemplateColumns: '36px 1fr 60px 64px 70px 80px',
+                  alignItems: 'center', gap: 0,
+                  padding: '9px 20px',
+                  borderBottom: idx < selectedTrades.length - 1 ? '1px solid var(--border)' : 'none',
+                  background: idx % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)',
+                  borderLeft: `3px solid ${t.type === 'buy' ? 'rgba(62,207,142,0.5)' : 'rgba(224,82,82,0.5)'}`,
+                  transition: 'background 0.1s',
+                }}>
+                  {/* Type badge */}
+                  <span style={{
+                    fontSize: 9, fontWeight: 800, padding: '2px 5px', borderRadius: 4,
+                    background: t.type === 'buy' ? 'rgba(62,207,142,0.12)' : 'rgba(224,82,82,0.12)',
+                    color: t.type === 'buy' ? '#3ECF8E' : '#E05252',
+                    letterSpacing: 0.3, textAlign: 'center',
+                  }}>{t.type === 'buy' ? 'BUY' : 'SELL'}</span>
+                  {/* Symbol */}
+                  <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)', paddingLeft: 4 }}>{t.symbol.replace('.ECN','').replace('.ecn','')}</span>
+                  {/* Lots */}
+                  <span style={{ fontSize: 11, color: 'var(--text-dim)' }}>{t.lots}</span>
+                  {/* Time */}
+                  <span style={{ fontSize: 11, color: 'var(--text-dim)', fontVariantNumeric: 'tabular-nums' }}>{fmtTime(t.closeTime)}</span>
+                  {/* Pips */}
+                  <span style={{ fontSize: 11, fontWeight: 600, color: clr(t.pips), textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
+                    {t.pips > 0 ? '+' : ''}{t.pips}
+                  </span>
+                  {/* P&L */}
+                  <span style={{ fontSize: 13, fontWeight: 800, color: clr(t.net), textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
+                    {fmtPnL(t.net)}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {/* Footer totals */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 20, padding: '10px 20px', borderTop: '1px solid var(--border)', background: 'var(--bg-table-hd)' }}>
+              {dayGross > 0 && <span style={{ fontSize: 11, color: '#3ECF8E' }}>Gross +${dayGross.toFixed(2)}</span>}
+              {dayLoss > 0  && <span style={{ fontSize: 11, color: '#E05252' }}>Loss -${dayLoss.toFixed(2)}</span>}
+              <span style={{ fontSize: 11, fontWeight: 800, color: clr(selectedData.pnl) }}>Net {fmtPnL(selectedData.pnl)}</span>
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
