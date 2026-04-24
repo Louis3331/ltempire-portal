@@ -369,14 +369,14 @@ function StatsBar({ trades, lang }) {
   ];
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 12, marginBottom: 20 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(110px,1fr))', gap: 10, marginBottom: 20 }}>
       {stats.map((s, i) => (
         <div key={i} style={{
           background: 'var(--bg-table)', border: '1px solid var(--border)', borderRadius: 10,
-          padding: '14px 16px', boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
+          padding: '12px 14px', boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
         }}>
-          <div style={{ fontSize: 10, color: 'var(--text-dim)', fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 6 }}>{s.label}</div>
-          <div style={{ fontSize: 18, fontWeight: 800, color: s.color }}>{s.value}</div>
+          <div style={{ fontSize: 9, color: 'var(--text-dim)', fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 5 }}>{s.label}</div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: s.color }}>{s.value}</div>
         </div>
       ))}
     </div>
@@ -386,7 +386,8 @@ function StatsBar({ trades, lang }) {
 /* ── Calendar ────────────────────────────────────────────── */
 const DAYS   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-const COLS   = 'repeat(7,1fr) 90px';
+const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const COLS   = 'repeat(7,1fr) 80px';
 
 function Calendar({ trades, lang }) {
   const now   = new Date();
@@ -394,6 +395,7 @@ function Calendar({ trades, lang }) {
   const [month, setMonth] = useState(now.getMonth());
   const [selected, setSelected] = useState(null);
   const [hovered,  setHovered]  = useState(null);
+  const [zoom,     setZoom]     = useState('month'); // 'month' | 'year'
 
   const monthTrades = trades.filter(t => {
     const d = new Date(t.closeTime);
@@ -429,6 +431,76 @@ function Calendar({ trades, lang }) {
 
   const dayKey = (d) => d ? `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}` : null;
 
+  /* ── Year overview mode ── */
+  if (zoom === 'year') {
+    const yearTrades = trades.filter(t => new Date(t.closeTime).getFullYear() === year);
+    const monthStats = Array.from({ length: 12 }, (_, m) => {
+      const mt = yearTrades.filter(t => new Date(t.closeTime).getMonth() === m);
+      const pnl = mt.reduce((s, t) => s + t.net, 0);
+      return { pnl, count: mt.length, wins: mt.filter(t => t.net > 0).length };
+    });
+    const yearPnl = monthStats.reduce((s, m) => s + m.pnl, 0);
+    const activeMths = monthStats.filter(m => m.count > 0).length;
+
+    return (
+      <div style={{ background: 'var(--bg-table)', border: '1px solid var(--border)', borderRadius: 14, overflow: 'hidden', marginBottom: 20, boxShadow: '0 4px 24px rgba(0,0,0,0.12)' }}>
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', background: 'linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.04))', borderBottom: '1px solid var(--border)' }}>
+          <button onClick={() => setYear(y => y - 1)} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border)', borderRadius: 8, cursor: 'pointer', color: 'var(--text-dim)', display: 'flex', padding: '6px 8px' }}>
+            <ChevronIcon dir="left" />
+          </button>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text)', letterSpacing: 0.5 }}>{year} Overview</div>
+            {activeMths > 0 && (
+              <div style={{ fontSize: 11, color: 'var(--text-dim)', marginTop: 2 }}>
+                <span style={{ color: clr(yearPnl), fontWeight: 700 }}>{fmtPnL(yearPnl)}</span>
+                <span style={{ margin: '0 6px', opacity: 0.4 }}>·</span>
+                <span>{activeMths} active months</span>
+              </div>
+            )}
+          </div>
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+            <button onClick={() => setZoom('month')} style={{ background: 'var(--gold-alpha)', border: '1px solid rgba(201,168,76,0.35)', borderRadius: 8, cursor: 'pointer', color: 'var(--gold)', padding: '5px 10px', fontSize: 11, fontWeight: 700 }}>
+              Month ↗
+            </button>
+            <button onClick={() => setYear(y => y + 1)} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border)', borderRadius: 8, cursor: 'pointer', color: 'var(--text-dim)', display: 'flex', padding: '6px 8px' }}>
+              <ChevronIcon dir="right" />
+            </button>
+          </div>
+        </div>
+        {/* 12-month grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(120px,1fr))', gap: 10, padding: 16 }}>
+          {MONTHS_SHORT.map((mName, m) => {
+            const s = monthStats[m];
+            const isCur = year === now.getFullYear() && m === now.getMonth();
+            return (
+              <div key={m} onClick={() => { if (s.count > 0) { setMonth(m); setZoom('month'); setSelected(null); } }}
+                style={{
+                  background: s.count > 0 ? (s.pnl >= 0 ? 'rgba(62,207,142,0.07)' : 'rgba(224,82,82,0.07)') : 'rgba(255,255,255,0.02)',
+                  border: isCur ? '1px solid var(--gold)' : '1px solid var(--border)',
+                  borderRadius: 10, padding: '14px 12px',
+                  cursor: s.count > 0 ? 'pointer' : 'default',
+                  transition: 'background 0.15s',
+                  position: 'relative', overflow: 'hidden',
+                }}>
+                {s.count > 0 && <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: s.pnl >= 0 ? '#3ECF8E' : '#E05252', opacity: 0.6 }} />}
+                <div style={{ fontSize: 11, fontWeight: 700, color: isCur ? 'var(--gold)' : 'var(--text)', marginBottom: 8 }}>{mName}</div>
+                {s.count > 0 ? (
+                  <>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: clr(s.pnl), marginBottom: 4 }}>{fmtPnL(s.pnl)}</div>
+                    <div style={{ fontSize: 9, color: 'var(--text-dim)' }}>{s.count} trades · {((s.wins/s.count)*100).toFixed(0)}% W</div>
+                  </>
+                ) : (
+                  <div style={{ fontSize: 11, color: 'var(--text-dim)', opacity: 0.4 }}>—</div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ background: 'var(--bg-table)', border: '1px solid var(--border)', borderRadius: 14, overflow: 'hidden', marginBottom: 20, boxShadow: '0 4px 24px rgba(0,0,0,0.12)' }}>
 
@@ -449,11 +521,19 @@ function Calendar({ trades, lang }) {
             </div>
           )}
         </div>
-        <button onClick={nextMonth} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border)', borderRadius: 8, cursor: 'pointer', color: 'var(--text-dim)', display: 'flex', padding: '6px 8px', transition: 'all 0.15s' }}>
-          <ChevronIcon dir="right" />
-        </button>
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          <button onClick={() => setZoom('year')} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border)', borderRadius: 8, cursor: 'pointer', color: 'var(--text-dim)', padding: '5px 10px', fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap' }}>
+            {year} ↙
+          </button>
+          <button onClick={nextMonth} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border)', borderRadius: 8, cursor: 'pointer', color: 'var(--text-dim)', display: 'flex', padding: '6px 8px', transition: 'all 0.15s' }}>
+            <ChevronIcon dir="right" />
+          </button>
+        </div>
       </div>
 
+      {/* ── Column headers + grid (horizontally scrollable on mobile) ── */}
+      <div style={{ overflowX: 'auto' }}>
+      <div style={{ minWidth: 480 }}>
       {/* ── Column headers ── */}
       <div style={{ display: 'grid', gridTemplateColumns: COLS, borderBottom: '1px solid var(--border)', background: 'var(--bg-table-hd)' }}>
         {DAYS.map((d, i) => (
@@ -484,7 +564,7 @@ function Calendar({ trades, lang }) {
                   onMouseEnter={() => day && data && setHovered(day)}
                   onMouseLeave={() => setHovered(null)}
                   style={{
-                    minHeight: 80, padding: '8px 10px',
+                    minHeight: 92, padding: '8px 8px',
                     borderRight: di < 6 ? '1px solid var(--border)' : 'none',
                     cursor: data ? 'pointer' : 'default',
                     background: isSel
@@ -538,7 +618,7 @@ function Calendar({ trades, lang }) {
 
             {/* ── Weekly total cell ── */}
             <div style={{
-              minHeight: 80, borderLeft: '1px solid var(--border)',
+              minHeight: 92, borderLeft: '1px solid var(--border)',
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4,
               background: hasData
                 ? (weekPnl >= 0 ? 'rgba(62,207,142,0.06)' : 'rgba(224,82,82,0.06)')
@@ -561,6 +641,8 @@ function Calendar({ trades, lang }) {
           </div>
         );
       })}
+      </div>{/* end minWidth wrapper */}
+      </div>{/* end overflowX scroll */}
 
       {/* ── Selected day detail ── */}
       {selectedData && (
@@ -806,7 +888,7 @@ function PerformanceView({ trades, lang }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
       {/* ── KPI row ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6,1fr)', gap: 12 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(130px,1fr))', gap: 12 }}>
 
         {/* Avg Win / Loss */}
         <div style={{ ...card, position: 'relative', overflow: 'hidden' }}>
@@ -870,7 +952,7 @@ function PerformanceView({ trades, lang }) {
       </div>
 
       {/* ── Charts row ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(240px,1fr))', gap: 16 }}>
 
         {/* Weekday P&L + count */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
