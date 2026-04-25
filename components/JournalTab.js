@@ -173,6 +173,44 @@ function fmtPnL(n) {
 }
 function clr(n) { return n >= 0 ? 'var(--clr-win)' : 'var(--clr-loss)'; }
 
+/* ── Count-up animation ──────────────────────────────────── */
+function useCountUp(target, duration = 800) {
+  const [value, setValue] = useState(0);
+  useEffect(() => {
+    setValue(0);
+    if (target === 0) return;
+    const start = performance.now();
+    let raf;
+    const tick = (now) => {
+      const p = Math.min((now - start) / duration, 1);
+      const ease = p * (2 - p); // ease-out quad
+      setValue(target * ease);
+      if (p < 1) { raf = requestAnimationFrame(tick); }
+      else setValue(target);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [target, duration]);
+  return value;
+}
+
+function AnimatedPnL({ value, duration = 800 }) {
+  const v = useCountUp(value, duration);
+  return <>{v >= 0 ? '+' : '-'}${Math.abs(v).toFixed(2)}</>;
+}
+function AnimatedPct({ value, duration = 800 }) {
+  const v = useCountUp(value, duration);
+  return <>{v.toFixed(1)}%</>;
+}
+function AnimatedInt({ value, duration = 800 }) {
+  const v = useCountUp(value, duration);
+  return <>{Math.round(Math.abs(v))}</>;
+}
+function AnimatedDecimal({ value, decimals = 2, duration = 800 }) {
+  const v = useCountUp(value, duration);
+  return <>{v.toFixed(decimals)}</>;
+}
+
 function getDayKey(iso) {
   const d = new Date(iso);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -354,18 +392,18 @@ function StatsBar({ trades, lang }) {
   if (!trades.length) return null;
   const totalNet  = trades.reduce((s, t) => s + t.net, 0);
   const wins      = trades.filter(t => t.win).length;
-  const winRate   = ((wins / trades.length) * 100).toFixed(1);
+  const winRateNum = (wins / trades.length) * 100;
   const dayMap    = buildCalendarData(trades);
   const dayPnls   = Object.values(dayMap).map(d => d.pnl);
   const bestDay   = Math.max(...dayPnls);
   const worstDay  = Math.min(...dayPnls);
 
   const stats = [
-    { label: lang === 'zh' ? '总盈亏' : 'Total P&L',   value: fmtPnL(totalNet),         color: clr(totalNet) },
-    { label: lang === 'zh' ? '胜率'   : 'Win Rate',     value: `${winRate}%`,             color: parseFloat(winRate) >= 50 ? 'var(--clr-win)' : 'var(--clr-loss)' },
-    { label: lang === 'zh' ? '交易数' : 'Total Trades', value: trades.length,              color: 'var(--text)' },
-    { label: lang === 'zh' ? '最佳日' : 'Best Day',     value: fmtPnL(bestDay),           color: 'var(--clr-win)' },
-    { label: lang === 'zh' ? '最差日' : 'Worst Day',    value: fmtPnL(worstDay),          color: 'var(--clr-loss)' },
+    { label: lang === 'zh' ? '总盈亏' : 'Total P&L',   node: <AnimatedPnL value={totalNet} />,            color: clr(totalNet) },
+    { label: lang === 'zh' ? '胜率'   : 'Win Rate',     node: <AnimatedPct value={winRateNum} />,           color: winRateNum >= 50 ? 'var(--clr-win)' : 'var(--clr-loss)' },
+    { label: lang === 'zh' ? '交易数' : 'Total Trades', node: <AnimatedInt value={trades.length} />,        color: 'var(--text)' },
+    { label: lang === 'zh' ? '最佳日' : 'Best Day',     node: <AnimatedPnL value={bestDay} />,              color: 'var(--clr-win)' },
+    { label: lang === 'zh' ? '最差日' : 'Worst Day',    node: <AnimatedPnL value={worstDay} />,             color: 'var(--clr-loss)' },
   ];
 
   return (
@@ -376,7 +414,7 @@ function StatsBar({ trades, lang }) {
           padding: '12px 14px', boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
         }}>
           <div style={{ fontSize: 9, color: 'var(--text-dim)', fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 5 }}>{s.label}</div>
-          <div style={{ fontSize: 16, fontWeight: 800, color: s.color }}>{s.value}</div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: s.color }}>{s.node}</div>
         </div>
       ))}
     </div>
@@ -453,7 +491,7 @@ function Calendar({ trades, lang }) {
             <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text)', letterSpacing: 0.5 }}>{year} Overview</div>
             {activeMths > 0 && (
               <div style={{ fontSize: 11, color: 'var(--text-dim)', marginTop: 2 }}>
-                <span style={{ color: clr(yearPnl), fontWeight: 700 }}>{fmtPnL(yearPnl)}</span>
+                <span style={{ color: clr(yearPnl), fontWeight: 700 }}><AnimatedPnL value={yearPnl} /></span>
                 <span style={{ margin: '0 6px', opacity: 0.4 }}>·</span>
                 <span>{activeMths} active months</span>
               </div>
@@ -487,7 +525,7 @@ function Calendar({ trades, lang }) {
                 <div style={{ fontSize: 11, fontWeight: 700, color: isCur ? 'var(--gold)' : 'var(--text)', marginBottom: 8 }}>{mName}</div>
                 {s.count > 0 ? (
                   <>
-                    <div style={{ fontSize: 13, fontWeight: 800, color: clr(s.pnl), marginBottom: 4 }}>{fmtPnL(s.pnl)}</div>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: clr(s.pnl), marginBottom: 4 }}><AnimatedPnL value={s.pnl} duration={600} /></div>
                     <div style={{ fontSize: 9, color: 'var(--text-dim)' }}>{s.count} trades · {((s.wins/s.count)*100).toFixed(0)}% W</div>
                   </>
                 ) : (
@@ -513,7 +551,7 @@ function Calendar({ trades, lang }) {
           <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--text)', letterSpacing: 0.5 }}>{MONTHS[month]} {year}</div>
           {monthDays > 0 && (
             <div style={{ fontSize: 11, color: 'var(--text-dim)', marginTop: 2 }}>
-              <span style={{ color: clr(monthPnl), fontWeight: 700 }}>{fmtPnL(monthPnl)}</span>
+              <span style={{ color: clr(monthPnl), fontWeight: 700 }}><AnimatedPnL value={monthPnl} /></span>
               <span style={{ margin: '0 8px', opacity: 0.4 }}>·</span>
               <span>{winDayRate}% {lang === 'zh' ? '盈利日' : 'green days'}</span>
               <span style={{ margin: '0 8px', opacity: 0.4 }}>·</span>
@@ -946,8 +984,8 @@ function PerformanceView({ trades, lang }) {
         {/* Avg Win / Loss */}
         <div style={{ ...card, position: 'relative', overflow: 'hidden' }}>
           <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1.2, marginBottom: 10 }}>AVG TRADE</div>
-          <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--clr-win)', marginBottom: 3 }}>+${Math.abs(avgWin).toFixed(2)}</div>
-          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--clr-loss)' }}>-${Math.abs(avgLoss).toFixed(2)}</div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--clr-win)', marginBottom: 3 }}><AnimatedPnL value={avgWin} /></div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--clr-loss)' }}><AnimatedPnL value={avgLoss} /></div>
           <div style={{ fontSize: 9, color: 'var(--text-dim)', marginTop: 8 }}>Win avg · Loss avg</div>
           <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 3, background: 'linear-gradient(180deg,var(--clr-win),var(--clr-loss))', borderRadius: '12px 0 0 12px' }} />
         </div>
@@ -955,7 +993,7 @@ function PerformanceView({ trades, lang }) {
         {/* Max Drawdown */}
         <div style={{ ...card, position: 'relative', overflow: 'hidden' }}>
           <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1.2, marginBottom: 10 }}>MAX DRAWDOWN</div>
-          <div style={{ fontSize: 20, fontWeight: 800, color: maxDD > 0 ? 'var(--clr-loss)' : 'var(--text)' }}>-${maxDD.toFixed(2)}</div>
+          <div style={{ fontSize: 20, fontWeight: 800, color: maxDD > 0 ? 'var(--clr-loss)' : 'var(--text)' }}><AnimatedPnL value={-maxDD} /></div>
           <div style={{ fontSize: 9, color: 'var(--text-dim)', marginTop: 8 }}>Peak-to-trough</div>
           <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 3, background: 'var(--clr-loss)', borderRadius: '12px 0 0 12px' }} />
         </div>
@@ -963,7 +1001,9 @@ function PerformanceView({ trades, lang }) {
         {/* Profit Factor */}
         <div style={{ ...card, position: 'relative', overflow: 'hidden' }}>
           <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1.2, marginBottom: 10 }}>PROFIT FACTOR</div>
-          <div style={{ fontSize: 22, fontWeight: 800, color: pfNum >= 1.5 ? 'var(--clr-win)' : pfNum >= 1 ? 'var(--gold)' : 'var(--clr-loss)' }}>{pf}</div>
+          <div style={{ fontSize: 22, fontWeight: 800, color: pfNum >= 1.5 ? 'var(--clr-win)' : pfNum >= 1 ? 'var(--gold)' : 'var(--clr-loss)' }}>
+            {grossLoss > 0 ? <AnimatedDecimal value={pfNum} /> : '∞'}
+          </div>
           <div style={{ fontSize: 9, color: 'var(--text-dim)', marginTop: 8 }}>Gross win ÷ loss</div>
           <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 3, background: pfNum >= 1 ? 'var(--gold)' : 'var(--clr-loss)', borderRadius: '12px 0 0 12px' }} />
         </div>
@@ -971,8 +1011,8 @@ function PerformanceView({ trades, lang }) {
         {/* Best / Worst */}
         <div style={{ ...card, position: 'relative', overflow: 'hidden' }}>
           <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1.2, marginBottom: 10 }}>BEST · WORST</div>
-          <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--clr-win)', marginBottom: 4 }}>+${best?.net.toFixed(2)}</div>
-          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--clr-loss)' }}>-${Math.abs(worst?.net || 0).toFixed(2)}</div>
+          <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--clr-win)', marginBottom: 4 }}><AnimatedPnL value={best?.net || 0} /></div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--clr-loss)' }}><AnimatedPnL value={worst?.net || 0} /></div>
           <div style={{ fontSize: 9, color: 'var(--text-dim)', marginTop: 8 }}>Single trade</div>
           <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 3, background: 'linear-gradient(180deg,var(--clr-win),var(--clr-loss))', borderRadius: '12px 0 0 12px' }} />
         </div>
@@ -981,7 +1021,7 @@ function PerformanceView({ trades, lang }) {
         <div style={{ ...card, position: 'relative', overflow: 'hidden' }}>
           <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1.2, marginBottom: 10 }}>STREAK</div>
           <div style={{ fontSize: 26, fontWeight: 800, color: streak > 0 ? 'var(--clr-win)' : streak < 0 ? 'var(--clr-loss)' : 'var(--text)', lineHeight: 1 }}>
-            {streak > 0 ? '+' : ''}{streak}
+            {streak > 0 ? '+' : streak < 0 ? '-' : ''}<AnimatedInt value={Math.abs(streak)} />
           </div>
           <div style={{ fontSize: 9, color: 'var(--text-dim)', marginTop: 8 }}>
             {streak > 1 ? 'win streak' : streak < -1 ? 'loss streak' : streak === 1 ? 'last win' : streak === -1 ? 'last loss' : 'neutral'}
