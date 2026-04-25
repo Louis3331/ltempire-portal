@@ -171,7 +171,7 @@ function fmtPnL(n) {
   const sign = n >= 0 ? '+' : '';
   return `${sign}$${Math.abs(n).toFixed(2)}`;
 }
-function clr(n) { return n >= 0 ? '#3ECF8E' : '#E05252'; }
+function clr(n) { return n >= 0 ? 'var(--clr-win)' : 'var(--clr-loss)'; }
 
 function getDayKey(iso) {
   const d = new Date(iso);
@@ -295,9 +295,9 @@ function ManualForm({ onAdd, onClose, lang }) {
                   <button key={t} onClick={() => set('type', t)} style={{
                     flex: 1, padding: '8px', borderRadius: 7, border: '1px solid',
                     fontSize: 12, fontWeight: 700, cursor: 'pointer',
-                    borderColor: form.type === t ? (t === 'buy' ? '#3ECF8E' : '#E05252') : 'var(--border)',
-                    background:  form.type === t ? (t === 'buy' ? 'rgba(62,207,142,0.12)' : 'rgba(224,82,82,0.12)') : 'transparent',
-                    color:       form.type === t ? (t === 'buy' ? '#3ECF8E' : '#E05252') : 'var(--text-dim)',
+                    borderColor: form.type === t ? (t === 'buy' ? 'var(--clr-win)' : 'var(--clr-loss)') : 'var(--border)',
+                    background:  form.type === t ? (t === 'buy' ? 'var(--win-bg)' : 'var(--loss-bg)') : 'transparent',
+                    color:       form.type === t ? (t === 'buy' ? 'var(--clr-win)' : 'var(--clr-loss)') : 'var(--text-dim)',
                   }}>{t.toUpperCase()}</button>
                 ))}
               </div>
@@ -362,10 +362,10 @@ function StatsBar({ trades, lang }) {
 
   const stats = [
     { label: lang === 'zh' ? '总盈亏' : 'Total P&L',   value: fmtPnL(totalNet),         color: clr(totalNet) },
-    { label: lang === 'zh' ? '胜率'   : 'Win Rate',     value: `${winRate}%`,             color: parseFloat(winRate) >= 50 ? '#3ECF8E' : '#E05252' },
+    { label: lang === 'zh' ? '胜率'   : 'Win Rate',     value: `${winRate}%`,             color: parseFloat(winRate) >= 50 ? 'var(--clr-win)' : 'var(--clr-loss)' },
     { label: lang === 'zh' ? '交易数' : 'Total Trades', value: trades.length,              color: 'var(--text)' },
-    { label: lang === 'zh' ? '最佳日' : 'Best Day',     value: fmtPnL(bestDay),           color: '#3ECF8E' },
-    { label: lang === 'zh' ? '最差日' : 'Worst Day',    value: fmtPnL(worstDay),          color: '#E05252' },
+    { label: lang === 'zh' ? '最佳日' : 'Best Day',     value: fmtPnL(bestDay),           color: 'var(--clr-win)' },
+    { label: lang === 'zh' ? '最差日' : 'Worst Day',    value: fmtPnL(worstDay),          color: 'var(--clr-loss)' },
   ];
 
   return (
@@ -476,14 +476,14 @@ function Calendar({ trades, lang }) {
             return (
               <div key={m} onClick={() => { if (s.count > 0) { setMonth(m); setZoom('month'); setSelected(null); } }}
                 style={{
-                  background: s.count > 0 ? (s.pnl >= 0 ? 'rgba(62,207,142,0.07)' : 'rgba(224,82,82,0.07)') : 'rgba(255,255,255,0.02)',
+                  background: s.count > 0 ? (s.pnl >= 0 ? 'var(--win-cell-bg)' : 'var(--loss-cell-bg)') : 'rgba(255,255,255,0.02)',
                   border: isCur ? '1px solid var(--gold)' : '1px solid var(--border)',
                   borderRadius: 10, padding: '14px 12px',
                   cursor: s.count > 0 ? 'pointer' : 'default',
                   transition: 'background 0.15s',
                   position: 'relative', overflow: 'hidden',
                 }}>
-                {s.count > 0 && <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: s.pnl >= 0 ? '#3ECF8E' : '#E05252', opacity: 0.6 }} />}
+                {s.count > 0 && <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: s.pnl >= 0 ? 'var(--clr-win)' : 'var(--clr-loss)', opacity: 0.6 }} />}
                 <div style={{ fontSize: 11, fontWeight: 700, color: isCur ? 'var(--gold)' : 'var(--text)', marginBottom: 8 }}>{mName}</div>
                 {s.count > 0 ? (
                   <>
@@ -570,9 +570,9 @@ function Calendar({ trades, lang }) {
                     background: isSel
                       ? 'rgba(201,168,76,0.12)'
                       : isHov
-                        ? (data.pnl >= 0 ? 'rgba(62,207,142,0.1)' : 'rgba(224,82,82,0.1)')
+                        ? (data.pnl >= 0 ? 'var(--win-bg)' : 'var(--loss-bg)')
                         : data
-                          ? (data.pnl >= 0 ? 'rgba(62,207,142,0.04)' : 'rgba(224,82,82,0.04)')
+                          ? (data.pnl >= 0 ? 'var(--win-cell-bg)' : 'var(--loss-cell-bg)')
                           : isWeekend ? 'rgba(255,255,255,0.01)' : 'transparent',
                     transition: 'background 0.15s',
                     position: 'relative',
@@ -597,7 +597,7 @@ function Calendar({ trades, lang }) {
                         <>
                           <div style={{
                             display: 'inline-block', fontSize: 12, fontWeight: 800, color: clr(data.pnl),
-                            background: data.pnl >= 0 ? 'rgba(62,207,142,0.1)' : 'rgba(224,82,82,0.1)',
+                            background: data.pnl >= 0 ? 'var(--win-bg)' : 'var(--loss-bg)',
                             padding: '2px 6px', borderRadius: 5, marginBottom: 4,
                           }}>
                             {data.pnl >= 0 ? '+' : ''}{data.pnl.toFixed(2)}
@@ -607,7 +607,7 @@ function Calendar({ trades, lang }) {
                             {' · '}{data.wins}/{data.trades} {lang === 'zh' ? '胜' : 'W'}
                           </div>
                           {/* Bottom P&L bar */}
-                          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 2, background: data.pnl >= 0 ? 'rgba(62,207,142,0.4)' : 'rgba(224,82,82,0.4)', borderRadius: 0 }} />
+                          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 2, background: data.pnl >= 0 ? 'var(--clr-win)' : 'var(--clr-loss)', opacity: 0.5, borderRadius: 0 }} />
                         </>
                       )}
                     </>
@@ -621,7 +621,7 @@ function Calendar({ trades, lang }) {
               minHeight: 92, borderLeft: '1px solid var(--border)',
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4,
               background: hasData
-                ? (weekPnl >= 0 ? 'rgba(62,207,142,0.06)' : 'rgba(224,82,82,0.06)')
+                ? (weekPnl >= 0 ? 'var(--win-cell-bg)' : 'var(--loss-cell-bg)')
                 : 'rgba(255,255,255,0.01)',
               padding: '6px 8px',
             }}>
@@ -634,7 +634,7 @@ function Calendar({ trades, lang }) {
                   }}>
                     {weekPnl >= 0 ? '+' : ''}{weekPnl.toFixed(2)}
                   </div>
-                  <div style={{ width: 28, height: 2, borderRadius: 1, background: weekPnl >= 0 ? 'rgba(62,207,142,0.5)' : 'rgba(224,82,82,0.5)' }} />
+                  <div style={{ width: 28, height: 2, borderRadius: 1, background: weekPnl >= 0 ? 'var(--clr-win)' : 'var(--clr-loss)', opacity: 0.6 }} />
                 </>
               ) : null}
             </div>
@@ -660,16 +660,16 @@ function Calendar({ trades, lang }) {
               </div>
               {/* win/loss pills */}
               <div style={{ display: 'flex', gap: 6 }}>
-                <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: 'rgba(62,207,142,0.12)', color: '#3ECF8E' }}>
+                <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: 'var(--win-bg)', color: 'var(--clr-win)' }}>
                   {dayWins.length}W
                 </span>
-                <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: 'rgba(224,82,82,0.12)', color: '#E05252' }}>
+                <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: 'var(--loss-bg)', color: 'var(--clr-loss)' }}>
                   {dayLosses.length}L
                 </span>
               </div>
               {/* win bar */}
               <div style={{ flex: 1, margin: '0 16px', height: 4, background: 'var(--border)', borderRadius: 2, overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${selectedTrades.length > 0 ? (dayWins.length / selectedTrades.length) * 100 : 0}%`, background: 'linear-gradient(90deg,#3ECF8E,rgba(62,207,142,0.4))', borderRadius: 2, transition: 'width 0.4s ease' }} />
+                <div style={{ height: '100%', width: `${selectedTrades.length > 0 ? (dayWins.length / selectedTrades.length) * 100 : 0}%`, background: 'linear-gradient(90deg,var(--clr-win),var(--win-bg))', borderRadius: 2, transition: 'width 0.4s ease' }} />
               </div>
               <div style={{ fontSize: 16, fontWeight: 800, color: clr(selectedData.pnl) }}>{fmtPnL(selectedData.pnl)}</div>
             </div>
@@ -689,14 +689,14 @@ function Calendar({ trades, lang }) {
                   padding: '9px 20px',
                   borderBottom: idx < selectedTrades.length - 1 ? '1px solid var(--border)' : 'none',
                   background: idx % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)',
-                  borderLeft: `3px solid ${t.type === 'buy' ? 'rgba(62,207,142,0.5)' : 'rgba(224,82,82,0.5)'}`,
+                  borderLeft: `3px solid ${t.type === 'buy' ? 'var(--clr-win)' : 'var(--clr-loss)'}`,
                   transition: 'background 0.1s',
                 }}>
                   {/* Type badge */}
                   <span style={{
                     fontSize: 9, fontWeight: 800, padding: '2px 5px', borderRadius: 4,
-                    background: t.type === 'buy' ? 'rgba(62,207,142,0.12)' : 'rgba(224,82,82,0.12)',
-                    color: t.type === 'buy' ? '#3ECF8E' : '#E05252',
+                    background: t.type === 'buy' ? 'var(--win-bg)' : 'var(--loss-bg)',
+                    color: t.type === 'buy' ? 'var(--clr-win)' : 'var(--clr-loss)',
                     letterSpacing: 0.3, textAlign: 'center',
                   }}>{t.type === 'buy' ? 'BUY' : 'SELL'}</span>
                   {/* Symbol */}
@@ -719,8 +719,8 @@ function Calendar({ trades, lang }) {
 
             {/* Footer totals */}
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 20, padding: '10px 20px', borderTop: '1px solid var(--border)', background: 'var(--bg-table-hd)' }}>
-              {dayGross > 0 && <span style={{ fontSize: 11, color: '#3ECF8E' }}>Gross +${dayGross.toFixed(2)}</span>}
-              {dayLoss > 0  && <span style={{ fontSize: 11, color: '#E05252' }}>Loss -${dayLoss.toFixed(2)}</span>}
+              {dayGross > 0 && <span style={{ fontSize: 11, color: 'var(--clr-win)' }}>Gross +${dayGross.toFixed(2)}</span>}
+              {dayLoss > 0  && <span style={{ fontSize: 11, color: 'var(--clr-loss)' }}>Loss -${dayLoss.toFixed(2)}</span>}
               <span style={{ fontSize: 11, fontWeight: 800, color: clr(selectedData.pnl) }}>Net {fmtPnL(selectedData.pnl)}</span>
             </div>
           </div>
@@ -779,7 +779,7 @@ function TradeLog({ trades, onDelete, onRefresh, lang }) {
                 </td>
                 <td style={{ padding: '11px 14px', fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{t.symbol}</td>
                 <td style={{ padding: '11px 14px' }}>
-                  <span style={{ padding: '3px 8px', borderRadius: 5, fontSize: 11, fontWeight: 700, background: t.type === 'buy' ? 'rgba(62,207,142,0.12)' : 'rgba(224,82,82,0.12)', color: t.type === 'buy' ? '#3ECF8E' : '#E05252' }}>{t.type.toUpperCase()}</span>
+                  <span style={{ padding: '3px 8px', borderRadius: 5, fontSize: 11, fontWeight: 700, background: t.type === 'buy' ? 'var(--win-bg)' : 'var(--loss-bg)', color: t.type === 'buy' ? 'var(--clr-win)' : 'var(--clr-loss)' }}>{t.type.toUpperCase()}</span>
                 </td>
                 <td style={{ padding: '11px 14px', fontSize: 12, color: 'var(--text-muted)' }}>{t.lots}</td>
                 <td style={{ padding: '11px 14px', fontSize: 12, color: 'var(--text-muted)', fontFamily: 'monospace' }}>{t.openPrice}</td>
@@ -788,7 +788,7 @@ function TradeLog({ trades, onDelete, onRefresh, lang }) {
                 <td style={{ padding: '11px 14px', fontSize: 13, fontWeight: 700, color: clr(t.net) }}>{fmtPnL(t.net)}</td>
                 <td style={{ padding: '11px 14px', fontSize: 11, color: 'var(--text-dim)', maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.notes || '—'}</td>
                 <td style={{ padding: '11px 14px' }}>
-                  <button onClick={() => onDelete(t.ticket)} style={{ background: 'rgba(224,82,82,0.08)', border: '1px solid rgba(224,82,82,0.2)', borderRadius: 5, color: '#E05252', cursor: 'pointer', padding: '4px 6px', display: 'flex', alignItems: 'center' }}>
+                  <button onClick={() => onDelete(t.ticket)} style={{ background: 'var(--loss-bg)', border: '1px solid var(--clr-loss)', borderRadius: 5, color: 'var(--clr-loss)', cursor: 'pointer', padding: '4px 6px', display: 'flex', alignItems: 'center' }}>
                     <TrashIcon />
                   </button>
                 </td>
@@ -825,7 +825,7 @@ function PnLBar({ label, value, maxAbs }) {
             position: 'absolute', top: 3, bottom: 3,
             left: isPos ? '50%' : `${50 - pct}%`,
             width: `${pct}%`,
-            background: isPos ? 'rgba(62,207,142,0.75)' : 'rgba(224,82,82,0.75)',
+            background: isPos ? 'var(--clr-win)' : 'var(--clr-loss)',
             borderRadius: isPos ? '0 4px 4px 0' : '4px 0 0 4px',
             transition: 'width 0.4s ease',
           }} />
@@ -946,58 +946,58 @@ function PerformanceView({ trades, lang }) {
         {/* Avg Win / Loss */}
         <div style={{ ...card, position: 'relative', overflow: 'hidden' }}>
           <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1.2, marginBottom: 10 }}>AVG TRADE</div>
-          <div style={{ fontSize: 16, fontWeight: 800, color: '#3ECF8E', marginBottom: 3 }}>+${Math.abs(avgWin).toFixed(2)}</div>
-          <div style={{ fontSize: 13, fontWeight: 700, color: '#E05252' }}>-${Math.abs(avgLoss).toFixed(2)}</div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--clr-win)', marginBottom: 3 }}>+${Math.abs(avgWin).toFixed(2)}</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--clr-loss)' }}>-${Math.abs(avgLoss).toFixed(2)}</div>
           <div style={{ fontSize: 9, color: 'var(--text-dim)', marginTop: 8 }}>Win avg · Loss avg</div>
-          <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 3, background: 'linear-gradient(180deg,#3ECF8E,#E05252)', borderRadius: '12px 0 0 12px' }} />
+          <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 3, background: 'linear-gradient(180deg,var(--clr-win),var(--clr-loss))', borderRadius: '12px 0 0 12px' }} />
         </div>
 
         {/* Max Drawdown */}
         <div style={{ ...card, position: 'relative', overflow: 'hidden' }}>
           <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1.2, marginBottom: 10 }}>MAX DRAWDOWN</div>
-          <div style={{ fontSize: 20, fontWeight: 800, color: maxDD > 0 ? '#E05252' : 'var(--text)' }}>-${maxDD.toFixed(2)}</div>
+          <div style={{ fontSize: 20, fontWeight: 800, color: maxDD > 0 ? 'var(--clr-loss)' : 'var(--text)' }}>-${maxDD.toFixed(2)}</div>
           <div style={{ fontSize: 9, color: 'var(--text-dim)', marginTop: 8 }}>Peak-to-trough</div>
-          <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 3, background: '#E05252', borderRadius: '12px 0 0 12px' }} />
+          <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 3, background: 'var(--clr-loss)', borderRadius: '12px 0 0 12px' }} />
         </div>
 
         {/* Profit Factor */}
         <div style={{ ...card, position: 'relative', overflow: 'hidden' }}>
           <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1.2, marginBottom: 10 }}>PROFIT FACTOR</div>
-          <div style={{ fontSize: 22, fontWeight: 800, color: pfNum >= 1.5 ? '#3ECF8E' : pfNum >= 1 ? 'var(--gold)' : '#E05252' }}>{pf}</div>
+          <div style={{ fontSize: 22, fontWeight: 800, color: pfNum >= 1.5 ? 'var(--clr-win)' : pfNum >= 1 ? 'var(--gold)' : 'var(--clr-loss)' }}>{pf}</div>
           <div style={{ fontSize: 9, color: 'var(--text-dim)', marginTop: 8 }}>Gross win ÷ loss</div>
-          <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 3, background: pfNum >= 1 ? 'var(--gold)' : '#E05252', borderRadius: '12px 0 0 12px' }} />
+          <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 3, background: pfNum >= 1 ? 'var(--gold)' : 'var(--clr-loss)', borderRadius: '12px 0 0 12px' }} />
         </div>
 
         {/* Best / Worst */}
         <div style={{ ...card, position: 'relative', overflow: 'hidden' }}>
           <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1.2, marginBottom: 10 }}>BEST · WORST</div>
-          <div style={{ fontSize: 14, fontWeight: 800, color: '#3ECF8E', marginBottom: 4 }}>+${best?.net.toFixed(2)}</div>
-          <div style={{ fontSize: 12, fontWeight: 700, color: '#E05252' }}>-${Math.abs(worst?.net || 0).toFixed(2)}</div>
+          <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--clr-win)', marginBottom: 4 }}>+${best?.net.toFixed(2)}</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--clr-loss)' }}>-${Math.abs(worst?.net || 0).toFixed(2)}</div>
           <div style={{ fontSize: 9, color: 'var(--text-dim)', marginTop: 8 }}>Single trade</div>
-          <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 3, background: 'linear-gradient(180deg,#3ECF8E,#E05252)', borderRadius: '12px 0 0 12px' }} />
+          <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 3, background: 'linear-gradient(180deg,var(--clr-win),var(--clr-loss))', borderRadius: '12px 0 0 12px' }} />
         </div>
 
         {/* Current streak */}
         <div style={{ ...card, position: 'relative', overflow: 'hidden' }}>
           <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1.2, marginBottom: 10 }}>STREAK</div>
-          <div style={{ fontSize: 26, fontWeight: 800, color: streak > 0 ? '#3ECF8E' : streak < 0 ? '#E05252' : 'var(--text)', lineHeight: 1 }}>
+          <div style={{ fontSize: 26, fontWeight: 800, color: streak > 0 ? 'var(--clr-win)' : streak < 0 ? 'var(--clr-loss)' : 'var(--text)', lineHeight: 1 }}>
             {streak > 0 ? '+' : ''}{streak}
           </div>
           <div style={{ fontSize: 9, color: 'var(--text-dim)', marginTop: 8 }}>
             {streak > 1 ? 'win streak' : streak < -1 ? 'loss streak' : streak === 1 ? 'last win' : streak === -1 ? 'last loss' : 'neutral'}
           </div>
-          <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 3, background: streak > 0 ? '#3ECF8E' : streak < 0 ? '#E05252' : 'var(--border)', borderRadius: '12px 0 0 12px' }} />
+          <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 3, background: streak > 0 ? 'var(--clr-win)' : streak < 0 ? 'var(--clr-loss)' : 'var(--border)', borderRadius: '12px 0 0 12px' }} />
         </div>
 
         {/* Avg hold time */}
         <div style={{ ...card, position: 'relative', overflow: 'hidden' }}>
           <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1.2, marginBottom: 10 }}>AVG HOLD TIME</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-            <span style={{ fontSize: 9, padding: '2px 6px', borderRadius: 4, background: 'rgba(62,207,142,0.15)', color: '#3ECF8E', fontWeight: 800 }}>W</span>
+            <span style={{ fontSize: 9, padding: '2px 6px', borderRadius: 4, background: 'var(--win-bg)', color: 'var(--clr-win)', fontWeight: 800 }}>W</span>
             <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{fmtDur(wHold)}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ fontSize: 9, padding: '2px 6px', borderRadius: 4, background: 'rgba(224,82,82,0.15)', color: '#E05252', fontWeight: 800 }}>L</span>
+            <span style={{ fontSize: 9, padding: '2px 6px', borderRadius: 4, background: 'var(--loss-bg)', color: 'var(--clr-loss)', fontWeight: 800 }}>L</span>
             <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{fmtDur(lHold)}</span>
           </div>
           <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 3, background: 'var(--gold)', borderRadius: '12px 0 0 12px' }} />
@@ -1022,11 +1022,11 @@ function PerformanceView({ trades, lang }) {
         {/* Best / worst 5 trades */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div style={card}>
-            {sectionTitle(lang === 'zh' ? '最佳5笔' : 'Best 5 Trades', '#3ECF8E')}
+            {sectionTitle(lang === 'zh' ? '最佳5笔' : 'Best 5 Trades', 'var(--clr-win)')}
             {top5.map((t, i) => <PnLBar key={i} label={t.symbol} value={t.net} maxAbs={maxTradeAbs} />)}
           </div>
           <div style={card}>
-            {sectionTitle(lang === 'zh' ? '最差5笔' : 'Worst 5 Trades', '#E05252')}
+            {sectionTitle(lang === 'zh' ? '最差5笔' : 'Worst 5 Trades', 'var(--clr-loss)')}
             {bot5.map((t, i) => <PnLBar key={i} label={t.symbol} value={t.net} maxAbs={maxTradeAbs} />)}
           </div>
         </div>
@@ -1048,8 +1048,8 @@ function PerformanceView({ trades, lang }) {
                   height: '100%',
                   width: `${(Math.abs(s.pnl) / maxSymAbs) * 100}%`,
                   background: s.pnl >= 0
-                    ? 'linear-gradient(90deg, rgba(62,207,142,0.9), rgba(62,207,142,0.3))'
-                    : 'linear-gradient(90deg, rgba(224,82,82,0.9), rgba(224,82,82,0.3))',
+                    ? 'linear-gradient(90deg, var(--clr-win), var(--win-bg))'
+                    : 'linear-gradient(90deg, var(--clr-loss), var(--loss-bg))',
                   borderRadius: 3,
                   transition: 'width 0.5s ease',
                 }} />
@@ -1173,8 +1173,8 @@ export default function JournalTab({ lang = 'en' }) {
           {trades.length > 0 && (
             <button onClick={clearAll} disabled={clearing} style={{
               display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px',
-              background: 'rgba(224,82,82,0.08)', border: '1px solid rgba(224,82,82,0.25)',
-              borderRadius: 8, fontSize: 12, fontWeight: 600, color: '#E05252',
+              background: 'var(--loss-bg)', border: '1px solid var(--clr-loss)',
+              borderRadius: 8, fontSize: 12, fontWeight: 600, color: 'var(--clr-loss)',
               cursor: clearing ? 'wait' : 'pointer', whiteSpace: 'nowrap',
             }}>
               <TrashIcon size={13} />
@@ -1188,9 +1188,9 @@ export default function JournalTab({ lang = 'en' }) {
       {importMsg && (
         <div style={{
           marginBottom: 16, padding: '10px 16px', borderRadius: 8, fontSize: 13,
-          background: importMsg.type === 'success' ? 'rgba(62,207,142,0.1)' : 'rgba(224,82,82,0.1)',
-          border: `1px solid ${importMsg.type === 'success' ? 'rgba(62,207,142,0.3)' : 'rgba(224,82,82,0.3)'}`,
-          color: importMsg.type === 'success' ? '#3ECF8E' : '#E05252',
+          background: importMsg.type === 'success' ? 'var(--win-bg)' : 'var(--loss-bg)',
+          border: `1px solid ${importMsg.type === 'success' ? 'var(--clr-win)' : 'var(--clr-loss)'}`,
+          color: importMsg.type === 'success' ? 'var(--clr-win)' : 'var(--clr-loss)',
         }}>{importMsg.text}</div>
       )}
 

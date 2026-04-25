@@ -618,6 +618,12 @@ export default function Dashboard() {
           --shadow-sidebar:   none;
           --lang-bg:          #1a1a1a;
           --lang-border:      #2a2a2a;
+          --clr-win:          #3ECF8E;
+          --clr-loss:         #E05252;
+          --win-bg:           rgba(62,207,142,0.12);
+          --loss-bg:          rgba(224,82,82,0.12);
+          --win-cell-bg:      rgba(62,207,142,0.06);
+          --loss-cell-bg:     rgba(224,82,82,0.06);
         }
         html[data-theme="light"] {
           --bg:               #E8E3D8;
@@ -644,6 +650,12 @@ export default function Dashboard() {
           --shadow-sidebar:   2px 0 24px rgba(0,0,0,0.12);
           --lang-bg:          #EDE8DF;
           --lang-border:      #D4CEBC;
+          --clr-win:          #15803D;
+          --clr-loss:         #B91C1C;
+          --win-bg:           rgba(21,128,61,0.12);
+          --loss-bg:          rgba(185,28,28,0.12);
+          --win-cell-bg:      rgba(21,128,61,0.07);
+          --loss-cell-bg:     rgba(185,28,28,0.07);
         }
 
         /* ── Reset ── */
