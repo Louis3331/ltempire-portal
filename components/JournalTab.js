@@ -1065,12 +1065,12 @@ function EquityCurve({ trades }) {
 }
 
 /* ── Mini bar chart (sidebar) ────────────────────────────── */
-function MiniBarChart({ data, color = 'var(--gold)', colorByValue = false }) {
+function MiniBarChart({ data, color = 'var(--gold)', colorByValue = false, fillHeight = false }) {
   const [hover, setHover] = useState(null);
   if (!data.length) return <div style={{ fontSize: 11, color: 'var(--text-dim)', padding: '12px 0' }}>No data</div>;
 
-  const W = 400, H = 200;
-  const pad = { t: 20, r: 8, b: 28, l: 52 };
+  const W = 400, H = 240;
+  const pad = { t: 28, r: 12, b: 40, l: 72 };
   const cW = W - pad.l - pad.r;
   const cH = H - pad.t - pad.b;
 
@@ -1104,16 +1104,20 @@ function MiniBarChart({ data, color = 'var(--gold)', colorByValue = false }) {
   // Thin x labels if too many
   const step = Math.ceil(data.length / 6);
 
+  const svgStyle = fillHeight
+    ? { width: '100%', height: '100%', display: 'block', overflow: 'visible' }
+    : { width: '100%', height: 'auto', minHeight: 160, display: 'block', overflow: 'visible' };
+
   return (
-    <div style={{ position: 'relative' }}>
-      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 'auto', minHeight: 130, display: 'block', overflow: 'visible' }}
+    <div style={fillHeight ? { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' } : { position: 'relative' }}>
+      <svg viewBox={`0 0 ${W} ${H}`} style={svgStyle}
         onMouseLeave={() => setHover(null)}>
 
         {/* Grid lines + Y labels */}
         {yTicks.map((v, i) => (
           <g key={i}>
             <line x1={pad.l} y1={yScale(v)} x2={pad.l + cW} y2={yScale(v)} stroke="var(--border)" strokeWidth="0.6" />
-            <text x={pad.l - 6} y={yScale(v) + 4} fontSize="8" textAnchor="end" style={{ fill: 'var(--text-dim)', fontFamily: 'system-ui' }}>
+            <text x={pad.l - 6} y={yScale(v) + 4} fontSize="13" textAnchor="end" style={{ fill: 'var(--text-dim)', fontFamily: 'system-ui' }}>
               {v >= 0 ? '+' : ''}${Math.round(v)}
             </text>
           </g>
@@ -1145,7 +1149,7 @@ function MiniBarChart({ data, color = 'var(--gold)', colorByValue = false }) {
 
         {/* X labels */}
         {data.map((d, i) => i % step === 0 && (
-          <text key={i} x={pad.l + i * gap + gap / 2} y={H - 4} fontSize="7.5" textAnchor="middle" style={{ fill: 'var(--text-dim)', fontFamily: 'system-ui' }}>
+          <text key={i} x={pad.l + i * gap + gap / 2} y={H - 6} fontSize="12" textAnchor="middle" style={{ fill: 'var(--text-dim)', fontFamily: 'system-ui' }}>
             {shortLabel(d.label)}
           </text>
         ))}
@@ -1155,14 +1159,14 @@ function MiniBarChart({ data, color = 'var(--gold)', colorByValue = false }) {
           const d  = data[hover];
           const bx = pad.l + hover * gap + gap / 2;
           const by = yScale(Math.max(d.value, 0)) - 4;
-          const tx = bx > W * 0.7 ? bx - 80 : bx + 6;
-          const ty = Math.max(pad.t + 2, by - 28);
+          const tx = bx > W * 0.7 ? bx - 96 : bx + 6;
+          const ty = Math.max(pad.t + 2, by - 36);
           return (
             <>
               <line x1={bx} y1={pad.t} x2={bx} y2={pad.t + cH} stroke="var(--gold)" strokeWidth="0.8" strokeDasharray="3 2" opacity="0.5" />
-              <rect x={tx} y={ty} width="76" height="22" rx="5" fill="var(--bg-table)" stroke="var(--gold)" strokeWidth="0.7" opacity="0.95" />
-              <text x={tx + 6} y={ty + 9} fontSize="7.5" style={{ fill: 'var(--text-dim)', fontFamily: 'system-ui' }}>{shortLabel(d.label)}</text>
-              <text x={tx + 6} y={ty + 18} fontSize="9" fontWeight="700" style={{ fill: d.value >= 0 ? 'var(--clr-win)' : 'var(--clr-loss)', fontFamily: 'system-ui' }}>
+              <rect x={tx} y={ty} width="90" height="30" rx="5" fill="var(--bg-table)" stroke="var(--gold)" strokeWidth="0.7" opacity="0.95" />
+              <text x={tx + 7} y={ty + 12} fontSize="11" style={{ fill: 'var(--text-dim)', fontFamily: 'system-ui' }}>{shortLabel(d.label)}</text>
+              <text x={tx + 7} y={ty + 24} fontSize="13" fontWeight="700" style={{ fill: d.value >= 0 ? 'var(--clr-win)' : 'var(--clr-loss)', fontFamily: 'system-ui' }}>
                 {d.value >= 0 ? '+' : ''}${Math.abs(d.value).toFixed(2)}
               </text>
             </>
@@ -1215,7 +1219,7 @@ function OverviewView({ trades, lang }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
       {/* Equity Curve + Monthly sidebar */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 16, alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 16, alignItems: 'stretch' }}>
 
         {/* Equity Curve — flex column so SVG fills all remaining card height */}
         <div style={{ background: 'var(--bg-table)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px 18px 10px', boxShadow: '0 2px 12px rgba(0,0,0,0.07)', display: 'flex', flexDirection: 'column' }}>
@@ -1255,16 +1259,17 @@ function OverviewView({ trades, lang }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
 
           {/* Monthly P&L */}
-          <div style={{ background: 'var(--bg-table)', border: '1px solid var(--border)', borderRadius: 12, padding: '12px 14px', boxShadow: '0 2px 12px rgba(0,0,0,0.07)' }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--bg-table)', border: '1px solid var(--border)', borderRadius: 12, padding: '12px 14px', boxShadow: '0 2px 12px rgba(0,0,0,0.07)' }}>
             {sectionTitle('Monthly P&L')}
             <MiniBarChart
               data={monthlyData.map(m => ({ label: m.label, value: m.pnl }))}
               color="var(--gold)"
+              fillHeight
             />
           </div>
 
           {/* Last 30 Days */}
-          <div style={{ background: 'var(--bg-table)', border: '1px solid var(--border)', borderRadius: 12, padding: '12px 14px', boxShadow: '0 2px 12px rgba(0,0,0,0.07)' }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'var(--bg-table)', border: '1px solid var(--border)', borderRadius: 12, padding: '12px 14px', boxShadow: '0 2px 12px rgba(0,0,0,0.07)' }}>
             {sectionTitle('Last 30 Days')}
             <MiniBarChart
               data={(() => {
@@ -1279,6 +1284,7 @@ function OverviewView({ trades, lang }) {
                 return Object.values(dayMap).sort((a, b) => a.label.localeCompare(b.label));
               })()}
               colorByValue
+              fillHeight
             />
           </div>
         </div>
