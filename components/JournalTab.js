@@ -1019,6 +1019,8 @@ function EquityCurve({ trades }) {
 }
 
 function PerformanceView({ trades, lang }) {
+  const [curveFilter, setCurveFilter] = useState('all');
+
   if (!trades.length) {
     return (
       <div style={{ textAlign: 'center', padding: 64, color: 'var(--text-dim)', fontSize: 13 }}>
@@ -1029,6 +1031,16 @@ function PerformanceView({ trades, lang }) {
 
   // ── Core stats ──
   const sorted  = [...trades].sort((a, b) => new Date(a.closeTime) - new Date(b.closeTime));
+
+  // ── Curve filter months ──
+  const curveMonths = [...new Map(sorted.map(t => {
+    const d = new Date(t.closeTime);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    return [key, { key, label: `${MONTHS_SHORT[d.getMonth()]} ${d.getFullYear()}` }];
+  })).values()];
+  const curveTrades = curveFilter === 'all' ? trades
+    : trades.filter(t => { const d = new Date(t.closeTime); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}` === curveFilter; });
+  const curvePnl = curveTrades.reduce((s, t) => s + t.net, 0);
   const wins    = trades.filter(t => t.net > 0);
   const losses  = trades.filter(t => t.net <= 0);
   const avgWin  = wins.length   ? wins.reduce((s, t) => s + t.net, 0)   / wins.length   : 0;
@@ -1107,21 +1119,37 @@ function PerformanceView({ trades, lang }) {
 
       {/* ── Equity Curve ── */}
       <div style={{ background: 'var(--bg-table)', border: '1px solid var(--border)', borderRadius: 12, padding: '20px 20px 12px', boxShadow: '0 2px 12px rgba(0,0,0,0.07)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14, gap: 12 }}>
           <div>
             <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--gold)', letterSpacing: 1.2, textTransform: 'uppercase' }}>
               {lang === 'zh' ? '净值曲线' : 'Equity Curve'}
             </div>
-            <div style={{ fontSize: 11, color: 'var(--text-dim)', marginTop: 3 }}>{trades.length} trades</div>
+            <div style={{ fontSize: 11, color: 'var(--text-dim)', marginTop: 3 }}>{curveTrades.length} trades</div>
           </div>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: 26, fontWeight: 900, color: clr(sorted.reduce((s, t) => s + t.net, 0)), letterSpacing: -0.5 }}>
-              <AnimatedPnL value={sorted.reduce((s, t) => s + t.net, 0)} />
+            <div style={{ fontSize: 26, fontWeight: 900, color: clr(curvePnl), letterSpacing: -0.5 }}>
+              <AnimatedPnL value={curvePnl} />
             </div>
-            <div style={{ fontSize: 10, color: 'var(--text-dim)', marginTop: 2 }}>total P&L</div>
+            <div style={{ fontSize: 10, color: 'var(--text-dim)', marginTop: 2 }}>{curveFilter === 'all' ? 'all time' : curveMonths.find(m => m.key === curveFilter)?.label}</div>
           </div>
         </div>
-        <EquityCurve trades={trades} />
+        {/* Month filter pills */}
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 14 }}>
+          {[{ key: 'all', label: 'All' }, ...curveMonths].map(m => {
+            const active = curveFilter === m.key;
+            return (
+              <button key={m.key} onClick={() => setCurveFilter(m.key)} style={{
+                padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 600, cursor: 'pointer', border: '1px solid',
+                borderColor: active ? 'var(--gold)' : 'var(--border)',
+                background: active ? 'var(--gold-alpha)' : 'transparent',
+                color: active ? 'var(--gold)' : 'var(--text-dim)',
+                transition: 'all 0.15s',
+              }}>{m.label}</button>
+            );
+          })}
+        </div>
+        <EquityCurve trades={curveTrades} />
       </div>
 
       {/* ── KPI row ── */}
