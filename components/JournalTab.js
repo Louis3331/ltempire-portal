@@ -602,7 +602,7 @@ function Calendar({ trades, lang }) {
                   onMouseEnter={() => day && data && setHovered(day)}
                   onMouseLeave={() => setHovered(null)}
                   style={{
-                    minHeight: 92, padding: '8px 8px',
+                    minHeight: 100, padding: '8px 8px',
                     borderRight: di < 6 ? '1px solid var(--border)' : 'none',
                     cursor: data ? 'pointer' : 'default',
                     background: isSel
@@ -634,13 +634,13 @@ function Calendar({ trades, lang }) {
                       {data && (
                         <>
                           <div style={{
-                            display: 'inline-block', fontSize: 12, fontWeight: 800, color: clr(data.pnl),
+                            display: 'block', fontSize: 15, fontWeight: 800, color: clr(data.pnl),
                             background: data.pnl >= 0 ? 'var(--win-bg)' : 'var(--loss-bg)',
-                            padding: '2px 6px', borderRadius: 5, marginBottom: 4,
+                            padding: '3px 7px', borderRadius: 5, marginBottom: 5,
                           }}>
                             {data.pnl >= 0 ? '+' : ''}{data.pnl.toFixed(2)}
                           </div>
-                          <div style={{ fontSize: 9, color: 'var(--text-dim)', fontWeight: 600 }}>
+                          <div style={{ fontSize: 11, color: 'var(--text-dim)', fontWeight: 600 }}>
                             {data.trades} {lang === 'zh' ? '笔' : data.trades > 1 ? 'trades' : 'trade'}
                             {' · '}{data.wins}/{data.trades} {lang === 'zh' ? '胜' : 'W'}
                           </div>
