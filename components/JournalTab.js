@@ -1001,7 +1001,7 @@ function EquityCurve({ trades }) {
 
   return (
     <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`}
-      style={{ width: '100%', height: '100%', minHeight: 220, display: 'block', overflow: 'visible', cursor: 'crosshair' }}
+      style={{ width: '100%', height: 'auto', minHeight: 220, display: 'block', overflow: 'visible', cursor: 'crosshair' }}
       onMouseMove={onMove} onMouseLeave={() => setHover(null)}>
       <defs>
         <linearGradient id="eq-fill" x1="0" y1="0" x2="0" y2="1">
@@ -1106,7 +1106,7 @@ function MiniBarChart({ data, color = 'var(--gold)', colorByValue = false }) {
 
   return (
     <div style={{ position: 'relative' }}>
-      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: '100%', minHeight: 130, display: 'block', overflow: 'visible' }}
+      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 'auto', minHeight: 130, display: 'block', overflow: 'visible' }}
         onMouseLeave={() => setHover(null)}>
 
         {/* Grid lines + Y labels */}
@@ -1215,7 +1215,7 @@ function OverviewView({ trades, lang }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
       {/* Equity Curve + Monthly sidebar */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 260px', gap: 16, alignItems: 'stretch', minHeight: 420 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 16, alignItems: 'start' }}>
 
         {/* Equity Curve — flex column so SVG fills all remaining card height */}
         <div style={{ background: 'var(--bg-table)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px 18px 10px', boxShadow: '0 2px 12px rgba(0,0,0,0.07)', display: 'flex', flexDirection: 'column' }}>
@@ -1255,35 +1255,31 @@ function OverviewView({ trades, lang }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
 
           {/* Monthly P&L */}
-          <div style={{ background: 'var(--bg-table)', border: '1px solid var(--border)', borderRadius: 12, padding: '12px 14px', boxShadow: '0 2px 12px rgba(0,0,0,0.07)', flex: 1, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ background: 'var(--bg-table)', border: '1px solid var(--border)', borderRadius: 12, padding: '12px 14px', boxShadow: '0 2px 12px rgba(0,0,0,0.07)' }}>
             {sectionTitle('Monthly P&L')}
-            <div style={{ flex: 1, minHeight: 0 }}>
-              <MiniBarChart
-                data={monthlyData.map(m => ({ label: m.label, value: m.pnl }))}
-                color="var(--gold)"
-              />
-            </div>
+            <MiniBarChart
+              data={monthlyData.map(m => ({ label: m.label, value: m.pnl }))}
+              color="var(--gold)"
+            />
           </div>
 
           {/* Last 30 Days */}
-          <div style={{ background: 'var(--bg-table)', border: '1px solid var(--border)', borderRadius: 12, padding: '12px 14px', boxShadow: '0 2px 12px rgba(0,0,0,0.07)', flex: 1, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ background: 'var(--bg-table)', border: '1px solid var(--border)', borderRadius: 12, padding: '12px 14px', boxShadow: '0 2px 12px rgba(0,0,0,0.07)' }}>
             {sectionTitle('Last 30 Days')}
-            <div style={{ flex: 1, minHeight: 0 }}>
-              <MiniBarChart
-                data={(() => {
-                  const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
-                  const dayMap = {};
-                  for (const t of trades) {
-                    if (new Date(t.closeTime) < cutoff) continue;
-                    const k = getDayKey(t.closeTime);
-                    if (!dayMap[k]) dayMap[k] = { label: k, value: 0 };
-                    dayMap[k].value += t.net;
-                  }
-                  return Object.values(dayMap).sort((a, b) => a.label.localeCompare(b.label));
-                })()}
-                colorByValue
-              />
-            </div>
+            <MiniBarChart
+              data={(() => {
+                const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+                const dayMap = {};
+                for (const t of trades) {
+                  if (new Date(t.closeTime) < cutoff) continue;
+                  const k = getDayKey(t.closeTime);
+                  if (!dayMap[k]) dayMap[k] = { label: k, value: 0 };
+                  dayMap[k].value += t.net;
+                }
+                return Object.values(dayMap).sort((a, b) => a.label.localeCompare(b.label));
+              })()}
+              colorByValue
+            />
           </div>
         </div>
       </div>
