@@ -715,14 +715,14 @@ function Calendar({ trades, lang }) {
             {/* Trade rows */}
             <div style={{ maxHeight: 340, overflowY: 'auto' }}>
               {/* Column header */}
-              <div style={{ display: 'grid', gridTemplateColumns: '36px 1fr 60px 64px 70px 80px', gap: 0, padding: '6px 20px', borderBottom: '1px solid var(--border)', background: 'var(--bg-table-hd)' }}>
-                {['', 'Symbol', 'Lots', 'Time', 'Pips', 'P&L'].map((h, i) => (
-                  <div key={i} style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 0.8, textAlign: i >= 4 ? 'right' : 'left' }}>{h}</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '36px 1fr 50px 90px 90px 80px 70px 90px', gap: 0, padding: '6px 20px', borderBottom: '1px solid var(--border)', background: 'var(--bg-table-hd)' }}>
+                {['', 'Symbol', 'Lots', 'Open', 'Close', 'Time', 'Pips', 'P&L'].map((h, i) => (
+                  <div key={i} style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 0.8, textAlign: i >= 5 ? 'right' : 'left' }}>{h}</div>
                 ))}
               </div>
               {selectedTrades.map((t, idx) => (
                 <div key={t.ticket} style={{
-                  display: 'grid', gridTemplateColumns: '36px 1fr 60px 64px 70px 80px',
+                  display: 'grid', gridTemplateColumns: '36px 1fr 50px 90px 90px 80px 70px 90px',
                   alignItems: 'center', gap: 0,
                   padding: '9px 20px',
                   borderBottom: idx < selectedTrades.length - 1 ? '1px solid var(--border)' : 'none',
@@ -740,9 +740,13 @@ function Calendar({ trades, lang }) {
                   {/* Symbol */}
                   <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)', paddingLeft: 4 }}>{t.symbol.replace('.ECN','').replace('.ecn','')}</span>
                   {/* Lots */}
-                  <span style={{ fontSize: 11, color: 'var(--text-dim)' }}>{t.lots}</span>
+                  <span style={{ fontSize: 11, color: 'var(--text-dim)', fontVariantNumeric: 'tabular-nums' }}>{t.lots}</span>
+                  {/* Open price */}
+                  <span style={{ fontSize: 11, color: 'var(--text-dim)', fontVariantNumeric: 'tabular-nums', textAlign: 'right' }}>{t.openPrice}</span>
+                  {/* Close price */}
+                  <span style={{ fontSize: 11, color: 'var(--text-dim)', fontVariantNumeric: 'tabular-nums', textAlign: 'right' }}>{t.closePrice}</span>
                   {/* Time */}
-                  <span style={{ fontSize: 11, color: 'var(--text-dim)', fontVariantNumeric: 'tabular-nums' }}>{fmtTime(t.closeTime)}</span>
+                  <span style={{ fontSize: 11, color: 'var(--text-dim)', fontVariantNumeric: 'tabular-nums', textAlign: 'right' }}>{fmtTime(t.closeTime)}</span>
                   {/* Pips */}
                   <span style={{ fontSize: 11, fontWeight: 600, color: clr(t.pips), textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
                     {t.pips > 0 ? '+' : ''}{t.pips}
