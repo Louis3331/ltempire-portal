@@ -899,23 +899,23 @@ function PnLBar({ label, value, maxAbs }) {
   const pct = maxAbs > 0 ? (Math.abs(value) / maxAbs) * 46 : 0;
   const isPos = value >= 0;
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 9 }}>
-      <div style={{ width: 76, fontSize: 11, color: 'var(--text-dim)', textAlign: 'right', flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</div>
-      <div style={{ flex: 1, position: 'relative', height: 20 }}>
-        <div style={{ position: 'absolute', inset: 0, background: 'var(--bg)', borderRadius: 4 }} />
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
+      <div style={{ width: 70, fontSize: 10, color: 'var(--text-dim)', textAlign: 'right', flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</div>
+      <div style={{ flex: 1, position: 'relative', height: 14 }}>
+        <div style={{ position: 'absolute', inset: 0, background: 'var(--bg)', borderRadius: 3 }} />
         {value !== 0 && (
           <div style={{
-            position: 'absolute', top: 3, bottom: 3,
+            position: 'absolute', top: 2, bottom: 2,
             left: isPos ? '50%' : `${50 - pct}%`,
             width: `${pct}%`,
             background: isPos ? 'var(--clr-win)' : 'var(--clr-loss)',
-            borderRadius: isPos ? '0 4px 4px 0' : '4px 0 0 4px',
+            borderRadius: isPos ? '0 3px 3px 0' : '3px 0 0 3px',
             transition: 'width 0.4s ease',
           }} />
         )}
         <div style={{ position: 'absolute', left: '50%', top: 0, bottom: 0, width: 1, background: 'var(--border)' }} />
       </div>
-      <div style={{ width: 68, fontSize: 11, fontWeight: 700, color: clr(value), textAlign: 'right', flexShrink: 0 }}>{fmtPnL(value)}</div>
+      <div style={{ width: 62, fontSize: 10, fontWeight: 700, color: clr(value), textAlign: 'right', flexShrink: 0 }}>{fmtPnL(value)}</div>
     </div>
   );
 }
@@ -924,13 +924,13 @@ function PnLBar({ label, value, maxAbs }) {
 function CountBar({ label, value, maxVal }) {
   const pct = maxVal > 0 ? (value / maxVal) * 92 : 0;
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 9 }}>
-      <div style={{ width: 76, fontSize: 11, color: 'var(--text-dim)', textAlign: 'right', flexShrink: 0 }}>{label}</div>
-      <div style={{ flex: 1, position: 'relative', height: 20 }}>
-        <div style={{ position: 'absolute', inset: 0, background: 'var(--bg)', borderRadius: 4 }} />
-        <div style={{ position: 'absolute', top: 3, bottom: 3, left: 0, width: `${pct}%`, background: 'rgba(201,168,76,0.5)', borderRadius: 4, transition: 'width 0.4s ease' }} />
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
+      <div style={{ width: 70, fontSize: 10, color: 'var(--text-dim)', textAlign: 'right', flexShrink: 0 }}>{label}</div>
+      <div style={{ flex: 1, position: 'relative', height: 14 }}>
+        <div style={{ position: 'absolute', inset: 0, background: 'var(--bg)', borderRadius: 3 }} />
+        <div style={{ position: 'absolute', top: 2, bottom: 2, left: 0, width: `${pct}%`, background: 'rgba(201,168,76,0.5)', borderRadius: 3, transition: 'width 0.4s ease' }} />
       </div>
-      <div style={{ width: 28, fontSize: 11, fontWeight: 700, color: 'var(--text-dim)', textAlign: 'right', flexShrink: 0 }}>{value}</div>
+      <div style={{ width: 24, fontSize: 10, fontWeight: 700, color: 'var(--text-dim)', textAlign: 'right', flexShrink: 0 }}>{value}</div>
     </div>
   );
 }
@@ -1385,134 +1385,128 @@ function PerformanceView({ trades, lang }) {
   const safePage    = Math.min(rtPage, rtPageCount - 1);
   const recentTrades = allByClose.slice(safePage * RT_PER_PAGE, (safePage + 1) * RT_PER_PAGE);
 
-  const card = { background: 'var(--bg-table)', border: '1px solid var(--border)', borderRadius: 12, padding: '18px 20px', boxShadow: '0 2px 12px rgba(0,0,0,0.07)' };
-  const kpiLbl = { fontSize: 9, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1.2, textTransform: 'uppercase', marginBottom: 12 };
+  const card = { background: 'var(--bg-table)', border: '1px solid var(--border)', borderRadius: 10, padding: '12px 14px', boxShadow: '0 2px 8px rgba(0,0,0,0.07)' };
+  const kpiLbl = { fontSize: 9, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1.2, textTransform: 'uppercase', marginBottom: 8 };
   const sectionTitle = (txt, color = 'var(--gold)') => (
-    <div style={{ fontSize: 10, fontWeight: 700, color, letterSpacing: 1.2, textTransform: 'uppercase', marginBottom: 14, paddingBottom: 10, borderBottom: '1px solid var(--border)' }}>{txt}</div>
+    <div style={{ fontSize: 9, fontWeight: 700, color, letterSpacing: 1.2, textTransform: 'uppercase', marginBottom: 8, paddingBottom: 6, borderBottom: '1px solid var(--border)' }}>{txt}</div>
   );
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
 
       {/* ── KPI row: 5 cards ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 12 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 10 }}>
 
         {/* 1. Avg Holding Time */}
         <div style={{ ...card, position: 'relative', overflow: 'hidden' }}>
           <div style={kpiLbl}>Avg Holding Time</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 6 }}>
-            <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--gold)', flexShrink: 0, display: 'inline-block' }} />
-            <span style={{ fontSize: 11, color: 'var(--text-dim)' }}>Winners:</span>
-            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{fmtDur(wHold)}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 5 }}>
+            <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--gold)', flexShrink: 0, display: 'inline-block' }} />
+            <span style={{ fontSize: 10, color: 'var(--text-dim)' }}>Winners:</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)' }}>{fmtDur(wHold)}</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-            <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--text-dim)', flexShrink: 0, display: 'inline-block' }} />
-            <span style={{ fontSize: 11, color: 'var(--text-dim)' }}>Losers:</span>
-            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{fmtDur(lHold)}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--text-dim)', flexShrink: 0, display: 'inline-block' }} />
+            <span style={{ fontSize: 10, color: 'var(--text-dim)' }}>Losers:</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)' }}>{fmtDur(lHold)}</span>
           </div>
-          <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 3, background: 'var(--gold)', borderRadius: '12px 0 0 12px' }} />
+          <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 3, background: 'var(--gold)', borderRadius: '10px 0 0 10px' }} />
         </div>
 
         {/* 2. Drawdown */}
         <div style={{ ...card, position: 'relative', overflow: 'hidden' }}>
           <div style={kpiLbl}>Drawdown</div>
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12 }}>
             <div>
-              <div style={{ fontSize: 9, color: 'var(--text-dim)', marginBottom: 3 }}>CURRENT</div>
-              <div style={{ fontSize: 16, fontWeight: 800, color: currentDD > 0 ? 'var(--clr-loss)' : 'var(--text)' }}>{fmtPnL(-currentDD)}</div>
+              <div style={{ fontSize: 8, color: 'var(--text-dim)', marginBottom: 2 }}>CURRENT</div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: currentDD > 0 ? 'var(--clr-loss)' : 'var(--text)' }}>{fmtPnL(-currentDD)}</div>
             </div>
             <div>
-              <div style={{ fontSize: 9, color: 'var(--text-dim)', marginBottom: 3 }}>MAX</div>
-              <div style={{ fontSize: 16, fontWeight: 800, color: maxDD > 0 ? 'var(--clr-loss)' : 'var(--text)' }}>{fmtPnL(-maxDD)}</div>
+              <div style={{ fontSize: 8, color: 'var(--text-dim)', marginBottom: 2 }}>MAX</div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: maxDD > 0 ? 'var(--clr-loss)' : 'var(--text)' }}>{fmtPnL(-maxDD)}</div>
             </div>
-            <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end', paddingBottom: 2 }}>
-              <svg viewBox={`0 0 ${ddW} ${ddH}`} style={{ width: '100%', height: ddH, display: 'block' }}>
+            <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end' }}>
+              <svg viewBox={`0 0 ${ddW} ${ddH}`} style={{ width: '100%', height: 24, display: 'block' }}>
                 <path d={ddPath} fill="none" stroke="var(--text-dim)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.5" />
               </svg>
             </div>
           </div>
-          <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 3, background: 'var(--clr-loss)', borderRadius: '12px 0 0 12px' }} />
+          <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 3, background: 'var(--clr-loss)', borderRadius: '10px 0 0 10px' }} />
         </div>
 
         {/* 3. Biggest Trades */}
         <div style={{ ...card, position: 'relative', overflow: 'hidden' }}>
           <div style={kpiLbl}>Biggest Trades</div>
-          <div style={{ marginBottom: 8 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-              <span style={{ fontSize: 9, color: 'var(--clr-win)' }}>↑</span>
-              <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--clr-win)', minWidth: 72 }}>{fmtPnL(best?.net || 0)}</span>
-              <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>{best?.symbol?.replace('.ECN','')}</span>
-            </div>
-            <div style={{ height: 6, background: 'var(--bg)', borderRadius: 3, overflow: 'hidden', marginBottom: 8 }}>
-              <div style={{ height: '100%', width: `${((best?.net || 0) / biggestAbs) * 100}%`, background: 'var(--gold)', borderRadius: 3, opacity: 0.8 }} />
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-              <span style={{ fontSize: 9, color: 'var(--clr-loss)' }}>↓</span>
-              <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--clr-loss)', minWidth: 72 }}>{fmtPnL(worst?.net || 0)}</span>
-              <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>{worst?.symbol?.replace('.ECN','')}</span>
-            </div>
-            <div style={{ height: 6, background: 'var(--bg)', borderRadius: 3, overflow: 'hidden' }}>
-              <div style={{ height: '100%', width: `${(Math.abs(worst?.net || 0) / biggestAbs) * 100}%`, background: 'rgba(80,80,80,0.6)', borderRadius: 3 }} />
-            </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 3 }}>
+            <span style={{ fontSize: 9, color: 'var(--clr-win)' }}>↑</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--clr-win)', minWidth: 64 }}>{fmtPnL(best?.net || 0)}</span>
+            <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>{best?.symbol?.replace('.ECN','')}</span>
           </div>
-          <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 3, background: 'linear-gradient(180deg,var(--clr-win),var(--clr-loss))', borderRadius: '12px 0 0 12px' }} />
+          <div style={{ height: 5, background: 'var(--bg)', borderRadius: 2, overflow: 'hidden', marginBottom: 6 }}>
+            <div style={{ height: '100%', width: `${((best?.net || 0) / biggestAbs) * 100}%`, background: 'var(--gold)', borderRadius: 2, opacity: 0.8 }} />
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 3 }}>
+            <span style={{ fontSize: 9, color: 'var(--clr-loss)' }}>↓</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--clr-loss)', minWidth: 64 }}>{fmtPnL(worst?.net || 0)}</span>
+            <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>{worst?.symbol?.replace('.ECN','')}</span>
+          </div>
+          <div style={{ height: 5, background: 'var(--bg)', borderRadius: 2, overflow: 'hidden' }}>
+            <div style={{ height: '100%', width: `${(Math.abs(worst?.net || 0) / biggestAbs) * 100}%`, background: 'rgba(80,80,80,0.6)', borderRadius: 2 }} />
+          </div>
+          <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 3, background: 'linear-gradient(180deg,var(--clr-win),var(--clr-loss))', borderRadius: '10px 0 0 10px' }} />
         </div>
 
         {/* 4. W/L Ratio */}
         <div style={{ ...card, position: 'relative', overflow: 'hidden' }}>
           <div style={kpiLbl}>Avg W/L Ratio</div>
-          <div style={{ fontSize: 26, fontWeight: 800, color: wlRatio >= 1.5 ? 'var(--clr-win)' : wlRatio >= 1 ? 'var(--gold)' : 'var(--clr-loss)', lineHeight: 1, marginBottom: 10 }}>
+          <div style={{ fontSize: 22, fontWeight: 800, color: wlRatio >= 1.5 ? 'var(--clr-win)' : wlRatio >= 1 ? 'var(--gold)' : 'var(--clr-loss)', lineHeight: 1, marginBottom: 8 }}>
             <AnimatedDecimal value={wlRatio} decimals={2} />
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <div style={{ width: 24, fontSize: 9, color: 'var(--clr-win)', fontWeight: 700 }}>W</div>
-              <div style={{ flex: 1, height: 5, background: 'var(--bg)', borderRadius: 3, overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${grossWin + grossLoss > 0 ? (grossWin / (grossWin + grossLoss)) * 100 : 0}%`, background: 'var(--clr-win)', borderRadius: 3, opacity: 0.75 }} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+              <div style={{ width: 14, fontSize: 8, color: 'var(--clr-win)', fontWeight: 700 }}>W</div>
+              <div style={{ flex: 1, height: 4, background: 'var(--bg)', borderRadius: 2, overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${grossWin + grossLoss > 0 ? (grossWin / (grossWin + grossLoss)) * 100 : 0}%`, background: 'var(--clr-win)', borderRadius: 2, opacity: 0.75 }} />
               </div>
-              <div style={{ width: 36, fontSize: 9, color: 'var(--clr-win)', fontWeight: 700, textAlign: 'right' }}>{grossWin + grossLoss > 0 ? ((grossWin / (grossWin + grossLoss)) * 100).toFixed(1) : 0}%</div>
+              <div style={{ width: 32, fontSize: 8, color: 'var(--clr-win)', fontWeight: 700, textAlign: 'right' }}>{grossWin + grossLoss > 0 ? ((grossWin / (grossWin + grossLoss)) * 100).toFixed(1) : 0}%</div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <div style={{ width: 24, fontSize: 9, color: 'var(--clr-loss)', fontWeight: 700 }}>L</div>
-              <div style={{ flex: 1, height: 5, background: 'var(--bg)', borderRadius: 3, overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${grossWin + grossLoss > 0 ? (grossLoss / (grossWin + grossLoss)) * 100 : 0}%`, background: 'var(--clr-loss)', borderRadius: 3, opacity: 0.75 }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+              <div style={{ width: 14, fontSize: 8, color: 'var(--clr-loss)', fontWeight: 700 }}>L</div>
+              <div style={{ flex: 1, height: 4, background: 'var(--bg)', borderRadius: 2, overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${grossWin + grossLoss > 0 ? (grossLoss / (grossWin + grossLoss)) * 100 : 0}%`, background: 'var(--clr-loss)', borderRadius: 2, opacity: 0.75 }} />
               </div>
-              <div style={{ width: 36, fontSize: 9, color: 'var(--clr-loss)', fontWeight: 700, textAlign: 'right' }}>{grossWin + grossLoss > 0 ? ((grossLoss / (grossWin + grossLoss)) * 100).toFixed(1) : 0}%</div>
+              <div style={{ width: 32, fontSize: 8, color: 'var(--clr-loss)', fontWeight: 700, textAlign: 'right' }}>{grossWin + grossLoss > 0 ? ((grossLoss / (grossWin + grossLoss)) * 100).toFixed(1) : 0}%</div>
             </div>
           </div>
-          <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 3, background: 'var(--gold)', borderRadius: '12px 0 0 12px' }} />
+          <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 3, background: 'var(--gold)', borderRadius: '10px 0 0 10px' }} />
         </div>
 
         {/* 5. Current Streak */}
         <div style={{ ...card, position: 'relative', overflow: 'hidden' }}>
           <div style={kpiLbl}>Current Streak</div>
-          <div style={{ fontSize: 26, fontWeight: 800, lineHeight: 1, marginBottom: 8, color: streak > 0 ? 'var(--clr-win)' : streak < 0 ? 'var(--clr-loss)' : 'var(--text)' }}>
-            {streak > 0 ? '+' : streak < 0 ? '' : ''}<AnimatedInt value={streak} />
+          <div style={{ fontSize: 22, fontWeight: 800, lineHeight: 1, marginBottom: 6, color: streak > 0 ? 'var(--clr-win)' : streak < 0 ? 'var(--clr-loss)' : 'var(--text)' }}>
+            {streak > 0 ? '+' : ''}<AnimatedInt value={streak} />
           </div>
-          <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap', marginBottom: 4 }}>
             {recent.slice(0, 12).map((t, i) => (
-              <div key={i} style={{ width: 11, height: 11, borderRadius: 2, background: t.net > 0 ? 'var(--clr-win)' : 'var(--clr-loss)', opacity: i < Math.abs(streak) ? 0.9 : 0.2 }} />
+              <div key={i} style={{ width: 10, height: 10, borderRadius: 2, background: t.net > 0 ? 'var(--clr-win)' : 'var(--clr-loss)', opacity: i < Math.abs(streak) ? 0.9 : 0.2 }} />
             ))}
           </div>
-          <div style={{ fontSize: 9, color: 'var(--text-dim)', marginTop: 8 }}>
+          <div style={{ fontSize: 9, color: 'var(--text-dim)' }}>
             {streak > 1 ? 'win streak' : streak < -1 ? 'loss streak' : streak === 1 ? 'last win' : streak === -1 ? 'last loss' : 'neutral'}
           </div>
-          <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 3, background: streak > 0 ? 'var(--clr-win)' : streak < 0 ? 'var(--clr-loss)' : 'var(--border)', borderRadius: '12px 0 0 12px' }} />
+          <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 3, background: streak > 0 ? 'var(--clr-win)' : streak < 0 ? 'var(--clr-loss)' : 'var(--border)', borderRadius: '10px 0 0 10px' }} />
         </div>
       </div>
 
       {/* ── Charts: 4-column grid ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 10 }}>
 
         {/* Col 1: Entry time range */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div style={card}>
             {sectionTitle('Entry Time Range')}
             {hourData.map((h, i) => <PnLBar key={i} label={h.label} value={h.pnl} maxAbs={maxHourAbs} />)}
-          </div>
-          <div style={card}>
-            {sectionTitle('Number of Trades')}
-            {hourData.map((h, i) => <CountBar key={i} label={h.label} value={h.count} maxVal={maxHourCount} />)}
           </div>
         </div>
 
@@ -1543,28 +1537,25 @@ function PerformanceView({ trades, lang }) {
         {/* Col 4: Recent trades with pagination */}
         <div style={{ ...card, display: 'flex', flexDirection: 'column' }}>
           {sectionTitle('Recent Trades')}
-          {/* Header */}
-          <div style={{ display: 'grid', gridTemplateColumns: '90px 1fr 72px', gap: 8, paddingBottom: 8, borderBottom: '1px solid var(--border)', marginBottom: 4 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '82px 1fr 64px', gap: 6, paddingBottom: 6, borderBottom: '1px solid var(--border)', marginBottom: 2 }}>
             {['Entry Date', 'Symbol', 'Gross P&L'].map((h, i) => (
-              <div key={h} style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 0.8, textAlign: i === 2 ? 'right' : 'left' }}>{h}</div>
+              <div key={h} style={{ fontSize: 8, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 0.8, textAlign: i === 2 ? 'right' : 'left' }}>{h}</div>
             ))}
           </div>
-          {/* Rows */}
           <div style={{ flex: 1 }}>
             {recentTrades.map((t, i) => (
-              <div key={t.ticket} style={{ display: 'grid', gridTemplateColumns: '90px 1fr 72px', gap: 8, padding: '8px 0', borderBottom: i < recentTrades.length - 1 ? '1px solid var(--border)' : 'none', alignItems: 'center' }}>
-                <div style={{ fontSize: 11, color: 'var(--text-dim)' }}>{new Date(t.closeTime).toLocaleDateString('en-CA')}</div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)' }}>{t.symbol.replace('.ECN','')}</div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: clr(t.net), textAlign: 'right' }}>{fmtPnL(t.net)}</div>
+              <div key={t.ticket} style={{ display: 'grid', gridTemplateColumns: '82px 1fr 64px', gap: 6, padding: '6px 0', borderBottom: i < recentTrades.length - 1 ? '1px solid var(--border)' : 'none', alignItems: 'center' }}>
+                <div style={{ fontSize: 10, color: 'var(--text-dim)' }}>{new Date(t.closeTime).toLocaleDateString('en-CA')}</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text)' }}>{t.symbol.replace('.ECN','')}</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: clr(t.net), textAlign: 'right' }}>{fmtPnL(t.net)}</div>
               </div>
             ))}
           </div>
-          {/* Pagination */}
           {rtPageCount > 1 && (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 12, paddingTop: 10, borderTop: '1px solid var(--border)' }}>
-              <button onClick={() => setRtPage(p => Math.max(0, p - 1))} disabled={safePage === 0} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 6, color: safePage === 0 ? 'var(--text-dim)' : 'var(--text)', padding: '4px 8px', fontSize: 12, cursor: safePage === 0 ? 'default' : 'pointer', opacity: safePage === 0 ? 0.4 : 1 }}>‹</button>
-              <span style={{ fontSize: 11, color: 'var(--text-dim)' }}>Page {safePage + 1} of {rtPageCount}</span>
-              <button onClick={() => setRtPage(p => Math.min(rtPageCount - 1, p + 1))} disabled={safePage === rtPageCount - 1} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 6, color: safePage === rtPageCount - 1 ? 'var(--text-dim)' : 'var(--text)', padding: '4px 8px', fontSize: 12, cursor: safePage === rtPageCount - 1 ? 'default' : 'pointer', opacity: safePage === rtPageCount - 1 ? 0.4 : 1 }}>›</button>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--border)' }}>
+              <button onClick={() => setRtPage(p => Math.max(0, p - 1))} disabled={safePage === 0} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 5, color: safePage === 0 ? 'var(--text-dim)' : 'var(--text)', padding: '3px 7px', fontSize: 11, cursor: safePage === 0 ? 'default' : 'pointer', opacity: safePage === 0 ? 0.4 : 1 }}>‹</button>
+              <span style={{ fontSize: 10, color: 'var(--text-dim)' }}>Page {safePage + 1} of {rtPageCount}</span>
+              <button onClick={() => setRtPage(p => Math.min(rtPageCount - 1, p + 1))} disabled={safePage === rtPageCount - 1} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 5, color: safePage === rtPageCount - 1 ? 'var(--text-dim)' : 'var(--text)', padding: '3px 7px', fontSize: 11, cursor: safePage === rtPageCount - 1 ? 'default' : 'pointer', opacity: safePage === rtPageCount - 1 ? 0.4 : 1 }}>›</button>
             </div>
           )}
         </div>
