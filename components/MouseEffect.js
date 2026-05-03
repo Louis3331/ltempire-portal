@@ -13,8 +13,6 @@ export default function MouseEffect() {
 
     const onMove = (e) => {
       pos.current = { x: e.clientX, y: e.clientY };
-      document.documentElement.style.setProperty('--mx', `${e.clientX}px`);
-      document.documentElement.style.setProperty('--my', `${e.clientY}px`);
     };
 
     const tick = () => {
@@ -35,32 +33,12 @@ export default function MouseEffect() {
 
   return (
     <>
-      {/* Spotlight overlay */}
-      <div className="spotlight" aria-hidden="true" />
-
-      {/* Custom cursor dot only */}
+      {/* Custom cursor dot */}
       <div ref={dotRef} className="cur-dot" aria-hidden="true" />
 
       <style>{`
         /* Hide default cursor sitewide */
         *, *::before, *::after { cursor: none !important; }
-
-        /* ── Spotlight ── */
-        .spotlight {
-          position: fixed; inset: 0; z-index: 2; pointer-events: none;
-          background: radial-gradient(
-            500px circle at var(--mx, -999px) var(--my, -999px),
-            rgba(201,168,76,0.13),
-            transparent 70%
-          );
-        }
-        html[data-theme="light"] .spotlight {
-          background: radial-gradient(
-            500px circle at var(--mx, -999px) var(--my, -999px),
-            rgba(139,96,16,0.10),
-            transparent 70%
-          );
-        }
 
         /* ── Dot ── */
         .cur-dot {
