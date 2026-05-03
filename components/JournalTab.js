@@ -771,14 +771,20 @@ function Calendar({ trades, lang }) {
 function TradeLog({ trades, onDelete, onRefresh, lang }) {
   const [filter, setFilter] = useState('all');
   const symbols = [...new Set(trades.map(t => t.symbol))];
-
   const filtered = filter === 'all' ? trades : trades.filter(t => t.symbol === filter || t.type === filter);
+  const sorted   = [...filtered].sort((a, b) => new Date(b.closeTime) - new Date(a.closeTime));
+
+  const TH = ({ children, right }) => (
+    <th style={{ padding: '11px 14px', fontSize: 10, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 0.8, textTransform: 'uppercase', borderBottom: '1px solid var(--border)', background: 'var(--bg-table-hd)', textAlign: right ? 'right' : 'left', whiteSpace: 'nowrap', userSelect: 'none' }}>
+      {children}
+    </th>
+  );
 
   return (
-    <div style={{ background: 'var(--bg-table)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
-      {/* Filters */}
-      <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
-        <span style={{ fontSize: 11, color: 'var(--text-dim)', fontWeight: 600, letterSpacing: 1, marginRight: 4 }}>FILTER</span>
+    <div style={{ background: 'var(--bg-table)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.07)' }}>
+      {/* Toolbar */}
+      <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center', background: 'var(--bg-table-hd)' }}>
+        <span style={{ fontSize: 10, color: 'var(--text-dim)', fontWeight: 700, letterSpacing: 1, marginRight: 4 }}>FILTER</span>
         {['all', 'buy', 'sell', ...symbols].map(f => (
           <button key={f} onClick={() => setFilter(f)} style={{
             padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 600, cursor: 'pointer',
@@ -786,46 +792,86 @@ function TradeLog({ trades, onDelete, onRefresh, lang }) {
             borderColor: filter === f ? 'var(--gold)' : 'var(--border)',
             background:  filter === f ? 'var(--gold-alpha)' : 'transparent',
             color:       filter === f ? 'var(--gold)' : 'var(--text-dim)',
-          }}>{f === 'all' ? (lang === 'zh' ? '全部' : 'All') : f.toUpperCase()}</button>
+          }}>{f === 'all' ? (lang === 'zh' ? '全部' : 'All') : f === 'buy' ? 'Long' : f === 'sell' ? 'Short' : f.replace('.ECN','')}</button>
         ))}
         <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--text-dim)' }}>
-          {filtered.length} {lang === 'zh' ? '笔交易' : 'trades'}
+          {sorted.length} {lang === 'zh' ? '笔交易' : 'trades'}
         </span>
       </div>
 
       {/* Table */}
       <div style={{ overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 700 }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 900 }}>
           <thead>
             <tr>
-              {['Close Date', 'Symbol', 'Type', 'Lots', 'Open', 'Close', 'Pips', 'Net P&L', 'Notes', ''].map(h => (
-                <th key={h} style={{ padding: '10px 14px', fontSize: 10, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 0.8, textTransform: 'uppercase', borderBottom: '1px solid var(--border)', background: 'var(--bg-table-hd)', textAlign: 'left', whiteSpace: 'nowrap' }}>{h}</th>
-              ))}
+              <TH>Status</TH>
+              <TH>Symbol</TH>
+              <TH>Entry Date</TH>
+              <TH>Entry Time</TH>
+              <TH>Side</TH>
+              <TH right>Entry Price</TH>
+              <TH right>Exit Price</TH>
+              <TH>Exit Date</TH>
+              <TH>Exit Time</TH>
+              <TH right>Size</TH>
+              <TH right>Fees</TH>
+              <TH right>Pips</TH>
+              <TH right>P&L</TH>
+              <TH></TH>
             </tr>
           </thead>
           <tbody>
-            {filtered.length === 0 ? (
-              <tr><td colSpan={10} style={{ padding: '48px', textAlign: 'center', color: 'var(--text-dim)', fontSize: 13 }}>
+            {sorted.length === 0 ? (
+              <tr><td colSpan={14} style={{ padding: '48px', textAlign: 'center', color: 'var(--text-dim)', fontSize: 13 }}>
                 {lang === 'zh' ? '暂无交易记录' : 'No trades yet'}
               </td></tr>
-            ) : filtered.map(t => (
-              <tr key={t.ticket} style={{ borderBottom: '1px solid var(--border-row)' }}>
-                <td style={{ padding: '11px 14px', fontSize: 12, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-                  <div>{fmtDate(t.closeTime)}</div>
-                  <div style={{ fontSize: 10, color: 'var(--text-dim)', marginTop: 1 }}>{fmtTime(t.closeTime)}</div>
+            ) : sorted.map((t, idx) => (
+              <tr key={t.ticket} style={{ borderBottom: '1px solid var(--border-row)', background: idx % 2 === 1 ? 'rgba(255,255,255,0.012)' : 'transparent', transition: 'background 0.1s' }}>
+                {/* Status */}
+                <td style={{ padding: '10px 14px' }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 4, background: 'rgba(255,255,255,0.06)', color: 'var(--text-dim)', letterSpacing: 0.5 }}>Closed</span>
                 </td>
-                <td style={{ padding: '11px 14px', fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{t.symbol}</td>
-                <td style={{ padding: '11px 14px' }}>
-                  <span style={{ padding: '3px 8px', borderRadius: 5, fontSize: 11, fontWeight: 700, background: t.type === 'buy' ? 'var(--win-bg)' : 'var(--loss-bg)', color: t.type === 'buy' ? 'var(--clr-win)' : 'var(--clr-loss)' }}>{t.type.toUpperCase()}</span>
+                {/* Symbol */}
+                <td style={{ padding: '10px 14px', fontSize: 13, fontWeight: 700, color: 'var(--text)', whiteSpace: 'nowrap' }}>
+                  {t.symbol.replace('.ECN','').replace('.ecn','')}
                 </td>
-                <td style={{ padding: '11px 14px', fontSize: 12, color: 'var(--text-muted)' }}>{t.lots}</td>
-                <td style={{ padding: '11px 14px', fontSize: 12, color: 'var(--text-muted)', fontFamily: 'monospace' }}>{t.openPrice}</td>
-                <td style={{ padding: '11px 14px', fontSize: 12, color: 'var(--text-muted)', fontFamily: 'monospace' }}>{t.closePrice}</td>
-                <td style={{ padding: '11px 14px', fontSize: 12, fontWeight: 600, color: clr(t.pips) }}>{t.pips > 0 ? '+' : ''}{t.pips}</td>
-                <td style={{ padding: '11px 14px', fontSize: 13, fontWeight: 700, color: clr(t.net) }}>{fmtPnL(t.net)}</td>
-                <td style={{ padding: '11px 14px', fontSize: 11, color: 'var(--text-dim)', maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.notes || '—'}</td>
-                <td style={{ padding: '11px 14px' }}>
-                  <button onClick={() => onDelete(t.ticket)} style={{ background: 'var(--loss-bg)', border: '1px solid var(--clr-loss)', borderRadius: 5, color: 'var(--clr-loss)', cursor: 'pointer', padding: '4px 6px', display: 'flex', alignItems: 'center' }}>
+                {/* Entry Date */}
+                <td style={{ padding: '10px 14px', fontSize: 11, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{fmtDate(t.openTime || t.closeTime)}</td>
+                {/* Entry Time */}
+                <td style={{ padding: '10px 14px', fontSize: 11, color: 'var(--text-dim)', fontVariantNumeric: 'tabular-nums' }}>{fmtTime(t.openTime || t.closeTime)}</td>
+                {/* Side */}
+                <td style={{ padding: '10px 14px' }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 5, background: t.type === 'buy' ? 'var(--win-bg)' : 'var(--loss-bg)', color: t.type === 'buy' ? 'var(--clr-win)' : 'var(--clr-loss)' }}>
+                    {t.type === 'buy' ? 'Long' : 'Short'}
+                  </span>
+                </td>
+                {/* Entry Price */}
+                <td style={{ padding: '10px 14px', fontSize: 12, color: 'var(--text-muted)', fontFamily: 'monospace', textAlign: 'right' }}>{t.openPrice}</td>
+                {/* Exit Price */}
+                <td style={{ padding: '10px 14px', fontSize: 12, color: 'var(--text-muted)', fontFamily: 'monospace', textAlign: 'right' }}>{t.closePrice}</td>
+                {/* Exit Date */}
+                <td style={{ padding: '10px 14px', fontSize: 11, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{fmtDate(t.closeTime)}</td>
+                {/* Exit Time */}
+                <td style={{ padding: '10px 14px', fontSize: 11, color: 'var(--text-dim)', fontVariantNumeric: 'tabular-nums' }}>{fmtTime(t.closeTime)}</td>
+                {/* Size */}
+                <td style={{ padding: '10px 14px', fontSize: 12, color: 'var(--text-muted)', textAlign: 'right' }}>{t.lots}</td>
+                {/* Fees */}
+                <td style={{ padding: '10px 14px', fontSize: 12, color: 'var(--text-dim)', textAlign: 'right' }}>
+                  {t.commission !== 0 ? <span style={{ color: 'var(--clr-loss)' }}>${Math.abs(t.commission).toFixed(2)}</span> : '—'}
+                </td>
+                {/* Pips */}
+                <td style={{ padding: '10px 14px', fontSize: 12, fontWeight: 600, color: clr(t.pips), textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
+                  {t.pips > 0 ? '+' : ''}{t.pips}
+                </td>
+                {/* P&L */}
+                <td style={{ padding: '10px 14px', fontSize: 13, fontWeight: 700, color: clr(t.net), textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
+                  {fmtPnL(t.net)}
+                </td>
+                {/* Delete */}
+                <td style={{ padding: '10px 10px' }}>
+                  <button onClick={() => onDelete(t.ticket)} style={{ background: 'transparent', border: '1px solid var(--border)', borderRadius: 5, color: 'var(--text-dim)', cursor: 'pointer', padding: '4px 6px', display: 'flex', alignItems: 'center', transition: 'all 0.15s' }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--clr-loss)'; e.currentTarget.style.color = 'var(--clr-loss)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-dim)'; }}>
                     <TrashIcon />
                   </button>
                 </td>
@@ -1109,50 +1155,93 @@ function PerformanceView({ trades, lang }) {
   const bot5        = byNet.slice(-5).reverse();
   const maxTradeAbs = Math.max(Math.abs(top5[0]?.net || 0), Math.abs(bot5[0]?.net || 0), 1);
 
+  // Monthly P&L breakdown
+  const monthlyMap = {};
+  for (const t of trades) {
+    const d = new Date(t.closeTime);
+    const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    if (!monthlyMap[key]) monthlyMap[key] = { pnl: 0, count: 0, label: `${MONTHS_SHORT[d.getMonth()]} ${d.getFullYear()}` };
+    monthlyMap[key].pnl   += t.net;
+    monthlyMap[key].count += 1;
+  }
+  const monthlyData = Object.entries(monthlyMap).sort(([a],[b]) => a.localeCompare(b)).map(([,v]) => v);
+  const maxMonthAbs = Math.max(...monthlyData.map(m => Math.abs(m.pnl)), 1);
+
+  // Entry time range (by hour of day)
+  const hourMap = {};
+  for (const t of trades) {
+    const h = new Date(t.closeTime).getHours();
+    if (!hourMap[h]) hourMap[h] = { pnl: 0, count: 0 };
+    hourMap[h].pnl   += t.net;
+    hourMap[h].count += 1;
+  }
+  const hourData     = Object.entries(hourMap).map(([h, v]) => ({ label: `${h}:00`, h: +h, ...v })).sort((a,b) => a.h - b.h);
+  const maxHourAbs   = Math.max(...hourData.map(d => Math.abs(d.pnl)), 1);
+  const maxHourCount = Math.max(...hourData.map(d => d.count), 1);
+
+  // Recent trades (last 8)
+  const recentTrades = [...trades].sort((a,b) => new Date(b.closeTime) - new Date(a.closeTime)).slice(0, 8);
+
   const card = { background: 'var(--bg-table)', border: '1px solid var(--border)', borderRadius: 12, padding: '18px 20px', boxShadow: '0 2px 12px rgba(0,0,0,0.07)' };
   const sectionTitle = (txt, color = 'var(--gold)') => (
-    <div style={{ fontSize: 10, fontWeight: 700, color, letterSpacing: 1.2, textTransform: 'uppercase', marginBottom: 16, paddingBottom: 10, borderBottom: '1px solid var(--border)' }}>{txt}</div>
+    <div style={{ fontSize: 10, fontWeight: 700, color, letterSpacing: 1.2, textTransform: 'uppercase', marginBottom: 14, paddingBottom: 10, borderBottom: '1px solid var(--border)' }}>{txt}</div>
   );
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-      {/* ── Equity Curve ── */}
-      <div style={{ background: 'var(--bg-table)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px 20px 10px', boxShadow: '0 2px 12px rgba(0,0,0,0.07)' }}>
-        {/* Header row: title + filter pills + P&L */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, gap: 12, flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div>
-              <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--gold)', letterSpacing: 1.2, textTransform: 'uppercase' }}>
-                {lang === 'zh' ? '净值曲线' : 'Equity Curve'}
-              </span>
-              <span style={{ fontSize: 10, color: 'var(--text-dim)', marginLeft: 8 }}>{curveTrades.length} trades</span>
+      {/* ── TOP ROW: Curve (left) + Monthly P&L (right) ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 260px', gap: 16, alignItems: 'stretch' }}>
+
+        {/* Equity Curve */}
+        <div style={{ background: 'var(--bg-table)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px 20px 10px', boxShadow: '0 2px 12px rgba(0,0,0,0.07)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, gap: 12, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div>
+                <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--gold)', letterSpacing: 1.2, textTransform: 'uppercase' }}>{lang === 'zh' ? '净值曲线' : 'Equity Curve'}</span>
+                <span style={{ fontSize: 10, color: 'var(--text-dim)', marginLeft: 8 }}>{curveTrades.length} trades</span>
+              </div>
+              {/* Month filter pills */}
+              <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+                {[{ key: 'all', label: 'All' }, ...curveMonths].map(m => {
+                  const active = curveFilter === m.key;
+                  return (
+                    <button key={m.key} onClick={() => setCurveFilter(m.key)} style={{
+                      padding: '2px 9px', borderRadius: 20, fontSize: 10, fontWeight: 600, cursor: 'pointer', border: '1px solid',
+                      borderColor: active ? 'var(--gold)' : 'var(--border)',
+                      background: active ? 'var(--gold-alpha)' : 'transparent',
+                      color: active ? 'var(--gold)' : 'var(--text-dim)',
+                      transition: 'all 0.15s',
+                    }}>{m.label}</button>
+                  );
+                })}
+              </div>
             </div>
-            {/* Month filter pills */}
-            <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
-              {[{ key: 'all', label: 'All' }, ...curveMonths].map(m => {
-                const active = curveFilter === m.key;
-                return (
-                  <button key={m.key} onClick={() => setCurveFilter(m.key)} style={{
-                    padding: '2px 9px', borderRadius: 20, fontSize: 10, fontWeight: 600, cursor: 'pointer', border: '1px solid',
-                    borderColor: active ? 'var(--gold)' : 'var(--border)',
-                    background: active ? 'var(--gold-alpha)' : 'transparent',
-                    color: active ? 'var(--gold)' : 'var(--text-dim)',
-                    transition: 'all 0.15s',
-                  }}>{m.label}</button>
-                );
-              })}
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: 22, fontWeight: 900, color: clr(curvePnl), letterSpacing: -0.5 }}><AnimatedPnL value={curvePnl} /></div>
+              <div style={{ fontSize: 9, color: 'var(--text-dim)', marginTop: 1 }}>{curveFilter === 'all' ? 'all time' : curveMonths.find(m => m.key === curveFilter)?.label}</div>
             </div>
           </div>
-          {/* P&L total */}
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: 22, fontWeight: 900, color: clr(curvePnl), letterSpacing: -0.5 }}>
-              <AnimatedPnL value={curvePnl} />
-            </div>
-            <div style={{ fontSize: 9, color: 'var(--text-dim)', marginTop: 1 }}>{curveFilter === 'all' ? 'all time' : curveMonths.find(m => m.key === curveFilter)?.label}</div>
+          <EquityCurve trades={curveTrades} />
+        </div>
+
+        {/* Monthly P&L sidebar */}
+        <div style={{ background: 'var(--bg-table)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px 20px', boxShadow: '0 2px 12px rgba(0,0,0,0.07)', display: 'flex', flexDirection: 'column' }}>
+          {sectionTitle('Monthly P&L')}
+          <div style={{ flex: 1, overflowY: 'auto' }}>
+            {monthlyData.map((m, i) => (
+              <div key={i} style={{ marginBottom: 10 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                  <span style={{ fontSize: 10, color: 'var(--text-dim)', fontWeight: 600 }}>{m.label}</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: clr(m.pnl) }}>{fmtPnL(m.pnl)}</span>
+                </div>
+                <div style={{ height: 5, background: 'var(--bg)', borderRadius: 3, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${(Math.abs(m.pnl) / maxMonthAbs) * 100}%`, background: m.pnl >= 0 ? 'var(--clr-win)' : 'var(--clr-loss)', borderRadius: 3, opacity: 0.75, transition: 'width 0.5s ease' }} />
+                </div>
+              </div>
+            ))}
           </div>
         </div>
-        <EquityCurve trades={curveTrades} />
       </div>
 
       {/* ── KPI row ── */}
@@ -1185,18 +1274,25 @@ function PerformanceView({ trades, lang }) {
           <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 3, background: pfNum >= 1 ? 'var(--gold)' : 'var(--clr-loss)', borderRadius: '12px 0 0 12px' }} />
         </div>
 
-        {/* Best / Worst */}
+        {/* Best · Worst single trade */}
         <div style={{ ...card, position: 'relative', overflow: 'hidden' }}>
-          <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1.2, marginBottom: 10 }}>BEST · WORST</div>
-          <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--clr-win)', marginBottom: 4 }}><AnimatedPnL value={best?.net || 0} /></div>
-          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--clr-loss)' }}><AnimatedPnL value={worst?.net || 0} /></div>
-          <div style={{ fontSize: 9, color: 'var(--text-dim)', marginTop: 8 }}>Single trade</div>
+          <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1.2, marginBottom: 10 }}>BIGGEST TRADES</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 5 }}>
+            <span style={{ fontSize: 9, color: 'var(--clr-win)' }}>▲</span>
+            <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--clr-win)' }}><AnimatedPnL value={best?.net || 0} /></span>
+            <span style={{ fontSize: 9, color: 'var(--text-dim)', marginLeft: 2 }}>{best?.symbol?.replace('.ECN','')}</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ fontSize: 9, color: 'var(--clr-loss)' }}>▼</span>
+            <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--clr-loss)' }}><AnimatedPnL value={worst?.net || 0} /></span>
+            <span style={{ fontSize: 9, color: 'var(--text-dim)', marginLeft: 2 }}>{worst?.symbol?.replace('.ECN','')}</span>
+          </div>
           <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 3, background: 'linear-gradient(180deg,var(--clr-win),var(--clr-loss))', borderRadius: '12px 0 0 12px' }} />
         </div>
 
         {/* Current streak */}
         <div style={{ ...card, position: 'relative', overflow: 'hidden' }}>
-          <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1.2, marginBottom: 10 }}>STREAK</div>
+          <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1.2, marginBottom: 10 }}>CURRENT STREAK</div>
           <div style={{ fontSize: 26, fontWeight: 800, color: streak > 0 ? 'var(--clr-win)' : streak < 0 ? 'var(--clr-loss)' : 'var(--text)', lineHeight: 1 }}>
             {streak > 0 ? '+' : streak < 0 ? '-' : ''}<AnimatedInt value={Math.abs(streak)} />
           </div>
@@ -1221,10 +1317,34 @@ function PerformanceView({ trades, lang }) {
         </div>
       </div>
 
-      {/* ── Charts row ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(240px,1fr))', gap: 16 }}>
+      {/* ── Charts: 4-column grid ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 16 }}>
 
-        {/* Weekday P&L + count */}
+        {/* Col 1: Entry time range */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div style={card}>
+            {sectionTitle('Entry Time Range')}
+            {hourData.map((h, i) => <PnLBar key={i} label={h.label} value={h.pnl} maxAbs={maxHourAbs} />)}
+          </div>
+          <div style={card}>
+            {sectionTitle('Trades by Hour')}
+            {hourData.map((h, i) => <CountBar key={i} label={h.label} value={h.count} maxVal={maxHourCount} />)}
+          </div>
+        </div>
+
+        {/* Col 2: Best / Worst 5 */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div style={card}>
+            {sectionTitle(lang === 'zh' ? '最佳5笔' : 'Best Trades', 'var(--clr-win)')}
+            {top5.map((t, i) => <PnLBar key={i} label={`${t.symbol.replace('.ECN','')} · ${fmtDate(t.closeTime)}`} value={t.net} maxAbs={maxTradeAbs} />)}
+          </div>
+          <div style={card}>
+            {sectionTitle(lang === 'zh' ? '最差5笔' : 'Worst Trades', 'var(--clr-loss)')}
+            {bot5.map((t, i) => <PnLBar key={i} label={`${t.symbol.replace('.ECN','')} · ${fmtDate(t.closeTime)}`} value={t.net} maxAbs={maxTradeAbs} />)}
+          </div>
+        </div>
+
+        {/* Col 3: P&L by Weekday + count */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div style={card}>
             {sectionTitle(lang === 'zh' ? '按星期盈亏' : 'P&L by Weekday')}
@@ -1236,43 +1356,29 @@ function PerformanceView({ trades, lang }) {
           </div>
         </div>
 
-        {/* Best / worst 5 trades */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div style={card}>
-            {sectionTitle(lang === 'zh' ? '最佳5笔' : 'Best 5 Trades', 'var(--clr-win)')}
-            {top5.map((t, i) => <PnLBar key={i} label={t.symbol} value={t.net} maxAbs={maxTradeAbs} />)}
-          </div>
-          <div style={card}>
-            {sectionTitle(lang === 'zh' ? '最差5笔' : 'Worst 5 Trades', 'var(--clr-loss)')}
-            {bot5.map((t, i) => <PnLBar key={i} label={t.symbol} value={t.net} maxAbs={maxTradeAbs} />)}
-          </div>
-        </div>
-
-        {/* Symbol breakdown */}
+        {/* Col 4: Recent trades */}
         <div style={card}>
-          {sectionTitle(lang === 'zh' ? '按品种分析' : 'P&L by Symbol')}
-          {symRows.map((s, i) => (
-            <div key={i} style={{ marginBottom: 16 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                <div>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)' }}>{s.label}</span>
-                  <span style={{ fontSize: 10, color: 'var(--text-dim)', marginLeft: 8 }}>{s.count} trades · {((s.wins/s.count)*100).toFixed(0)}% W</span>
-                </div>
-                <span style={{ fontSize: 12, fontWeight: 800, color: clr(s.pnl) }}>{fmtPnL(s.pnl)}</span>
-              </div>
-              <div style={{ height: 6, background: 'var(--bg)', borderRadius: 3, overflow: 'hidden' }}>
-                <div style={{
-                  height: '100%',
-                  width: `${(Math.abs(s.pnl) / maxSymAbs) * 100}%`,
-                  background: s.pnl >= 0
-                    ? 'linear-gradient(90deg, var(--clr-win), var(--win-bg))'
-                    : 'linear-gradient(90deg, var(--clr-loss), var(--loss-bg))',
-                  borderRadius: 3,
-                  transition: 'width 0.5s ease',
-                }} />
-              </div>
+          {sectionTitle('Recent Trades')}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+            {/* Mini header */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 56px 70px', gap: 4, padding: '0 0 8px', borderBottom: '1px solid var(--border)', marginBottom: 4 }}>
+              {['Symbol', 'Side', 'P&L'].map((h, i) => (
+                <div key={h} style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 0.8, textAlign: i === 2 ? 'right' : 'left' }}>{h}</div>
+              ))}
             </div>
-          ))}
+            {recentTrades.map((t, i) => (
+              <div key={t.ticket} style={{ display: 'grid', gridTemplateColumns: '1fr 56px 70px', gap: 4, padding: '7px 0', borderBottom: i < recentTrades.length - 1 ? '1px solid var(--border)' : 'none', alignItems: 'center' }}>
+                <div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)' }}>{t.symbol.replace('.ECN','')}</div>
+                  <div style={{ fontSize: 9, color: 'var(--text-dim)', marginTop: 1 }}>{fmtDate(t.closeTime)}</div>
+                </div>
+                <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: t.type === 'buy' ? 'var(--win-bg)' : 'var(--loss-bg)', color: t.type === 'buy' ? 'var(--clr-win)' : 'var(--clr-loss)', textAlign: 'center' }}>
+                  {t.type === 'buy' ? 'Long' : 'Short'}
+                </span>
+                <div style={{ fontSize: 12, fontWeight: 700, color: clr(t.net), textAlign: 'right' }}>{fmtPnL(t.net)}</div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
