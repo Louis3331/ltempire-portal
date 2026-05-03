@@ -1315,26 +1315,24 @@ function PerformanceView({ trades, lang }) {
   const grossWin  = wins.reduce((s, t) => s + t.net, 0);
   const grossLoss = Math.abs(losses.reduce((s, t) => s + t.net, 0));
 
-  // Drawdown + mini curve points
+  // Drawdown + mini underwater curve points
   let cumPnl = 0, peak = 0, maxDD = 0, currentDD = 0;
-  const ddPoints = [0];
+  const ddPoints = [0]; // stores drawdown depth (0 = at peak, positive = underwater)
   for (const t of sorted) {
     cumPnl += t.net;
-    ddPoints.push(cumPnl);
     if (cumPnl > peak) peak = cumPnl;
     const dd = peak - cumPnl;
+    ddPoints.push(dd);
     if (dd > maxDD) maxDD = dd;
   }
   currentDD = peak - cumPnl;
 
-  // Mini drawdown SVG path (80×28)
+  // Mini drawdown SVG path (80×28) — 0 at top, deeper = lower
   const ddW = 80, ddH = 28;
-  const ddMin = Math.min(...ddPoints);
-  const ddMax = Math.max(...ddPoints, ddMin + 1);
-  const ddRange = ddMax - ddMin;
+  const ddDepthMax = Math.max(...ddPoints, 1);
   const ddPath = ddPoints.map((v, i) => {
     const x = (i / Math.max(ddPoints.length - 1, 1)) * ddW;
-    const y = ddH - ((v - ddMin) / ddRange) * ddH;
+    const y = (v / ddDepthMax) * ddH; // 0 (no DD) = top, max DD = bottom
     return `${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`;
   }).join(' ');
 
@@ -1438,7 +1436,7 @@ function PerformanceView({ trades, lang }) {
             </div>
             <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end' }}>
               <svg viewBox={`0 0 ${ddW} ${ddH}`} style={{ width: '100%', height: 24, display: 'block' }}>
-                <path d={ddPath} fill="none" stroke="var(--text-dim)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.5" />
+                <path d={ddPath} fill="none" stroke="var(--clr-loss)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.7" />
               </svg>
             </div>
           </div>
