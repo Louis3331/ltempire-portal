@@ -1514,38 +1514,50 @@ function PerformanceView({ trades, lang }) {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 10 }}>
 
         {/* Col 1: Entry time range + Number of Trades */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <div style={card}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, height: '100%' }}>
+          <div style={{ ...card, flex: 1, display: 'flex', flexDirection: 'column' }}>
             {sectionTitle('Entry Time Range')}
-            {hourData.map((h, i) => <PnLBar key={i} label={h.label} value={h.pnl} maxAbs={maxHourAbs} />)}
+            <div style={{ flex: 1 }}>
+              {hourData.map((h, i) => <PnLBar key={i} label={h.label} value={h.pnl} maxAbs={maxHourAbs} />)}
+            </div>
           </div>
-          <div style={card}>
+          <div style={{ ...card, flex: 1, display: 'flex', flexDirection: 'column' }}>
             {sectionTitle('Number of Trades')}
-            {hourData.map((h, i) => <CountBar key={i} label={h.label} value={h.count} maxVal={maxHourCount} />)}
+            <div style={{ flex: 1 }}>
+              {hourData.map((h, i) => <CountBar key={i} label={h.label} value={h.count} maxVal={maxHourCount} />)}
+            </div>
           </div>
         </div>
 
         {/* Col 2: Best / Worst 5 */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div style={card}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, height: '100%' }}>
+          <div style={{ ...card, flex: 1, display: 'flex', flexDirection: 'column' }}>
             {sectionTitle('Best Trades', 'var(--clr-win)')}
-            {top5.map((t, i) => <PnLBar key={i} label={`${t.symbol.replace('.ECN','')} · ${fmtDate(t.closeTime)}`} value={t.net} maxAbs={maxTradeAbs} />)}
+            <div style={{ flex: 1 }}>
+              {top5.map((t, i) => <PnLBar key={i} label={`${t.symbol.replace('.ECN','')} · ${fmtDate(t.closeTime)}`} value={t.net} maxAbs={maxTradeAbs} />)}
+            </div>
           </div>
-          <div style={card}>
+          <div style={{ ...card, flex: 1, display: 'flex', flexDirection: 'column' }}>
             {sectionTitle('Worst Trades', 'var(--clr-loss)')}
-            {bot5.map((t, i) => <PnLBar key={i} label={`${t.symbol.replace('.ECN','')} · ${fmtDate(t.closeTime)}`} value={t.net} maxAbs={maxTradeAbs} />)}
+            <div style={{ flex: 1 }}>
+              {bot5.map((t, i) => <PnLBar key={i} label={`${t.symbol.replace('.ECN','')} · ${fmtDate(t.closeTime)}`} value={t.net} maxAbs={maxTradeAbs} />)}
+            </div>
           </div>
         </div>
 
         {/* Col 3: P&L by Weekday + count */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div style={card}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, height: '100%' }}>
+          <div style={{ ...card, flex: 1, display: 'flex', flexDirection: 'column' }}>
             {sectionTitle('P&L by Weekday')}
-            {wdData.map((w, i) => <PnLBar key={i} label={w.label} value={w.pnl} maxAbs={maxWdAbs} />)}
+            <div style={{ flex: 1 }}>
+              {wdData.map((w, i) => <PnLBar key={i} label={w.label} value={w.pnl} maxAbs={maxWdAbs} />)}
+            </div>
           </div>
-          <div style={card}>
+          <div style={{ ...card, flex: 1, display: 'flex', flexDirection: 'column' }}>
             {sectionTitle('Number of Trades')}
-            {wdData.map((w, i) => <CountBar key={i} label={w.label} value={w.count} maxVal={maxWdCount} />)}
+            <div style={{ flex: 1 }}>
+              {wdData.map((w, i) => <CountBar key={i} label={w.label} value={w.count} maxVal={maxWdCount} />)}
+            </div>
           </div>
         </div>
 
