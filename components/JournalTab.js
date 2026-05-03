@@ -900,8 +900,8 @@ function EquityCurve({ trades }) {
   const pts = [{ date: null, cum: 0, net: 0 }];
   sorted.forEach(t => { cum += t.net; pts.push({ date: t.closeTime, cum, net: t.net, symbol: t.symbol }); });
 
-  const W = 1000, H = 200;
-  const pad = { t: 16, r: 24, b: 32, l: 64 };
+  const W = 1000, H = 150;
+  const pad = { t: 12, r: 24, b: 28, l: 56 };
   const cW = W - pad.l - pad.r;
   const cH = H - pad.t - pad.b;
 
@@ -955,7 +955,7 @@ function EquityCurve({ trades }) {
 
   return (
     <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`}
-      style={{ width: '100%', height: 'auto', display: 'block', overflow: 'visible', cursor: 'crosshair' }}
+      style={{ width: '100%', maxHeight: 160, height: 'auto', display: 'block', overflow: 'visible', cursor: 'crosshair' }}
       onMouseMove={onMove} onMouseLeave={() => setHover(null)}>
       <defs>
         <linearGradient id="eq-fill" x1="0" y1="0" x2="0" y2="1">
@@ -1118,36 +1118,39 @@ function PerformanceView({ trades, lang }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
       {/* ── Equity Curve ── */}
-      <div style={{ background: 'var(--bg-table)', border: '1px solid var(--border)', borderRadius: 12, padding: '20px 20px 12px', boxShadow: '0 2px 12px rgba(0,0,0,0.07)' }}>
-        {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14, gap: 12 }}>
-          <div>
-            <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--gold)', letterSpacing: 1.2, textTransform: 'uppercase' }}>
-              {lang === 'zh' ? '净值曲线' : 'Equity Curve'}
+      <div style={{ background: 'var(--bg-table)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px 20px 10px', boxShadow: '0 2px 12px rgba(0,0,0,0.07)' }}>
+        {/* Header row: title + filter pills + P&L */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, gap: 12, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div>
+              <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--gold)', letterSpacing: 1.2, textTransform: 'uppercase' }}>
+                {lang === 'zh' ? '净值曲线' : 'Equity Curve'}
+              </span>
+              <span style={{ fontSize: 10, color: 'var(--text-dim)', marginLeft: 8 }}>{curveTrades.length} trades</span>
             </div>
-            <div style={{ fontSize: 11, color: 'var(--text-dim)', marginTop: 3 }}>{curveTrades.length} trades</div>
+            {/* Month filter pills */}
+            <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+              {[{ key: 'all', label: 'All' }, ...curveMonths].map(m => {
+                const active = curveFilter === m.key;
+                return (
+                  <button key={m.key} onClick={() => setCurveFilter(m.key)} style={{
+                    padding: '2px 9px', borderRadius: 20, fontSize: 10, fontWeight: 600, cursor: 'pointer', border: '1px solid',
+                    borderColor: active ? 'var(--gold)' : 'var(--border)',
+                    background: active ? 'var(--gold-alpha)' : 'transparent',
+                    color: active ? 'var(--gold)' : 'var(--text-dim)',
+                    transition: 'all 0.15s',
+                  }}>{m.label}</button>
+                );
+              })}
+            </div>
           </div>
+          {/* P&L total */}
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: 26, fontWeight: 900, color: clr(curvePnl), letterSpacing: -0.5 }}>
+            <div style={{ fontSize: 22, fontWeight: 900, color: clr(curvePnl), letterSpacing: -0.5 }}>
               <AnimatedPnL value={curvePnl} />
             </div>
-            <div style={{ fontSize: 10, color: 'var(--text-dim)', marginTop: 2 }}>{curveFilter === 'all' ? 'all time' : curveMonths.find(m => m.key === curveFilter)?.label}</div>
+            <div style={{ fontSize: 9, color: 'var(--text-dim)', marginTop: 1 }}>{curveFilter === 'all' ? 'all time' : curveMonths.find(m => m.key === curveFilter)?.label}</div>
           </div>
-        </div>
-        {/* Month filter pills */}
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 14 }}>
-          {[{ key: 'all', label: 'All' }, ...curveMonths].map(m => {
-            const active = curveFilter === m.key;
-            return (
-              <button key={m.key} onClick={() => setCurveFilter(m.key)} style={{
-                padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 600, cursor: 'pointer', border: '1px solid',
-                borderColor: active ? 'var(--gold)' : 'var(--border)',
-                background: active ? 'var(--gold-alpha)' : 'transparent',
-                color: active ? 'var(--gold)' : 'var(--text-dim)',
-                transition: 'all 0.15s',
-              }}>{m.label}</button>
-            );
-          })}
         </div>
         <EquityCurve trades={curveTrades} />
       </div>
