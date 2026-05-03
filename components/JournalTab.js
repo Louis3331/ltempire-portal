@@ -900,8 +900,8 @@ function EquityCurve({ trades }) {
   const pts = [{ date: null, cum: 0, net: 0 }];
   sorted.forEach(t => { cum += t.net; pts.push({ date: t.closeTime, cum, net: t.net, symbol: t.symbol }); });
 
-  const W = 1000, H = 150;
-  const pad = { t: 12, r: 24, b: 28, l: 56 };
+  const W = 1000, H = 180;
+  const pad = { t: 14, r: 24, b: 30, l: 60 };
   const cW = W - pad.l - pad.r;
   const cH = H - pad.t - pad.b;
 
@@ -955,7 +955,7 @@ function EquityCurve({ trades }) {
 
   return (
     <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`}
-      style={{ width: '100%', maxHeight: 160, height: 'auto', display: 'block', overflow: 'visible', cursor: 'crosshair' }}
+      style={{ width: '100%', maxHeight: 220, height: 'auto', display: 'block', overflow: 'visible', cursor: 'crosshair' }}
       onMouseMove={onMove} onMouseLeave={() => setHover(null)}>
       <defs>
         <linearGradient id="eq-fill" x1="0" y1="0" x2="0" y2="1">
