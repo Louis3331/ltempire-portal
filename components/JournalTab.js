@@ -1064,6 +1064,115 @@ function EquityCurve({ trades }) {
   );
 }
 
+/* ── Mini bar chart (sidebar) ────────────────────────────── */
+function MiniBarChart({ data, color = 'var(--gold)', colorByValue = false }) {
+  const [hover, setHover] = useState(null);
+  if (!data.length) return <div style={{ fontSize: 11, color: 'var(--text-dim)', padding: '12px 0' }}>No data</div>;
+
+  const W = 400, H = 120;
+  const pad = { t: 20, r: 8, b: 28, l: 52 };
+  const cW = W - pad.l - pad.r;
+  const cH = H - pad.t - pad.b;
+
+  const vals = data.map(d => d.value);
+  const maxVal = Math.max(...vals.map(Math.abs), 1);
+  const hasNeg = vals.some(v => v < 0);
+  // zero baseline y
+  const zeroY = hasNeg
+    ? pad.t + cH * (maxVal / (maxVal + Math.max(...vals.map(v => Math.abs(v < 0 ? v : 0)), 0.001)))
+    : pad.t + cH;
+
+  const barW = Math.max(2, cW / data.length - 2);
+  const gap  = cW / data.length;
+
+  // Y-axis ticks (4)
+  const tickMax = hasNeg ? maxVal : maxVal;
+  const tickMin = hasNeg ? -maxVal : 0;
+  const yTicks  = Array.from({ length: 5 }, (_, i) => tickMin + ((tickMax - tickMin) / 4) * i);
+  const yScale  = (v) => pad.t + cH - ((v - tickMin) / (tickMax - tickMin)) * cH;
+
+  // Short label (e.g. "Apr" from "Apr 2026", or "04-12" from "2026-04-12")
+  const shortLabel = (str) => {
+    if (!str) return '';
+    if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+      const d = new Date(str);
+      return `${d.getMonth() + 1}/${d.getDate()}`;
+    }
+    return str.split(' ')[0];
+  };
+
+  // Thin x labels if too many
+  const step = Math.ceil(data.length / 6);
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 'auto', display: 'block', overflow: 'visible' }}
+        onMouseLeave={() => setHover(null)}>
+
+        {/* Grid lines + Y labels */}
+        {yTicks.map((v, i) => (
+          <g key={i}>
+            <line x1={pad.l} y1={yScale(v)} x2={pad.l + cW} y2={yScale(v)} stroke="var(--border)" strokeWidth="0.6" />
+            <text x={pad.l - 6} y={yScale(v) + 4} fontSize="8" textAnchor="end" style={{ fill: 'var(--text-dim)', fontFamily: 'system-ui' }}>
+              {v >= 0 ? '+' : ''}${Math.round(v)}
+            </text>
+          </g>
+        ))}
+
+        {/* Zero baseline */}
+        {hasNeg && (
+          <line x1={pad.l} y1={yScale(0)} x2={pad.l + cW} y2={yScale(0)} stroke="var(--border)" strokeWidth="1.2" strokeDasharray="4 3" />
+        )}
+
+        {/* Bars */}
+        {data.map((d, i) => {
+          const x   = pad.l + i * gap + gap / 2 - barW / 2;
+          const top = yScale(Math.max(d.value, 0));
+          const bot = yScale(Math.min(d.value, 0));
+          const h   = Math.max(1, bot - top);
+          const barColor = colorByValue
+            ? (d.value >= 0 ? 'var(--clr-win)' : 'var(--clr-loss)')
+            : color;
+          const isHov = hover === i;
+          return (
+            <rect key={i} x={x} y={top} width={barW} height={h} rx="2"
+              fill={barColor} opacity={isHov ? 1 : 0.7}
+              onMouseEnter={() => setHover(i)}
+              style={{ cursor: 'crosshair', transition: 'opacity 0.1s' }}
+            />
+          );
+        })}
+
+        {/* X labels */}
+        {data.map((d, i) => i % step === 0 && (
+          <text key={i} x={pad.l + i * gap + gap / 2} y={H - 4} fontSize="7.5" textAnchor="middle" style={{ fill: 'var(--text-dim)', fontFamily: 'system-ui' }}>
+            {shortLabel(d.label)}
+          </text>
+        ))}
+
+        {/* Hover tooltip */}
+        {hover !== null && (() => {
+          const d  = data[hover];
+          const bx = pad.l + hover * gap + gap / 2;
+          const by = yScale(Math.max(d.value, 0)) - 4;
+          const tx = bx > W * 0.7 ? bx - 80 : bx + 6;
+          const ty = Math.max(pad.t + 2, by - 28);
+          return (
+            <>
+              <line x1={bx} y1={pad.t} x2={bx} y2={pad.t + cH} stroke="var(--gold)" strokeWidth="0.8" strokeDasharray="3 2" opacity="0.5" />
+              <rect x={tx} y={ty} width="76" height="22" rx="5" fill="var(--bg-table)" stroke="var(--gold)" strokeWidth="0.7" opacity="0.95" />
+              <text x={tx + 6} y={ty + 9} fontSize="7.5" style={{ fill: 'var(--text-dim)', fontFamily: 'system-ui' }}>{shortLabel(d.label)}</text>
+              <text x={tx + 6} y={ty + 18} fontSize="9" fontWeight="700" style={{ fill: d.value >= 0 ? 'var(--clr-win)' : 'var(--clr-loss)', fontFamily: 'system-ui' }}>
+                {d.value >= 0 ? '+' : ''}${Math.abs(d.value).toFixed(2)}
+              </text>
+            </>
+          );
+        })()}
+      </svg>
+    </div>
+  );
+}
+
 /* ── Overview view ───────────────────────────────────────── */
 function OverviewView({ trades, lang }) {
   const [curveFilter, setCurveFilter] = useState('all');
@@ -1110,50 +1219,64 @@ function OverviewView({ trades, lang }) {
 
         {/* Equity Curve */}
         <div style={{ background: 'var(--bg-table)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px 20px 10px', boxShadow: '0 2px 12px rgba(0,0,0,0.07)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, gap: 12, flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div>
-                <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--gold)', letterSpacing: 1.2, textTransform: 'uppercase' }}>{lang === 'zh' ? '净值曲线' : 'Equity Curve'}</span>
-                <span style={{ fontSize: 10, color: 'var(--text-dim)', marginLeft: 8 }}>{curveTrades.length} trades</span>
-              </div>
-              <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
-                {[{ key: 'all', label: 'All' }, ...curveMonths].map(m => {
-                  const active = curveFilter === m.key;
-                  return (
-                    <button key={m.key} onClick={() => setCurveFilter(m.key)} style={{
-                      padding: '2px 9px', borderRadius: 20, fontSize: 10, fontWeight: 600, cursor: 'pointer', border: '1px solid',
-                      borderColor: active ? 'var(--gold)' : 'var(--border)',
-                      background: active ? 'var(--gold-alpha)' : 'transparent',
-                      color: active ? 'var(--gold)' : 'var(--text-dim)',
-                      transition: 'all 0.15s',
-                    }}>{m.label}</button>
-                  );
-                })}
-              </div>
+          {/* Row 1: title + P&L */}
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 10 }}>
+            <div>
+              <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--gold)', letterSpacing: 1.2, textTransform: 'uppercase' }}>{lang === 'zh' ? '净值曲线' : 'Equity Curve'}</span>
+              <span style={{ fontSize: 10, color: 'var(--text-dim)', marginLeft: 8 }}>{curveTrades.length} trades</span>
             </div>
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontSize: 22, fontWeight: 900, color: clr(curvePnl), letterSpacing: -0.5 }}><AnimatedPnL value={curvePnl} /></div>
               <div style={{ fontSize: 9, color: 'var(--text-dim)', marginTop: 1 }}>{curveFilter === 'all' ? 'all time' : curveMonths.find(m => m.key === curveFilter)?.label}</div>
             </div>
           </div>
+          {/* Row 2: filter pills */}
+          <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginBottom: 12 }}>
+            {[{ key: 'all', label: 'All' }, ...curveMonths].map(m => {
+              const active = curveFilter === m.key;
+              return (
+                <button key={m.key} onClick={() => setCurveFilter(m.key)} style={{
+                  padding: '3px 10px', borderRadius: 20, fontSize: 10, fontWeight: 600, cursor: 'pointer', border: '1px solid',
+                  borderColor: active ? 'var(--gold)' : 'var(--border)',
+                  background: active ? 'var(--gold-alpha)' : 'transparent',
+                  color: active ? 'var(--gold)' : 'var(--text-dim)',
+                  transition: 'all 0.15s',
+                }}>{m.label}</button>
+              );
+            })}
+          </div>
           <EquityCurve trades={curveTrades} />
         </div>
 
-        {/* Monthly P&L sidebar */}
-        <div style={{ background: 'var(--bg-table)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px 20px', boxShadow: '0 2px 12px rgba(0,0,0,0.07)', display: 'flex', flexDirection: 'column' }}>
-          {sectionTitle('Monthly P&L')}
-          <div style={{ flex: 1, overflowY: 'auto' }}>
-            {monthlyData.map((m, i) => (
-              <div key={i} style={{ marginBottom: 10 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                  <span style={{ fontSize: 10, color: 'var(--text-dim)', fontWeight: 600 }}>{m.label}</span>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: clr(m.pnl) }}>{fmtPnL(m.pnl)}</span>
-                </div>
-                <div style={{ height: 5, background: 'var(--bg)', borderRadius: 3, overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: `${(Math.abs(m.pnl) / maxMonthAbs) * 100}%`, background: m.pnl >= 0 ? 'var(--clr-win)' : 'var(--clr-loss)', borderRadius: 3, opacity: 0.75, transition: 'width 0.5s ease' }} />
-                </div>
-              </div>
-            ))}
+        {/* Right sidebar: Monthly chart + Last 30 days chart */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+
+          {/* Monthly Gross P&L bar chart */}
+          <div style={{ background: 'var(--bg-table)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px 16px', boxShadow: '0 2px 12px rgba(0,0,0,0.07)', flex: 1 }}>
+            {sectionTitle('Monthly P&L')}
+            <MiniBarChart
+              data={monthlyData.map(m => ({ label: m.label, value: m.pnl }))}
+              color="var(--gold)"
+            />
+          </div>
+
+          {/* Last 30 days daily P&L bar chart */}
+          <div style={{ background: 'var(--bg-table)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px 16px', boxShadow: '0 2px 12px rgba(0,0,0,0.07)', flex: 1 }}>
+            {sectionTitle('Last 30 Days')}
+            <MiniBarChart
+              data={(() => {
+                const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+                const dayMap = {};
+                for (const t of trades) {
+                  if (new Date(t.closeTime) < cutoff) continue;
+                  const k = getDayKey(t.closeTime);
+                  if (!dayMap[k]) dayMap[k] = { label: k, value: 0 };
+                  dayMap[k].value += t.net;
+                }
+                return Object.values(dayMap).sort((a, b) => a.label.localeCompare(b.label));
+              })()}
+              colorByValue
+            />
           </div>
         </div>
       </div>
