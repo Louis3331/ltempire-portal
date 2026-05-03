@@ -1286,6 +1286,8 @@ function OverviewView({ trades, lang }) {
 
 /* ── Performance view ────────────────────────────────────── */
 function PerformanceView({ trades, lang }) {
+  const [rtPage, setRtPage] = useState(0);
+
   if (!trades.length) {
     return (
       <div style={{ textAlign: 'center', padding: 64, color: 'var(--text-dim)', fontSize: 13 }}>
@@ -1300,26 +1302,40 @@ function PerformanceView({ trades, lang }) {
   const losses  = trades.filter(t => t.net <= 0);
   const avgWin  = wins.length   ? wins.reduce((s, t) => s + t.net, 0)   / wins.length   : 0;
   const avgLoss = losses.length ? losses.reduce((s, t) => s + t.net, 0) / losses.length : 0;
+  const wlRatio = avgLoss !== 0 ? Math.abs(avgWin / avgLoss) : 0;
   const grossWin  = wins.reduce((s, t) => s + t.net, 0);
   const grossLoss = Math.abs(losses.reduce((s, t) => s + t.net, 0));
-  const pf        = grossLoss > 0 ? (grossWin / grossLoss).toFixed(2) : '∞';
-  const pfNum     = grossLoss > 0 ? grossWin / grossLoss : 99;
 
-  // Max drawdown
-  let cumPnl = 0, peak = 0, maxDD = 0;
+  // Drawdown + mini curve points
+  let cumPnl = 0, peak = 0, maxDD = 0, currentDD = 0;
+  const ddPoints = [0];
   for (const t of sorted) {
     cumPnl += t.net;
+    ddPoints.push(cumPnl);
     if (cumPnl > peak) peak = cumPnl;
     const dd = peak - cumPnl;
     if (dd > maxDD) maxDD = dd;
   }
+  currentDD = peak - cumPnl;
+
+  // Mini drawdown SVG path (80×28)
+  const ddW = 80, ddH = 28;
+  const ddMin = Math.min(...ddPoints);
+  const ddMax = Math.max(...ddPoints, ddMin + 1);
+  const ddRange = ddMax - ddMin;
+  const ddPath = ddPoints.map((v, i) => {
+    const x = (i / Math.max(ddPoints.length - 1, 1)) * ddW;
+    const y = ddH - ((v - ddMin) / ddRange) * ddH;
+    return `${i === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`;
+  }).join(' ');
 
   // Best / worst single trade
   const byNet = [...trades].sort((a, b) => b.net - a.net);
   const best  = byNet[0];
   const worst = byNet[byNet.length - 1];
+  const biggestAbs = Math.max(Math.abs(best?.net || 0), Math.abs(worst?.net || 0), 1);
 
-  // Current streak (most recent trades first)
+  // Current streak + recent 12 squares
   const recent = [...sorted].reverse();
   let streak = 0;
   if (recent.length) {
@@ -1329,15 +1345,13 @@ function PerformanceView({ trades, lang }) {
     }
   }
 
-  // Avg holding time (winners vs losers)
+  // Avg holding time
   const hold  = t => Math.max(0, new Date(t.closeTime) - new Date(t.openTime || t.closeTime));
   const wHold = wins.length   ? wins.reduce((s, t) => s + hold(t), 0)   / wins.length   : 0;
   const lHold = losses.length ? losses.reduce((s, t) => s + hold(t), 0) / losses.length : 0;
 
   // P&L by weekday
-  const WD_LABELS = lang === 'zh'
-    ? ['一', '二', '三', '四', '五', '六', '日']
-    : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const WD_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   const wdData = WD_LABELS.map(label => ({ label, pnl: 0, count: 0 }));
   for (const t of trades) {
     const idx = (new Date(t.closeTime).getDay() + 6) % 7;
@@ -1347,23 +1361,12 @@ function PerformanceView({ trades, lang }) {
   const maxWdAbs   = Math.max(...wdData.map(w => Math.abs(w.pnl)), 1);
   const maxWdCount = Math.max(...wdData.map(w => w.count), 1);
 
-  // P&L by symbol
-  const symMap = {};
-  for (const t of trades) {
-    if (!symMap[t.symbol]) symMap[t.symbol] = { pnl: 0, count: 0, wins: 0 };
-    symMap[t.symbol].pnl   += t.net;
-    symMap[t.symbol].count += 1;
-    if (t.net > 0) symMap[t.symbol].wins += 1;
-  }
-  const symRows  = Object.entries(symMap).map(([sym, v]) => ({ label: sym, ...v })).sort((a, b) => Math.abs(b.pnl) - Math.abs(a.pnl)).slice(0, 7);
-  const maxSymAbs = Math.max(...symRows.map(s => Math.abs(s.pnl)), 1);
-
   // Best / worst 5 trades
   const top5        = byNet.slice(0, 5);
   const bot5        = byNet.slice(-5).reverse();
   const maxTradeAbs = Math.max(Math.abs(top5[0]?.net || 0), Math.abs(bot5[0]?.net || 0), 1);
 
-  // Entry time range (by hour of day)
+  // Entry time range (by hour)
   const hourMap = {};
   for (const t of trades) {
     const h = new Date(t.closeTime).getHours();
@@ -1371,14 +1374,19 @@ function PerformanceView({ trades, lang }) {
     hourMap[h].pnl   += t.net;
     hourMap[h].count += 1;
   }
-  const hourData     = Object.entries(hourMap).map(([h, v]) => ({ label: `${h}:00`, h: +h, ...v })).sort((a,b) => a.h - b.h);
+  const hourData     = Object.entries(hourMap).map(([h, v]) => ({ label: `${h}:00–${+h+1}:00`, h: +h, ...v })).sort((a,b) => a.h - b.h);
   const maxHourAbs   = Math.max(...hourData.map(d => Math.abs(d.pnl)), 1);
   const maxHourCount = Math.max(...hourData.map(d => d.count), 1);
 
-  // Recent trades (last 8)
-  const recentTrades = [...trades].sort((a,b) => new Date(b.closeTime) - new Date(a.closeTime)).slice(0, 8);
+  // Paginated recent trades
+  const RT_PER_PAGE = 5;
+  const allByClose  = [...trades].sort((a,b) => new Date(b.closeTime) - new Date(a.closeTime));
+  const rtPageCount = Math.ceil(allByClose.length / RT_PER_PAGE);
+  const safePage    = Math.min(rtPage, rtPageCount - 1);
+  const recentTrades = allByClose.slice(safePage * RT_PER_PAGE, (safePage + 1) * RT_PER_PAGE);
 
   const card = { background: 'var(--bg-table)', border: '1px solid var(--border)', borderRadius: 12, padding: '18px 20px', boxShadow: '0 2px 12px rgba(0,0,0,0.07)' };
+  const kpiLbl = { fontSize: 9, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1.2, textTransform: 'uppercase', marginBottom: 12 };
   const sectionTitle = (txt, color = 'var(--gold)') => (
     <div style={{ fontSize: 10, fontWeight: 700, color, letterSpacing: 1.2, textTransform: 'uppercase', marginBottom: 14, paddingBottom: 10, borderBottom: '1px solid var(--border)' }}>{txt}</div>
   );
@@ -1386,76 +1394,110 @@ function PerformanceView({ trades, lang }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-      {/* ── KPI row ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(130px,1fr))', gap: 12 }}>
+      {/* ── KPI row: 5 cards ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 12 }}>
 
-        {/* Avg Win / Loss */}
+        {/* 1. Avg Holding Time */}
         <div style={{ ...card, position: 'relative', overflow: 'hidden' }}>
-          <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1.2, marginBottom: 10 }}>AVG TRADE</div>
-          <div style={{ fontSize: 16, fontWeight: 800, color: 'var(--clr-win)', marginBottom: 3 }}><AnimatedPnL value={avgWin} /></div>
-          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--clr-loss)' }}><AnimatedPnL value={avgLoss} /></div>
-          <div style={{ fontSize: 9, color: 'var(--text-dim)', marginTop: 8 }}>Win avg · Loss avg</div>
-          <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 3, background: 'linear-gradient(180deg,var(--clr-win),var(--clr-loss))', borderRadius: '12px 0 0 12px' }} />
+          <div style={kpiLbl}>Avg Holding Time</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 6 }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--gold)', flexShrink: 0, display: 'inline-block' }} />
+            <span style={{ fontSize: 11, color: 'var(--text-dim)' }}>Winners:</span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{fmtDur(wHold)}</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--text-dim)', flexShrink: 0, display: 'inline-block' }} />
+            <span style={{ fontSize: 11, color: 'var(--text-dim)' }}>Losers:</span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{fmtDur(lHold)}</span>
+          </div>
+          <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 3, background: 'var(--gold)', borderRadius: '12px 0 0 12px' }} />
         </div>
 
-        {/* Max Drawdown */}
+        {/* 2. Drawdown */}
         <div style={{ ...card, position: 'relative', overflow: 'hidden' }}>
-          <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1.2, marginBottom: 10 }}>MAX DRAWDOWN</div>
-          <div style={{ fontSize: 20, fontWeight: 800, color: maxDD > 0 ? 'var(--clr-loss)' : 'var(--text)' }}><AnimatedPnL value={-maxDD} /></div>
-          <div style={{ fontSize: 9, color: 'var(--text-dim)', marginTop: 8 }}>Peak-to-trough</div>
+          <div style={kpiLbl}>Drawdown</div>
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 16 }}>
+            <div>
+              <div style={{ fontSize: 9, color: 'var(--text-dim)', marginBottom: 3 }}>CURRENT</div>
+              <div style={{ fontSize: 16, fontWeight: 800, color: currentDD > 0 ? 'var(--clr-loss)' : 'var(--text)' }}>{fmtPnL(-currentDD)}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: 9, color: 'var(--text-dim)', marginBottom: 3 }}>MAX</div>
+              <div style={{ fontSize: 16, fontWeight: 800, color: maxDD > 0 ? 'var(--clr-loss)' : 'var(--text)' }}>{fmtPnL(-maxDD)}</div>
+            </div>
+            <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end', paddingBottom: 2 }}>
+              <svg viewBox={`0 0 ${ddW} ${ddH}`} style={{ width: '100%', height: ddH, display: 'block' }}>
+                <path d={ddPath} fill="none" stroke="var(--text-dim)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.5" />
+              </svg>
+            </div>
+          </div>
           <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 3, background: 'var(--clr-loss)', borderRadius: '12px 0 0 12px' }} />
         </div>
 
-        {/* Profit Factor */}
+        {/* 3. Biggest Trades */}
         <div style={{ ...card, position: 'relative', overflow: 'hidden' }}>
-          <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1.2, marginBottom: 10 }}>PROFIT FACTOR</div>
-          <div style={{ fontSize: 22, fontWeight: 800, color: pfNum >= 1.5 ? 'var(--clr-win)' : pfNum >= 1 ? 'var(--gold)' : 'var(--clr-loss)' }}>
-            {grossLoss > 0 ? <AnimatedDecimal value={pfNum} /> : '∞'}
-          </div>
-          <div style={{ fontSize: 9, color: 'var(--text-dim)', marginTop: 8 }}>Gross win ÷ loss</div>
-          <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 3, background: pfNum >= 1 ? 'var(--gold)' : 'var(--clr-loss)', borderRadius: '12px 0 0 12px' }} />
-        </div>
-
-        {/* Best · Worst single trade */}
-        <div style={{ ...card, position: 'relative', overflow: 'hidden' }}>
-          <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1.2, marginBottom: 10 }}>BIGGEST TRADES</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 5 }}>
-            <span style={{ fontSize: 9, color: 'var(--clr-win)' }}>▲</span>
-            <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--clr-win)' }}><AnimatedPnL value={best?.net || 0} /></span>
-            <span style={{ fontSize: 9, color: 'var(--text-dim)', marginLeft: 2 }}>{best?.symbol?.replace('.ECN','')}</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ fontSize: 9, color: 'var(--clr-loss)' }}>▼</span>
-            <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--clr-loss)' }}><AnimatedPnL value={worst?.net || 0} /></span>
-            <span style={{ fontSize: 9, color: 'var(--text-dim)', marginLeft: 2 }}>{worst?.symbol?.replace('.ECN','')}</span>
+          <div style={kpiLbl}>Biggest Trades</div>
+          <div style={{ marginBottom: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+              <span style={{ fontSize: 9, color: 'var(--clr-win)' }}>↑</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--clr-win)', minWidth: 72 }}>{fmtPnL(best?.net || 0)}</span>
+              <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>{best?.symbol?.replace('.ECN','')}</span>
+            </div>
+            <div style={{ height: 6, background: 'var(--bg)', borderRadius: 3, overflow: 'hidden', marginBottom: 8 }}>
+              <div style={{ height: '100%', width: `${((best?.net || 0) / biggestAbs) * 100}%`, background: 'var(--gold)', borderRadius: 3, opacity: 0.8 }} />
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+              <span style={{ fontSize: 9, color: 'var(--clr-loss)' }}>↓</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--clr-loss)', minWidth: 72 }}>{fmtPnL(worst?.net || 0)}</span>
+              <span style={{ fontSize: 9, color: 'var(--text-dim)' }}>{worst?.symbol?.replace('.ECN','')}</span>
+            </div>
+            <div style={{ height: 6, background: 'var(--bg)', borderRadius: 3, overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: `${(Math.abs(worst?.net || 0) / biggestAbs) * 100}%`, background: 'rgba(80,80,80,0.6)', borderRadius: 3 }} />
+            </div>
           </div>
           <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 3, background: 'linear-gradient(180deg,var(--clr-win),var(--clr-loss))', borderRadius: '12px 0 0 12px' }} />
         </div>
 
-        {/* Current streak */}
+        {/* 4. W/L Ratio */}
         <div style={{ ...card, position: 'relative', overflow: 'hidden' }}>
-          <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1.2, marginBottom: 10 }}>CURRENT STREAK</div>
-          <div style={{ fontSize: 26, fontWeight: 800, color: streak > 0 ? 'var(--clr-win)' : streak < 0 ? 'var(--clr-loss)' : 'var(--text)', lineHeight: 1 }}>
-            {streak > 0 ? '+' : streak < 0 ? '-' : ''}<AnimatedInt value={Math.abs(streak)} />
+          <div style={kpiLbl}>Avg W/L Ratio</div>
+          <div style={{ fontSize: 26, fontWeight: 800, color: wlRatio >= 1.5 ? 'var(--clr-win)' : wlRatio >= 1 ? 'var(--gold)' : 'var(--clr-loss)', lineHeight: 1, marginBottom: 10 }}>
+            <AnimatedDecimal value={wlRatio} decimals={2} />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ width: 24, fontSize: 9, color: 'var(--clr-win)', fontWeight: 700 }}>W</div>
+              <div style={{ flex: 1, height: 5, background: 'var(--bg)', borderRadius: 3, overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${grossWin + grossLoss > 0 ? (grossWin / (grossWin + grossLoss)) * 100 : 0}%`, background: 'var(--clr-win)', borderRadius: 3, opacity: 0.75 }} />
+              </div>
+              <div style={{ width: 36, fontSize: 9, color: 'var(--clr-win)', fontWeight: 700, textAlign: 'right' }}>{grossWin + grossLoss > 0 ? ((grossWin / (grossWin + grossLoss)) * 100).toFixed(1) : 0}%</div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ width: 24, fontSize: 9, color: 'var(--clr-loss)', fontWeight: 700 }}>L</div>
+              <div style={{ flex: 1, height: 5, background: 'var(--bg)', borderRadius: 3, overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${grossWin + grossLoss > 0 ? (grossLoss / (grossWin + grossLoss)) * 100 : 0}%`, background: 'var(--clr-loss)', borderRadius: 3, opacity: 0.75 }} />
+              </div>
+              <div style={{ width: 36, fontSize: 9, color: 'var(--clr-loss)', fontWeight: 700, textAlign: 'right' }}>{grossWin + grossLoss > 0 ? ((grossLoss / (grossWin + grossLoss)) * 100).toFixed(1) : 0}%</div>
+            </div>
+          </div>
+          <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 3, background: 'var(--gold)', borderRadius: '12px 0 0 12px' }} />
+        </div>
+
+        {/* 5. Current Streak */}
+        <div style={{ ...card, position: 'relative', overflow: 'hidden' }}>
+          <div style={kpiLbl}>Current Streak</div>
+          <div style={{ fontSize: 26, fontWeight: 800, lineHeight: 1, marginBottom: 8, color: streak > 0 ? 'var(--clr-win)' : streak < 0 ? 'var(--clr-loss)' : 'var(--text)' }}>
+            {streak > 0 ? '+' : streak < 0 ? '' : ''}<AnimatedInt value={streak} />
+          </div>
+          <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+            {recent.slice(0, 12).map((t, i) => (
+              <div key={i} style={{ width: 11, height: 11, borderRadius: 2, background: t.net > 0 ? 'var(--clr-win)' : 'var(--clr-loss)', opacity: i < Math.abs(streak) ? 0.9 : 0.2 }} />
+            ))}
           </div>
           <div style={{ fontSize: 9, color: 'var(--text-dim)', marginTop: 8 }}>
             {streak > 1 ? 'win streak' : streak < -1 ? 'loss streak' : streak === 1 ? 'last win' : streak === -1 ? 'last loss' : 'neutral'}
           </div>
           <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 3, background: streak > 0 ? 'var(--clr-win)' : streak < 0 ? 'var(--clr-loss)' : 'var(--border)', borderRadius: '12px 0 0 12px' }} />
-        </div>
-
-        {/* Avg hold time */}
-        <div style={{ ...card, position: 'relative', overflow: 'hidden' }}>
-          <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1.2, marginBottom: 10 }}>AVG HOLD TIME</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-            <span style={{ fontSize: 9, padding: '2px 6px', borderRadius: 4, background: 'var(--win-bg)', color: 'var(--clr-win)', fontWeight: 800 }}>W</span>
-            <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{fmtDur(wHold)}</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ fontSize: 9, padding: '2px 6px', borderRadius: 4, background: 'var(--loss-bg)', color: 'var(--clr-loss)', fontWeight: 800 }}>L</span>
-            <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{fmtDur(lHold)}</span>
-          </div>
-          <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 3, background: 'var(--gold)', borderRadius: '12px 0 0 12px' }} />
         </div>
       </div>
 
@@ -1469,7 +1511,7 @@ function PerformanceView({ trades, lang }) {
             {hourData.map((h, i) => <PnLBar key={i} label={h.label} value={h.pnl} maxAbs={maxHourAbs} />)}
           </div>
           <div style={card}>
-            {sectionTitle('Trades by Hour')}
+            {sectionTitle('Number of Trades')}
             {hourData.map((h, i) => <CountBar key={i} label={h.label} value={h.count} maxVal={maxHourCount} />)}
           </div>
         </div>
@@ -1477,11 +1519,11 @@ function PerformanceView({ trades, lang }) {
         {/* Col 2: Best / Worst 5 */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div style={card}>
-            {sectionTitle(lang === 'zh' ? '最佳5笔' : 'Best Trades', 'var(--clr-win)')}
+            {sectionTitle('Best Trades', 'var(--clr-win)')}
             {top5.map((t, i) => <PnLBar key={i} label={`${t.symbol.replace('.ECN','')} · ${fmtDate(t.closeTime)}`} value={t.net} maxAbs={maxTradeAbs} />)}
           </div>
           <div style={card}>
-            {sectionTitle(lang === 'zh' ? '最差5笔' : 'Worst Trades', 'var(--clr-loss)')}
+            {sectionTitle('Worst Trades', 'var(--clr-loss)')}
             {bot5.map((t, i) => <PnLBar key={i} label={`${t.symbol.replace('.ECN','')} · ${fmtDate(t.closeTime)}`} value={t.net} maxAbs={maxTradeAbs} />)}
           </div>
         </div>
@@ -1489,38 +1531,42 @@ function PerformanceView({ trades, lang }) {
         {/* Col 3: P&L by Weekday + count */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div style={card}>
-            {sectionTitle(lang === 'zh' ? '按星期盈亏' : 'P&L by Weekday')}
+            {sectionTitle('P&L by Weekday')}
             {wdData.map((w, i) => <PnLBar key={i} label={w.label} value={w.pnl} maxAbs={maxWdAbs} />)}
           </div>
           <div style={card}>
-            {sectionTitle(lang === 'zh' ? '按星期交易数' : 'Trades by Weekday')}
+            {sectionTitle('Number of Trades')}
             {wdData.map((w, i) => <CountBar key={i} label={w.label} value={w.count} maxVal={maxWdCount} />)}
           </div>
         </div>
 
-        {/* Col 4: Recent trades */}
-        <div style={card}>
+        {/* Col 4: Recent trades with pagination */}
+        <div style={{ ...card, display: 'flex', flexDirection: 'column' }}>
           {sectionTitle('Recent Trades')}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-            {/* Mini header */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 56px 70px', gap: 4, padding: '0 0 8px', borderBottom: '1px solid var(--border)', marginBottom: 4 }}>
-              {['Symbol', 'Side', 'P&L'].map((h, i) => (
-                <div key={h} style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 0.8, textAlign: i === 2 ? 'right' : 'left' }}>{h}</div>
-              ))}
-            </div>
+          {/* Header */}
+          <div style={{ display: 'grid', gridTemplateColumns: '90px 1fr 72px', gap: 8, paddingBottom: 8, borderBottom: '1px solid var(--border)', marginBottom: 4 }}>
+            {['Entry Date', 'Symbol', 'Gross P&L'].map((h, i) => (
+              <div key={h} style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 0.8, textAlign: i === 2 ? 'right' : 'left' }}>{h}</div>
+            ))}
+          </div>
+          {/* Rows */}
+          <div style={{ flex: 1 }}>
             {recentTrades.map((t, i) => (
-              <div key={t.ticket} style={{ display: 'grid', gridTemplateColumns: '1fr 56px 70px', gap: 4, padding: '7px 0', borderBottom: i < recentTrades.length - 1 ? '1px solid var(--border)' : 'none', alignItems: 'center' }}>
-                <div>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)' }}>{t.symbol.replace('.ECN','')}</div>
-                  <div style={{ fontSize: 9, color: 'var(--text-dim)', marginTop: 1 }}>{fmtDate(t.closeTime)}</div>
-                </div>
-                <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: t.type === 'buy' ? 'var(--win-bg)' : 'var(--loss-bg)', color: t.type === 'buy' ? 'var(--clr-win)' : 'var(--clr-loss)', textAlign: 'center' }}>
-                  {t.type === 'buy' ? 'Long' : 'Short'}
-                </span>
+              <div key={t.ticket} style={{ display: 'grid', gridTemplateColumns: '90px 1fr 72px', gap: 8, padding: '8px 0', borderBottom: i < recentTrades.length - 1 ? '1px solid var(--border)' : 'none', alignItems: 'center' }}>
+                <div style={{ fontSize: 11, color: 'var(--text-dim)' }}>{new Date(t.closeTime).toLocaleDateString('en-CA')}</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text)' }}>{t.symbol.replace('.ECN','')}</div>
                 <div style={{ fontSize: 12, fontWeight: 700, color: clr(t.net), textAlign: 'right' }}>{fmtPnL(t.net)}</div>
               </div>
             ))}
           </div>
+          {/* Pagination */}
+          {rtPageCount > 1 && (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 12, paddingTop: 10, borderTop: '1px solid var(--border)' }}>
+              <button onClick={() => setRtPage(p => Math.max(0, p - 1))} disabled={safePage === 0} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 6, color: safePage === 0 ? 'var(--text-dim)' : 'var(--text)', padding: '4px 8px', fontSize: 12, cursor: safePage === 0 ? 'default' : 'pointer', opacity: safePage === 0 ? 0.4 : 1 }}>‹</button>
+              <span style={{ fontSize: 11, color: 'var(--text-dim)' }}>Page {safePage + 1} of {rtPageCount}</span>
+              <button onClick={() => setRtPage(p => Math.min(rtPageCount - 1, p + 1))} disabled={safePage === rtPageCount - 1} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 6, color: safePage === rtPageCount - 1 ? 'var(--text-dim)' : 'var(--text)', padding: '4px 8px', fontSize: 12, cursor: safePage === rtPageCount - 1 ? 'default' : 'pointer', opacity: safePage === rtPageCount - 1 ? 0.4 : 1 }}>›</button>
+            </div>
+          )}
         </div>
       </div>
     </div>
