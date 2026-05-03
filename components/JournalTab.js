@@ -900,7 +900,7 @@ function PnLBar({ label, value, maxAbs }) {
   const isPos = value >= 0;
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
-      <div style={{ width: 86, fontSize: 10, color: 'var(--text-dim)', textAlign: 'right', flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</div>
+      <div style={{ width: 90, fontSize: 10, color: 'var(--text-dim)', textAlign: 'left', flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</div>
       <div style={{ flex: 1, position: 'relative', height: 14 }}>
         <div style={{ position: 'absolute', inset: 0, background: 'var(--bg)', borderRadius: 3 }} />
         {value !== 0 && (
@@ -915,7 +915,7 @@ function PnLBar({ label, value, maxAbs }) {
         )}
         <div style={{ position: 'absolute', left: '50%', top: 0, bottom: 0, width: 1, background: 'var(--border)' }} />
       </div>
-      <div style={{ width: 62, fontSize: 10, fontWeight: 700, color: clr(value), textAlign: 'right', flexShrink: 0 }}>{fmtPnL(value)}</div>
+      <div style={{ width: 70, fontSize: 10, fontWeight: 700, color: clr(value), textAlign: 'right', flexShrink: 0 }}>{fmtPnL(value)}</div>
     </div>
   );
 }
@@ -925,7 +925,7 @@ function CountBar({ label, value, maxVal }) {
   const pct = maxVal > 0 ? (value / maxVal) * 92 : 0;
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
-      <div style={{ width: 86, fontSize: 10, color: 'var(--text-dim)', textAlign: 'right', flexShrink: 0 }}>{label}</div>
+      <div style={{ width: 90, fontSize: 10, color: 'var(--text-dim)', textAlign: 'left', flexShrink: 0 }}>{label}</div>
       <div style={{ flex: 1, position: 'relative', height: 14 }}>
         <div style={{ position: 'absolute', inset: 0, background: 'var(--bg)', borderRadius: 3 }} />
         <div style={{ position: 'absolute', top: 2, bottom: 2, left: 0, width: `${pct}%`, background: 'rgba(201,168,76,0.5)', borderRadius: 3, transition: 'width 0.4s ease' }} />
@@ -1507,11 +1507,15 @@ function PerformanceView({ trades, lang }) {
       {/* ── Charts: 4-column grid ── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 10 }}>
 
-        {/* Col 1: Entry time range */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        {/* Col 1: Entry time range + Number of Trades */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <div style={card}>
             {sectionTitle('Entry Time Range')}
             {hourData.map((h, i) => <PnLBar key={i} label={h.label} value={h.pnl} maxAbs={maxHourAbs} />)}
+          </div>
+          <div style={card}>
+            {sectionTitle('Number of Trades')}
+            {hourData.map((h, i) => <CountBar key={i} label={h.label} value={h.count} maxVal={maxHourCount} />)}
           </div>
         </div>
 
