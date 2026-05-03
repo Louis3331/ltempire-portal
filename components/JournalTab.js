@@ -946,7 +946,7 @@ function EquityCurve({ trades }) {
   const pts = [{ date: null, cum: 0, net: 0 }];
   sorted.forEach(t => { cum += t.net; pts.push({ date: t.closeTime, cum, net: t.net, symbol: t.symbol }); });
 
-  const W = 1000, H = 180;
+  const W = 1000, H = 300;
   const pad = { t: 14, r: 24, b: 30, l: 60 };
   const cW = W - pad.l - pad.r;
   const cH = H - pad.t - pad.b;
@@ -1001,7 +1001,7 @@ function EquityCurve({ trades }) {
 
   return (
     <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`}
-      style={{ width: '100%', maxHeight: 220, height: 'auto', display: 'block', overflow: 'visible', cursor: 'crosshair' }}
+      style={{ width: '100%', maxHeight: 380, height: 'auto', display: 'block', overflow: 'visible', cursor: 'crosshair' }}
       onMouseMove={onMove} onMouseLeave={() => setHover(null)}>
       <defs>
         <linearGradient id="eq-fill" x1="0" y1="0" x2="0" y2="1">
@@ -1087,13 +1087,6 @@ function OverviewView({ trades, lang }) {
     : trades.filter(t => { const d = new Date(t.closeTime); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}` === curveFilter; });
   const curvePnl = curveTrades.reduce((s, t) => s + t.net, 0);
 
-  const totalNet = trades.reduce((s, t) => s + t.net, 0);
-  const wins     = trades.filter(t => t.net > 0);
-  const losses   = trades.filter(t => t.net <= 0);
-  const winRate  = (wins.length / trades.length) * 100;
-  const avgWin   = wins.length   ? wins.reduce((s, t) => s + t.net, 0)   / wins.length   : 0;
-  const avgLoss  = losses.length ? losses.reduce((s, t) => s + t.net, 0) / losses.length : 0;
-
   const monthlyMap = {};
   for (const t of trades) {
     const d = new Date(t.closeTime);
@@ -1111,25 +1104,6 @@ function OverviewView({ trades, lang }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-
-      {/* KPI summary bar */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(110px,1fr))', gap: 12 }}>
-        {[
-          { label: 'Total P&L',    node: <AnimatedPnL value={totalNet} />,     color: clr(totalNet) },
-          { label: 'Win Rate',     node: <AnimatedPct value={winRate} />,       color: winRate >= 50 ? 'var(--clr-win)' : 'var(--clr-loss)' },
-          { label: 'Total Trades', node: <AnimatedInt value={trades.length} />, color: 'var(--text)' },
-          { label: 'Avg Win',      node: <AnimatedPnL value={avgWin} />,        color: 'var(--clr-win)' },
-          { label: 'Avg Loss',     node: <AnimatedPnL value={avgLoss} />,       color: 'var(--clr-loss)' },
-        ].map((s, i) => (
-          <div key={i} style={{
-            background: 'var(--bg-table)', border: '1px solid var(--border)', borderRadius: 10,
-            padding: '12px 14px', boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
-          }}>
-            <div style={{ fontSize: 9, color: 'var(--text-dim)', fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 5 }}>{s.label}</div>
-            <div style={{ fontSize: 16, fontWeight: 800, color: s.color }}>{s.node}</div>
-          </div>
-        ))}
-      </div>
 
       {/* Equity Curve + Monthly sidebar */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 260px', gap: 16, alignItems: 'stretch' }}>
