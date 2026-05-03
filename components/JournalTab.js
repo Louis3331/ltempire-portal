@@ -1064,9 +1064,131 @@ function EquityCurve({ trades }) {
   );
 }
 
-function PerformanceView({ trades, lang }) {
+/* ── Overview view ───────────────────────────────────────── */
+function OverviewView({ trades, lang }) {
   const [curveFilter, setCurveFilter] = useState('all');
 
+  if (!trades.length) {
+    return (
+      <div style={{ textAlign: 'center', padding: 64, color: 'var(--text-dim)', fontSize: 13 }}>
+        {lang === 'zh' ? '暂无交易数据' : 'No trade data yet. Import your MT5 history to see an overview.'}
+      </div>
+    );
+  }
+
+  const sorted = [...trades].sort((a, b) => new Date(a.closeTime) - new Date(b.closeTime));
+
+  const curveMonths = [...new Map(sorted.map(t => {
+    const d = new Date(t.closeTime);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    return [key, { key, label: `${MONTHS_SHORT[d.getMonth()]} ${d.getFullYear()}` }];
+  })).values()];
+  const curveTrades = curveFilter === 'all' ? trades
+    : trades.filter(t => { const d = new Date(t.closeTime); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}` === curveFilter; });
+  const curvePnl = curveTrades.reduce((s, t) => s + t.net, 0);
+
+  const totalNet = trades.reduce((s, t) => s + t.net, 0);
+  const wins     = trades.filter(t => t.net > 0);
+  const losses   = trades.filter(t => t.net <= 0);
+  const winRate  = (wins.length / trades.length) * 100;
+  const avgWin   = wins.length   ? wins.reduce((s, t) => s + t.net, 0)   / wins.length   : 0;
+  const avgLoss  = losses.length ? losses.reduce((s, t) => s + t.net, 0) / losses.length : 0;
+
+  const monthlyMap = {};
+  for (const t of trades) {
+    const d = new Date(t.closeTime);
+    const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    if (!monthlyMap[key]) monthlyMap[key] = { pnl: 0, count: 0, label: `${MONTHS_SHORT[d.getMonth()]} ${d.getFullYear()}` };
+    monthlyMap[key].pnl   += t.net;
+    monthlyMap[key].count += 1;
+  }
+  const monthlyData = Object.entries(monthlyMap).sort(([a],[b]) => a.localeCompare(b)).map(([,v]) => v);
+  const maxMonthAbs = Math.max(...monthlyData.map(m => Math.abs(m.pnl)), 1);
+
+  const sectionTitle = (txt, color = 'var(--gold)') => (
+    <div style={{ fontSize: 10, fontWeight: 700, color, letterSpacing: 1.2, textTransform: 'uppercase', marginBottom: 14, paddingBottom: 10, borderBottom: '1px solid var(--border)' }}>{txt}</div>
+  );
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+      {/* KPI summary bar */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(110px,1fr))', gap: 12 }}>
+        {[
+          { label: 'Total P&L',    node: <AnimatedPnL value={totalNet} />,     color: clr(totalNet) },
+          { label: 'Win Rate',     node: <AnimatedPct value={winRate} />,       color: winRate >= 50 ? 'var(--clr-win)' : 'var(--clr-loss)' },
+          { label: 'Total Trades', node: <AnimatedInt value={trades.length} />, color: 'var(--text)' },
+          { label: 'Avg Win',      node: <AnimatedPnL value={avgWin} />,        color: 'var(--clr-win)' },
+          { label: 'Avg Loss',     node: <AnimatedPnL value={avgLoss} />,       color: 'var(--clr-loss)' },
+        ].map((s, i) => (
+          <div key={i} style={{
+            background: 'var(--bg-table)', border: '1px solid var(--border)', borderRadius: 10,
+            padding: '12px 14px', boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
+          }}>
+            <div style={{ fontSize: 9, color: 'var(--text-dim)', fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 5 }}>{s.label}</div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: s.color }}>{s.node}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Equity Curve + Monthly sidebar */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 260px', gap: 16, alignItems: 'stretch' }}>
+
+        {/* Equity Curve */}
+        <div style={{ background: 'var(--bg-table)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px 20px 10px', boxShadow: '0 2px 12px rgba(0,0,0,0.07)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, gap: 12, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div>
+                <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--gold)', letterSpacing: 1.2, textTransform: 'uppercase' }}>{lang === 'zh' ? '净值曲线' : 'Equity Curve'}</span>
+                <span style={{ fontSize: 10, color: 'var(--text-dim)', marginLeft: 8 }}>{curveTrades.length} trades</span>
+              </div>
+              <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+                {[{ key: 'all', label: 'All' }, ...curveMonths].map(m => {
+                  const active = curveFilter === m.key;
+                  return (
+                    <button key={m.key} onClick={() => setCurveFilter(m.key)} style={{
+                      padding: '2px 9px', borderRadius: 20, fontSize: 10, fontWeight: 600, cursor: 'pointer', border: '1px solid',
+                      borderColor: active ? 'var(--gold)' : 'var(--border)',
+                      background: active ? 'var(--gold-alpha)' : 'transparent',
+                      color: active ? 'var(--gold)' : 'var(--text-dim)',
+                      transition: 'all 0.15s',
+                    }}>{m.label}</button>
+                  );
+                })}
+              </div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: 22, fontWeight: 900, color: clr(curvePnl), letterSpacing: -0.5 }}><AnimatedPnL value={curvePnl} /></div>
+              <div style={{ fontSize: 9, color: 'var(--text-dim)', marginTop: 1 }}>{curveFilter === 'all' ? 'all time' : curveMonths.find(m => m.key === curveFilter)?.label}</div>
+            </div>
+          </div>
+          <EquityCurve trades={curveTrades} />
+        </div>
+
+        {/* Monthly P&L sidebar */}
+        <div style={{ background: 'var(--bg-table)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px 20px', boxShadow: '0 2px 12px rgba(0,0,0,0.07)', display: 'flex', flexDirection: 'column' }}>
+          {sectionTitle('Monthly P&L')}
+          <div style={{ flex: 1, overflowY: 'auto' }}>
+            {monthlyData.map((m, i) => (
+              <div key={i} style={{ marginBottom: 10 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                  <span style={{ fontSize: 10, color: 'var(--text-dim)', fontWeight: 600 }}>{m.label}</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: clr(m.pnl) }}>{fmtPnL(m.pnl)}</span>
+                </div>
+                <div style={{ height: 5, background: 'var(--bg)', borderRadius: 3, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${(Math.abs(m.pnl) / maxMonthAbs) * 100}%`, background: m.pnl >= 0 ? 'var(--clr-win)' : 'var(--clr-loss)', borderRadius: 3, opacity: 0.75, transition: 'width 0.5s ease' }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Performance view ────────────────────────────────────── */
+function PerformanceView({ trades, lang }) {
   if (!trades.length) {
     return (
       <div style={{ textAlign: 'center', padding: 64, color: 'var(--text-dim)', fontSize: 13 }}>
@@ -1077,21 +1199,10 @@ function PerformanceView({ trades, lang }) {
 
   // ── Core stats ──
   const sorted  = [...trades].sort((a, b) => new Date(a.closeTime) - new Date(b.closeTime));
-
-  // ── Curve filter months ──
-  const curveMonths = [...new Map(sorted.map(t => {
-    const d = new Date(t.closeTime);
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-    return [key, { key, label: `${MONTHS_SHORT[d.getMonth()]} ${d.getFullYear()}` }];
-  })).values()];
-  const curveTrades = curveFilter === 'all' ? trades
-    : trades.filter(t => { const d = new Date(t.closeTime); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}` === curveFilter; });
-  const curvePnl = curveTrades.reduce((s, t) => s + t.net, 0);
   const wins    = trades.filter(t => t.net > 0);
   const losses  = trades.filter(t => t.net <= 0);
   const avgWin  = wins.length   ? wins.reduce((s, t) => s + t.net, 0)   / wins.length   : 0;
   const avgLoss = losses.length ? losses.reduce((s, t) => s + t.net, 0) / losses.length : 0;
-
   const grossWin  = wins.reduce((s, t) => s + t.net, 0);
   const grossLoss = Math.abs(losses.reduce((s, t) => s + t.net, 0));
   const pf        = grossLoss > 0 ? (grossWin / grossLoss).toFixed(2) : '∞';
@@ -1155,18 +1266,6 @@ function PerformanceView({ trades, lang }) {
   const bot5        = byNet.slice(-5).reverse();
   const maxTradeAbs = Math.max(Math.abs(top5[0]?.net || 0), Math.abs(bot5[0]?.net || 0), 1);
 
-  // Monthly P&L breakdown
-  const monthlyMap = {};
-  for (const t of trades) {
-    const d = new Date(t.closeTime);
-    const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-    if (!monthlyMap[key]) monthlyMap[key] = { pnl: 0, count: 0, label: `${MONTHS_SHORT[d.getMonth()]} ${d.getFullYear()}` };
-    monthlyMap[key].pnl   += t.net;
-    monthlyMap[key].count += 1;
-  }
-  const monthlyData = Object.entries(monthlyMap).sort(([a],[b]) => a.localeCompare(b)).map(([,v]) => v);
-  const maxMonthAbs = Math.max(...monthlyData.map(m => Math.abs(m.pnl)), 1);
-
   // Entry time range (by hour of day)
   const hourMap = {};
   for (const t of trades) {
@@ -1189,60 +1288,6 @@ function PerformanceView({ trades, lang }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-
-      {/* ── TOP ROW: Curve (left) + Monthly P&L (right) ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 260px', gap: 16, alignItems: 'stretch' }}>
-
-        {/* Equity Curve */}
-        <div style={{ background: 'var(--bg-table)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px 20px 10px', boxShadow: '0 2px 12px rgba(0,0,0,0.07)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, gap: 12, flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div>
-                <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--gold)', letterSpacing: 1.2, textTransform: 'uppercase' }}>{lang === 'zh' ? '净值曲线' : 'Equity Curve'}</span>
-                <span style={{ fontSize: 10, color: 'var(--text-dim)', marginLeft: 8 }}>{curveTrades.length} trades</span>
-              </div>
-              {/* Month filter pills */}
-              <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
-                {[{ key: 'all', label: 'All' }, ...curveMonths].map(m => {
-                  const active = curveFilter === m.key;
-                  return (
-                    <button key={m.key} onClick={() => setCurveFilter(m.key)} style={{
-                      padding: '2px 9px', borderRadius: 20, fontSize: 10, fontWeight: 600, cursor: 'pointer', border: '1px solid',
-                      borderColor: active ? 'var(--gold)' : 'var(--border)',
-                      background: active ? 'var(--gold-alpha)' : 'transparent',
-                      color: active ? 'var(--gold)' : 'var(--text-dim)',
-                      transition: 'all 0.15s',
-                    }}>{m.label}</button>
-                  );
-                })}
-              </div>
-            </div>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: 22, fontWeight: 900, color: clr(curvePnl), letterSpacing: -0.5 }}><AnimatedPnL value={curvePnl} /></div>
-              <div style={{ fontSize: 9, color: 'var(--text-dim)', marginTop: 1 }}>{curveFilter === 'all' ? 'all time' : curveMonths.find(m => m.key === curveFilter)?.label}</div>
-            </div>
-          </div>
-          <EquityCurve trades={curveTrades} />
-        </div>
-
-        {/* Monthly P&L sidebar */}
-        <div style={{ background: 'var(--bg-table)', border: '1px solid var(--border)', borderRadius: 12, padding: '16px 20px', boxShadow: '0 2px 12px rgba(0,0,0,0.07)', display: 'flex', flexDirection: 'column' }}>
-          {sectionTitle('Monthly P&L')}
-          <div style={{ flex: 1, overflowY: 'auto' }}>
-            {monthlyData.map((m, i) => (
-              <div key={i} style={{ marginBottom: 10 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                  <span style={{ fontSize: 10, color: 'var(--text-dim)', fontWeight: 600 }}>{m.label}</span>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: clr(m.pnl) }}>{fmtPnL(m.pnl)}</span>
-                </div>
-                <div style={{ height: 5, background: 'var(--bg)', borderRadius: 3, overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: `${(Math.abs(m.pnl) / maxMonthAbs) * 100}%`, background: m.pnl >= 0 ? 'var(--clr-win)' : 'var(--clr-loss)', borderRadius: 3, opacity: 0.75, transition: 'width 0.5s ease' }} />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
 
       {/* ── KPI row ── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(130px,1fr))', gap: 12 }}>
@@ -1533,9 +1578,10 @@ export default function JournalTab({ lang = 'en' }) {
           {/* View toggle */}
           <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
             {[
-              ['calendar',    lang === 'zh' ? 'Calendar' : 'Calendar'],
-              ['log',         lang === 'zh' ? 'Trade Log' : 'Trade Log'],
-              ['performance', lang === 'zh' ? 'Performance' : 'Performance'],
+              ['calendar',    'Calendar'],
+              ['overview',    'Overview'],
+              ['log',         'Trade Log'],
+              ['performance', 'Performance'],
             ].map(([v, label]) => (
               <button key={v} onClick={() => setView(v)} style={{
                 padding: '7px 16px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer',
@@ -1548,6 +1594,7 @@ export default function JournalTab({ lang = 'en' }) {
           </div>
 
           {view === 'calendar'    && <Calendar        trades={trades} lang={lang} />}
+          {view === 'overview'    && <OverviewView    trades={trades} lang={lang} />}
           {view === 'log'         && <TradeLog        trades={trades} onDelete={deleteTrade} onRefresh={load} lang={lang} />}
           {view === 'performance' && <PerformanceView trades={trades} lang={lang} />}
         </>
