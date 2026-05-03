@@ -633,19 +633,14 @@ function Calendar({ trades, lang }) {
                       }}>{day}</div>
                       {data && (
                         <>
-                          <div style={{
-                            display: 'block', fontSize: 15, fontWeight: 800, color: clr(data.pnl),
-                            background: data.pnl >= 0 ? 'var(--win-bg)' : 'var(--loss-bg)',
-                            padding: '3px 7px', borderRadius: 5, marginBottom: 5,
-                          }}>
+                          <div style={{ fontSize: 18, fontWeight: 900, color: clr(data.pnl), letterSpacing: -0.5, lineHeight: 1.1, marginBottom: 6 }}>
                             {data.pnl >= 0 ? '+' : ''}{data.pnl.toFixed(2)}
                           </div>
-                          <div style={{ fontSize: 11, color: 'var(--text-dim)', fontWeight: 600 }}>
-                            {data.trades} {lang === 'zh' ? '笔' : data.trades > 1 ? 'trades' : 'trade'}
-                            {' · '}{data.wins}/{data.trades} {lang === 'zh' ? '胜' : 'W'}
+                          <div style={{ fontSize: 10, color: 'var(--text-dim)', fontWeight: 500, letterSpacing: 0.2 }}>
+                            {data.trades} {lang === 'zh' ? '笔' : 'trades'}{' · '}{data.wins}/{data.trades}W
                           </div>
-                          {/* Bottom P&L bar */}
-                          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 2, background: data.pnl >= 0 ? 'var(--clr-win)' : 'var(--clr-loss)', opacity: 0.5, borderRadius: 0 }} />
+                          {/* Bottom accent bar */}
+                          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 2, background: data.pnl >= 0 ? 'var(--clr-win)' : 'var(--clr-loss)', opacity: 0.4 }} />
                         </>
                       )}
                     </>
