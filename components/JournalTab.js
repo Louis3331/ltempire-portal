@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 /* ── Shared trade builder ───────────────────────────────── */
 function buildTrade(raw) {
@@ -890,6 +890,134 @@ function CountBar({ label, value, maxVal }) {
 }
 
 /* ── Performance view ────────────────────────────────────── */
+/* ── Equity Curve ────────────────────────────────────────── */
+function EquityCurve({ trades }) {
+  const svgRef = useRef(null);
+  const [hover, setHover] = useState(null);
+
+  const sorted = [...trades].sort((a, b) => new Date(a.closeTime) - new Date(b.closeTime));
+  let cum = 0;
+  const pts = [{ date: null, cum: 0, net: 0 }];
+  sorted.forEach(t => { cum += t.net; pts.push({ date: t.closeTime, cum, net: t.net, symbol: t.symbol }); });
+
+  const W = 1000, H = 200;
+  const pad = { t: 16, r: 24, b: 32, l: 64 };
+  const cW = W - pad.l - pad.r;
+  const cH = H - pad.t - pad.b;
+
+  const vals  = pts.map(p => p.cum);
+  const yPad  = (Math.max(...vals) - Math.min(...vals)) * 0.1 || 20;
+  const yMax  = Math.max(...vals) + yPad;
+  const yMin  = Math.min(...vals, 0) - yPad;
+  const yRange = yMax - yMin;
+
+  const sx = i  => pad.l + (i / Math.max(pts.length - 1, 1)) * cW;
+  const sy = v  => pad.t + cH - ((v - yMin) / yRange) * cH;
+  const zero    = sy(0);
+
+  const isPos    = pts[pts.length - 1].cum >= 0;
+  const lineClr  = isPos ? 'var(--clr-win)' : 'var(--clr-loss)';
+  const fillClr  = isPos ? 'var(--clr-win)' : 'var(--clr-loss)';
+
+  const linePath = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${sx(i).toFixed(1)} ${sy(p.cum).toFixed(1)}`).join(' ');
+  const zeroClamp = Math.min(Math.max(zero, pad.t), pad.t + cH);
+  const areaPath = `${linePath} L ${sx(pts.length - 1).toFixed(1)} ${zeroClamp.toFixed(1)} L ${sx(0).toFixed(1)} ${zeroClamp.toFixed(1)} Z`;
+
+  // Y-axis ticks
+  const yTicks = Array.from({ length: 5 }, (_, i) => yMin + (yRange / 4) * i);
+
+  // X-axis month labels — deduplicate by month
+  const xLabels = [];
+  let lastKey = null;
+  pts.forEach((p, i) => {
+    if (!p.date) return;
+    const d   = new Date(p.date);
+    const key = `${d.getFullYear()}-${d.getMonth()}`;
+    if (key !== lastKey) {
+      xLabels.push({ x: sx(i), label: MONTHS_SHORT[d.getMonth()] + (d.getFullYear() !== new Date().getFullYear() ? ` '${String(d.getFullYear()).slice(2)}` : '') });
+      lastKey = key;
+    }
+  });
+  // Thin out labels if too many
+  const step   = Math.ceil(xLabels.length / 12);
+  const labels = xLabels.filter((_, i) => i % step === 0);
+
+  const onMove = (e) => {
+    if (!svgRef.current) return;
+    const rect = svgRef.current.getBoundingClientRect();
+    const mx   = ((e.clientX - rect.left) / rect.width) * W;
+    const i    = Math.max(0, Math.min(pts.length - 1, Math.round((mx - pad.l) / cW * (pts.length - 1))));
+    setHover({ i, x: sx(i), y: sy(pts[i].cum), pt: pts[i] });
+  };
+
+  const ttX = hover ? (hover.x > W * 0.72 ? hover.x - 148 : hover.x + 14) : 0;
+  const ttY = hover ? Math.max(pad.t, Math.min(hover.y - 24, pad.t + cH - 52)) : 0;
+
+  return (
+    <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`}
+      style={{ width: '100%', height: 'auto', display: 'block', overflow: 'visible', cursor: 'crosshair' }}
+      onMouseMove={onMove} onMouseLeave={() => setHover(null)}>
+      <defs>
+        <linearGradient id="eq-fill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={isPos ? '#3ECF8E' : '#E05252'} stopOpacity="0.22" />
+          <stop offset="100%" stopColor={isPos ? '#3ECF8E' : '#E05252'} stopOpacity="0.01" />
+        </linearGradient>
+      </defs>
+
+      {/* Grid lines */}
+      {yTicks.map((v, i) => (
+        <line key={i} x1={pad.l} y1={sy(v)} x2={pad.l + cW} y2={sy(v)} stroke="var(--border)" strokeWidth="0.8" />
+      ))}
+
+      {/* Zero baseline */}
+      {zero >= pad.t && zero <= pad.t + cH && (
+        <line x1={pad.l} y1={zero} x2={pad.l + cW} y2={zero} stroke="var(--border)" strokeWidth="1.2" strokeDasharray="5 4" />
+      )}
+
+      {/* Area fill */}
+      <path d={areaPath} fill="url(#eq-fill)" />
+
+      {/* Equity line */}
+      <path d={linePath} fill="none" stroke={lineClr} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+
+      {/* Y-axis labels */}
+      {yTicks.map((v, i) => (
+        <text key={i} x={pad.l - 8} y={sy(v) + 4} fontSize="9" textAnchor="end" style={{ fill: 'var(--text-dim)', fontFamily: 'system-ui' }}>
+          {v >= 0 ? '+' : ''}${Math.round(v)}
+        </text>
+      ))}
+
+      {/* X-axis labels */}
+      {labels.map((m, i) => (
+        <text key={i} x={m.x} y={pad.t + cH + 20} fontSize="9" textAnchor="middle" style={{ fill: 'var(--text-dim)', fontFamily: 'system-ui' }}>
+          {m.label}
+        </text>
+      ))}
+
+      {/* Hover crosshair + dot */}
+      {hover && (
+        <>
+          <line x1={hover.x} y1={pad.t} x2={hover.x} y2={pad.t + cH} stroke="var(--gold)" strokeWidth="1" strokeDasharray="4 3" opacity="0.5" />
+          <circle cx={hover.x} cy={hover.y} r="4.5" fill={isPos ? '#3ECF8E' : '#E05252'} stroke="var(--bg-table)" strokeWidth="2" />
+          {/* Tooltip box */}
+          <rect x={ttX} y={ttY} width="136" height="48" rx="7" fill="var(--bg-table)" stroke="var(--gold)" strokeWidth="0.8" opacity="0.95" />
+          <text x={ttX + 10} y={ttY + 16} fontSize="9" style={{ fill: 'var(--text-dim)', fontFamily: 'system-ui' }}>
+            {hover.pt.date ? fmtDate(hover.pt.date) : 'Start'}{hover.pt.symbol ? ` · ${hover.pt.symbol.replace('.ECN','')}` : ''}
+          </text>
+          <text x={ttX + 10} y={ttY + 35} fontSize="14" fontWeight="800" style={{ fill: hover.pt.cum >= 0 ? '#3ECF8E' : '#E05252', fontFamily: 'system-ui' }}>
+            {hover.pt.cum >= 0 ? '+' : ''}${hover.pt.cum.toFixed(2)}
+          </text>
+          {hover.pt.net !== 0 && (
+            <text x={ttX + 126} y={ttY + 35} fontSize="10" fontWeight="600" textAnchor="end" style={{ fill: hover.pt.net >= 0 ? '#3ECF8E' : '#E05252', fontFamily: 'system-ui' }}>
+              {hover.pt.net >= 0 ? '+' : ''}${hover.pt.net.toFixed(2)}
+            </text>
+          )}
+        </>
+      )}
+    </svg>
+  );
+}
+
 function PerformanceView({ trades, lang }) {
   if (!trades.length) {
     return (
@@ -976,6 +1104,25 @@ function PerformanceView({ trades, lang }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+      {/* ── Equity Curve ── */}
+      <div style={{ background: 'var(--bg-table)', border: '1px solid var(--border)', borderRadius: 12, padding: '20px 20px 12px', boxShadow: '0 2px 12px rgba(0,0,0,0.07)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+          <div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--gold)', letterSpacing: 1.2, textTransform: 'uppercase' }}>
+              {lang === 'zh' ? '净值曲线' : 'Equity Curve'}
+            </div>
+            <div style={{ fontSize: 11, color: 'var(--text-dim)', marginTop: 3 }}>{trades.length} trades</div>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: 26, fontWeight: 900, color: clr(sorted.reduce((s, t) => s + t.net, 0)), letterSpacing: -0.5 }}>
+              <AnimatedPnL value={sorted.reduce((s, t) => s + t.net, 0)} />
+            </div>
+            <div style={{ fontSize: 10, color: 'var(--text-dim)', marginTop: 2 }}>total P&L</div>
+          </div>
+        </div>
+        <EquityCurve trades={trades} />
+      </div>
 
       {/* ── KPI row ── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(130px,1fr))', gap: 12 }}>
