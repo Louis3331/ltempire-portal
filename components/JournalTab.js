@@ -1597,7 +1597,7 @@ export default function JournalTab({ lang = 'en' }) {
   const [clearing,    setClearing]    = useState(false);
   const [showManual,  setShowManual]  = useState(false);
   const [importMsg,   setImportMsg]   = useState(null);
-  const [view,        setView]        = useState('calendar'); // 'calendar' | 'log' | 'performance'
+  const [view,        setView]        = useState('overview'); // 'overview' | 'performance' | 'log' | 'calendar'
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -1737,10 +1737,10 @@ export default function JournalTab({ lang = 'en' }) {
           {/* View toggle */}
           <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
             {[
-              ['calendar',    'Calendar'],
               ['overview',    'Overview'],
+              ['performance', 'Detail'],
               ['log',         'Trade Log'],
-              ['performance', 'Performance'],
+              ['calendar',    'Calendar'],
             ].map(([v, label]) => (
               <button key={v} onClick={() => setView(v)} style={{
                 padding: '7px 16px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer',
