@@ -607,9 +607,11 @@ function Calendar({ trades, lang }) {
                     cursor: data ? 'pointer' : 'default',
                     background: isSel
                       ? 'rgba(201,168,76,0.12)'
-                      : data
-                        ? (data.pnl >= 0 ? 'var(--win-cell-bg)' : 'var(--loss-cell-bg)')
-                        : isWeekend ? 'rgba(255,255,255,0.01)' : 'transparent',
+                      : isHov
+                        ? (data.pnl >= 0 ? 'var(--win-bg)' : 'var(--loss-bg)')
+                        : data
+                          ? (data.pnl >= 0 ? 'var(--win-cell-bg)' : 'var(--loss-cell-bg)')
+                          : isWeekend ? 'rgba(255,255,255,0.01)' : 'transparent',
                     transition: 'background 0.15s',
                     position: 'relative',
                   }}
