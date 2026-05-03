@@ -900,7 +900,7 @@ function PnLBar({ label, value, maxAbs }) {
   const isPos = value >= 0;
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
-      <div style={{ width: 70, fontSize: 10, color: 'var(--text-dim)', textAlign: 'right', flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</div>
+      <div style={{ width: 86, fontSize: 10, color: 'var(--text-dim)', textAlign: 'right', flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</div>
       <div style={{ flex: 1, position: 'relative', height: 14 }}>
         <div style={{ position: 'absolute', inset: 0, background: 'var(--bg)', borderRadius: 3 }} />
         {value !== 0 && (
@@ -925,7 +925,7 @@ function CountBar({ label, value, maxVal }) {
   const pct = maxVal > 0 ? (value / maxVal) * 92 : 0;
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
-      <div style={{ width: 70, fontSize: 10, color: 'var(--text-dim)', textAlign: 'right', flexShrink: 0 }}>{label}</div>
+      <div style={{ width: 86, fontSize: 10, color: 'var(--text-dim)', textAlign: 'right', flexShrink: 0 }}>{label}</div>
       <div style={{ flex: 1, position: 'relative', height: 14 }}>
         <div style={{ position: 'absolute', inset: 0, background: 'var(--bg)', borderRadius: 3 }} />
         <div style={{ position: 'absolute', top: 2, bottom: 2, left: 0, width: `${pct}%`, background: 'rgba(201,168,76,0.5)', borderRadius: 3, transition: 'width 0.4s ease' }} />
@@ -1369,15 +1369,17 @@ function PerformanceView({ trades, lang }) {
   const bot5        = byNet.slice(-5).reverse();
   const maxTradeAbs = Math.max(Math.abs(top5[0]?.net || 0), Math.abs(bot5[0]?.net || 0), 1);
 
-  // Entry time range (by hour)
+  // Entry time range — 2-hour buckets, AM/PM labels
+  const fmtHr = (h) => h === 0 ? '12 AM' : h < 12 ? `${h} AM` : h === 12 ? '12 PM' : `${h - 12} PM`;
   const hourMap = {};
   for (const t of trades) {
-    const h = new Date(t.closeTime).getHours();
-    if (!hourMap[h]) hourMap[h] = { pnl: 0, count: 0 };
-    hourMap[h].pnl   += t.net;
-    hourMap[h].count += 1;
+    const h      = new Date(t.closeTime).getHours();
+    const bucket = Math.floor(h / 2) * 2;
+    if (!hourMap[bucket]) hourMap[bucket] = { pnl: 0, count: 0 };
+    hourMap[bucket].pnl   += t.net;
+    hourMap[bucket].count += 1;
   }
-  const hourData     = Object.entries(hourMap).map(([h, v]) => ({ label: `${h}:00–${+h+1}:00`, h: +h, ...v })).sort((a,b) => a.h - b.h);
+  const hourData     = Object.entries(hourMap).map(([h, v]) => ({ label: `${fmtHr(+h)} - ${fmtHr(+h + 2)}`, h: +h, ...v })).sort((a,b) => a.h - b.h);
   const maxHourAbs   = Math.max(...hourData.map(d => Math.abs(d.pnl)), 1);
   const maxHourCount = Math.max(...hourData.map(d => d.count), 1);
 
