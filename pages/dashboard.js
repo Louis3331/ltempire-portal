@@ -237,11 +237,6 @@ export default function Dashboard() {
 
         {sidebarOpen && <div className="overlay" onClick={() => setSidebarOpen(false)} />}
 
-        {/* Language toggle — fixed top right */}
-        <div className="lang-corner">
-          <button className={`lang-pill ${lang === 'en' ? 'lang-active' : ''}`} onClick={() => switchLang('en')}>EN</button>
-          <button className={`lang-pill ${lang === 'zh' ? 'lang-active' : ''}`} onClick={() => switchLang('zh')}>中文</button>
-        </div>
 
         {/* ── Sidebar ─────────────────────────────────── */}
         <aside className={`sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
@@ -730,8 +725,8 @@ export default function Dashboard() {
           position: fixed; top: 14px; right: 20px; z-index: 30;
           display: flex; gap: 5px;
         }
-        /* Sidebar lang row hidden on desktop, visible on mobile */
-        .theme-row.sidebar-lang-row { display: none; }
+        /* Sidebar lang row visible on all screen sizes */
+        .theme-row.sidebar-lang-row { display: flex; }
 
         /* ── Sidebar rows (theme only now) ── */
         .theme-row {
