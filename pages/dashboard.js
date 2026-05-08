@@ -476,36 +476,32 @@ export default function Dashboard() {
                   <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1.5, textTransform: 'uppercase' }}>MT5 Accounts</span>
                   <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
                   <MonitorIcon />
                   <h2 style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)', margin: 0 }}>
                     {lang === 'zh' ? 'MT5 账户' : 'Connected Accounts'}
                   </h2>
-                  {/* Slot counter badge */}
-                  <span style={{
-                    fontSize: 11, fontWeight: 700, padding: '2px 9px', borderRadius: 20,
-                    background: accounts.length >= maxAccounts ? 'rgba(224,82,82,0.12)' : 'rgba(62,207,142,0.1)',
-                    color:      accounts.length >= maxAccounts ? '#E05252' : '#3ECF8E',
-                    border:     `1px solid ${accounts.length >= maxAccounts ? '#E0525240' : 'rgba(62,207,142,0.25)'}`,
-                  }}>
-                    {accounts.length} / {maxAccounts} {lang === 'zh' ? '个账户' : 'slots'}
+                  {/* Slot dots */}
+                  <div style={{ display: 'flex', gap: 5 }}>
+                    {Array.from({ length: maxAccounts }).map((_, i) => (
+                      <span key={i} style={{
+                        width: 10, height: 10, borderRadius: '50%', display: 'inline-block',
+                        background: i < accounts.length
+                          ? (accounts.length >= maxAccounts ? '#E05252' : '#3ECF8E')
+                          : 'var(--border)',
+                        border: `1px solid ${i < accounts.length ? (accounts.length >= maxAccounts ? '#E05252' : '#3ECF8E') : 'var(--border)'}`,
+                        boxShadow: i < accounts.length && accounts.length < maxAccounts ? '0 0 5px #3ECF8E60' : 'none',
+                      }} />
+                    ))}
+                  </div>
+                  <span style={{ fontSize: 11, color: 'var(--text-dim)' }}>
+                    {accounts.length >= maxAccounts
+                      ? (lang === 'zh' ? '已满' : 'Full — delete one to add new')
+                      : `${maxAccounts - accounts.length} ${lang === 'zh' ? '个空位' : 'slot open'}`}
                   </span>
-                  <button onClick={loadAccounts} style={{ marginLeft: 'auto', background: 'none', border: '1px solid var(--border)', borderRadius: 6, color: 'var(--text-dim)', fontSize: 11, padding: '4px 12px', cursor: 'pointer', transition: 'color 0.15s, border-color 0.15s' }}>
+                  <button onClick={loadAccounts} style={{ marginLeft: 'auto', background: 'none', border: '1px solid var(--border)', borderRadius: 6, color: 'var(--text-dim)', fontSize: 11, padding: '4px 12px', cursor: 'pointer' }}>
                     {lang === 'zh' ? '刷新' : '↻ Refresh'}
                   </button>
-                </div>
-                {/* Slot progress bar */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-                  <div style={{ flex: 1, height: 4, background: 'var(--border)', borderRadius: 4, overflow: 'hidden' }}>
-                    <div style={{
-                      height: '100%', borderRadius: 4, transition: 'width 0.4s ease',
-                      width: `${(accounts.length / maxAccounts) * 100}%`,
-                      background: accounts.length >= maxAccounts ? '#E05252' : 'var(--gold)',
-                    }} />
-                  </div>
-                  <span style={{ fontSize: 10, color: 'var(--text-dim)', flexShrink: 0 }}>
-                    {maxAccounts - accounts.length} {lang === 'zh' ? '个空位' : accounts.length >= maxAccounts ? 'full — delete one to add new' : 'slot open'}
-                  </span>
                 </div>
                 <div className="table-wrap">
                   <div className="table-scroll">
