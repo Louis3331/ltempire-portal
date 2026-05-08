@@ -114,7 +114,6 @@ export default function Dashboard() {
   /* Nav built inside component so labels are reactive to lang */
   const NAV = [
     { id: 'licenses', label: t('nav.licenses'), icon: <KeyIcon /> },
-    { id: 'accounts', label: t('nav.accounts'), icon: <MonitorIcon /> },
     { id: 'guide',    label: t('nav.guide'),    icon: <BookIcon /> },
     { id: 'brokers',  label: t('nav.brokers'),  icon: <BrokerIcon /> },
     { id: 'faq',      label: t('nav.faq'),      icon: <FaqIcon /> },
@@ -134,7 +133,7 @@ export default function Dashboard() {
         });
       })
       .catch(() => setError(t('error.load')))
-      .finally(() => setLoading(false));
+      .finally(() => { setLoading(false); loadAccounts(); });
   }, [router]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* Read saved theme */
@@ -191,7 +190,7 @@ export default function Dashboard() {
     setSlideDir(dir);
     setAnimKey(k => k + 1);
     setTab(newTab);
-    if (newTab === 'accounts') loadAccounts();
+    if (newTab === 'licenses') loadAccounts();
     setSidebarOpen(false);
   };
 
@@ -464,89 +463,117 @@ export default function Dashboard() {
               )
             )}
 
-            {/* ── Accounts ── */}
-            {tab === 'accounts' && (
-              <div className="table-wrap" {...tilt}>
-                <div className="table-scroll">
-                  <table className="table">
-                    <thead>
-                      <tr>
-                        {[t('th.licenseKey'), t('th.accountNo'), t('th.name'), t('th.server'), t('th.registered'), t('th.lastUpdate'), ''].map((h, i) => (
-                          <th key={i} className="th">{h}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {accountsLoading ? (
-                        Array.from({ length: 3 }).map((_, i) => (
-                          <tr key={i}>{Array.from({ length: 7 }).map((_, j) => (
-                            <td key={j} className="td"><div className="skeleton" style={{ height: 13, borderRadius: 4, width: j === 0 ? 110 : j === 6 ? 52 : [80,70,90,80,80][j-1] || 80 }} /></td>
-                          ))}</tr>
-                        ))
-                      ) : accounts.length === 0 ? (
-                        <tr>
-                          <td colSpan={7} className="td" style={{ textAlign: 'center', padding: '48px 0', color: 'var(--text-dim)', fontSize: 14 }}>
-                            {t('accounts.empty')}<br />
-                            <span style={{ fontSize: 12, color: 'var(--text-dimmer)', marginTop: 6, display: 'block' }}>{t('accounts.emptyHint')}</span>
-                          </td>
-                        </tr>
-                      ) : accounts.map(a => (
-                        <tr key={a.id} className="tr">
-                          <td className="td"><code className="key-code" style={{ fontSize: 12 }}>{a.licenseKey}</code></td>
-                          <td className="td" style={{ color: 'var(--gold)', fontWeight: 600 }}>{a.accountNumber}</td>
-                          <td className="td">{a.accountName || t('label.none')}</td>
-                          <td className="td">{a.accountServer || t('label.none')}</td>
-                          <td className="td" style={{ color: 'var(--text-muted)', fontSize: 12 }}>{fmtMs(a.registeredAt)}</td>
-                          <td className="td" style={{ color: 'var(--text-muted)', fontSize: 12 }}>{fmtMs(a.lastUpdate)}</td>
-                          <td className="td">
-                            <button className="del-btn" onClick={() => deleteAccount(a.licenseKey, a.id)}>{t('btn.delete')}</button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+            {/* ── Accounts (merged into licenses tab) ── */}
+            {tab === 'licenses' && !error && (
+              <div style={{ marginTop: 28 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+                  <MonitorIcon />
+                  <h2 style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)', margin: 0 }}>
+                    {lang === 'zh' ? 'MT5 账户' : 'MT5 Accounts'}
+                  </h2>
+                  <button onClick={loadAccounts} style={{ marginLeft: 'auto', background: 'none', border: '1px solid var(--border)', borderRadius: 6, color: 'var(--text-dim)', fontSize: 11, padding: '3px 10px', cursor: 'pointer' }}>
+                    {lang === 'zh' ? '刷新' : 'Refresh'}
+                  </button>
                 </div>
-
-                {/* Mobile cards */}
-                {!accountsLoading && accounts.length > 0 && (
-                  <div className="mobile-cards">
-                    {accounts.map(a => (
-                      <div key={a.id} className="mobile-card tilt-card" {...tilt}>
-                        <div className="mc-row">
-                          <span className="mc-label">{t('th.accountNo')}</span>
-                          <span style={{ color: 'var(--gold)', fontWeight: 700 }}>{a.accountNumber}</span>
-                        </div>
-                        <div className="mc-row">
-                          <span className="mc-label">{t('th.name')}</span>
-                          <span style={{ color: 'var(--text)', fontSize: 13 }}>{a.accountName || t('label.none')}</span>
-                        </div>
-                        <div className="mc-row">
-                          <span className="mc-label">{t('th.server')}</span>
-                          <span style={{ color: 'var(--text)', fontSize: 13 }}>{a.accountServer || t('label.none')}</span>
-                        </div>
-                        <div className="mc-row">
-                          <span className="mc-label">{t('label.license')}</span>
-                          <code className="key-code" style={{ fontSize: 11 }}>{a.licenseKey}</code>
-                        </div>
-                        <div className="mc-row">
-                          <span className="mc-label">{t('th.lastUpdate')}</span>
-                          <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>{fmtMs(a.lastUpdate)}</span>
-                        </div>
-                        <button className="del-btn" style={{ width: '100%', marginTop: 8 }} onClick={() => deleteAccount(a.licenseKey, a.id)}>
-                          {t('btn.deleteAccount')}
-                        </button>
-                      </div>
-                    ))}
+                <div className="table-wrap">
+                  <div className="table-scroll">
+                    <table className="table">
+                      <thead>
+                        <tr>
+                          {[t('th.licenseKey'), t('th.accountNo'), t('th.name'), t('th.server'), t('th.registered'), t('th.lastUpdate'), ''].map((h, i) => (
+                            <th key={i} className="th">{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {accountsLoading ? (
+                          Array.from({ length: 3 }).map((_, i) => (
+                            <tr key={i}>{Array.from({ length: 7 }).map((_, j) => (
+                              <td key={j} className="td"><div className="skeleton" style={{ height: 13, borderRadius: 4, width: j === 0 ? 110 : j === 6 ? 52 : [80,70,90,80,80][j-1] || 80 }} /></td>
+                            ))}</tr>
+                          ))
+                        ) : accounts.length === 0 ? (
+                          <tr>
+                            <td colSpan={7} className="td" style={{ textAlign: 'center', padding: '36px 0', color: 'var(--text-dim)', fontSize: 14 }}>
+                              {t('accounts.empty')}<br />
+                              <span style={{ fontSize: 12, color: 'var(--text-dimmer)', marginTop: 6, display: 'block' }}>{t('accounts.emptyHint')}</span>
+                            </td>
+                          </tr>
+                        ) : accounts.map(a => (
+                          <tr key={a.id} className="tr">
+                            <td className="td">
+                              <div className="key-cell">
+                                <code className="key-code" style={{ fontSize: 12 }}>{a.licenseKey}</code>
+                                <button className="copy-btn" onClick={() => copy(a.licenseKey, `acc-${a.id}`)} title={t('btn.copy')}>
+                                  {copied === `acc-${a.id}`
+                                    ? <svg viewBox="0 0 24 24" fill="none" stroke="#3ECF8E" strokeWidth="2.5" style={{ width: 13, height: 13 }}><polyline points="20 6 9 17 4 12" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                                    : <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 13, height: 13 }}><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>
+                                  }
+                                </button>
+                              </div>
+                            </td>
+                            <td className="td" style={{ color: 'var(--gold)', fontWeight: 600 }}>{a.accountNumber}</td>
+                            <td className="td">{a.accountName || t('label.none')}</td>
+                            <td className="td">{a.accountServer || t('label.none')}</td>
+                            <td className="td" style={{ color: 'var(--text-muted)', fontSize: 12 }}>{fmtMs(a.registeredAt)}</td>
+                            <td className="td" style={{ color: 'var(--text-muted)', fontSize: 12 }}>{fmtMs(a.lastUpdate)}</td>
+                            <td className="td">
+                              <button className="del-btn" onClick={() => deleteAccount(a.licenseKey, a.id)}>{t('btn.delete')}</button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
-                )}
-                {accountsLoading && (
-                  <div className="mobile-cards">
-                    {Array.from({ length: 2 }).map((_, i) => (
-                      <div key={i} className="mobile-card">
-                        {Array.from({ length: 4 }).map((_, j) => (
-                          <div key={j} className="mc-row">
-                            <div className="skeleton" style={{ height: 11, width: 60, borderRadius: 3 }} />
-                            <div className="skeleton" style={{ height: 13, width: 100, borderRadius: 3 }} />
+
+                  {/* Mobile cards */}
+                  {!accountsLoading && accounts.length > 0 && (
+                    <div className="mobile-cards">
+                      {accounts.map(a => (
+                        <div key={a.id} className="mobile-card tilt-card" {...tilt}>
+                          <div className="mc-row">
+                            <span className="mc-label">{t('th.accountNo')}</span>
+                            <span style={{ color: 'var(--gold)', fontWeight: 700 }}>{a.accountNumber}</span>
+                          </div>
+                          <div className="mc-row">
+                            <span className="mc-label">{t('th.name')}</span>
+                            <span style={{ color: 'var(--text)', fontSize: 13 }}>{a.accountName || t('label.none')}</span>
+                          </div>
+                          <div className="mc-row">
+                            <span className="mc-label">{t('th.server')}</span>
+                            <span style={{ color: 'var(--text)', fontSize: 13 }}>{a.accountServer || t('label.none')}</span>
+                          </div>
+                          <div className="mc-row">
+                            <span className="mc-label">{t('label.license')}</span>
+                            <div className="key-cell">
+                              <code className="key-code" style={{ fontSize: 11 }}>{a.licenseKey}</code>
+                              <button className="copy-btn" onClick={() => copy(a.licenseKey, `acc-mob-${a.id}`)}>
+                                {copied === `acc-mob-${a.id}`
+                                  ? <svg viewBox="0 0 24 24" fill="none" stroke="#3ECF8E" strokeWidth="2.5" style={{ width: 13, height: 13 }}><polyline points="20 6 9 17 4 12" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                                  : <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 13, height: 13 }}><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>
+                                }
+                              </button>
+                            </div>
+                          </div>
+                          <div className="mc-row">
+                            <span className="mc-label">{t('th.lastUpdate')}</span>
+                            <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>{fmtMs(a.lastUpdate)}</span>
+                          </div>
+                          <button className="del-btn" style={{ width: '100%', marginTop: 8 }} onClick={() => deleteAccount(a.licenseKey, a.id)}>
+                            {t('btn.deleteAccount')}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {accountsLoading && (
+                    <div className="mobile-cards">
+                      {Array.from({ length: 2 }).map((_, i) => (
+                        <div key={i} className="mobile-card">
+                          {Array.from({ length: 4 }).map((_, j) => (
+                            <div key={j} className="mc-row">
+                              <div className="skeleton" style={{ height: 11, width: 60, borderRadius: 3 }} />
+                              <div className="skeleton" style={{ height: 13, width: 100, borderRadius: 3 }} />
                           </div>
                         ))}
                       </div>
