@@ -101,6 +101,7 @@ export default function Dashboard() {
   const [tab,             setTab]             = useState('licenses');
   const [copied,          setCopied]          = useState(null);
   const [accounts,        setAccounts]        = useState([]);
+  const [maxAccounts,     setMaxAccounts]     = useState(2);
   const [accountsLoading, setAccountsLoading] = useState(false);
   const [sidebarOpen,     setSidebarOpen]     = useState(false);
   const [animKey,         setAnimKey]         = useState(0);
@@ -159,7 +160,10 @@ export default function Dashboard() {
 
   const loadAccounts = () => {
     setAccountsLoading(true);
-    fetch('/api/accounts').then(r => r.json()).then(d => setAccounts(d.accounts || [])).catch(() => {}).finally(() => setAccountsLoading(false));
+    fetch('/api/accounts').then(r => r.json()).then(d => {
+      setAccounts(d.accounts || []);
+      if (d.maxAccounts) setMaxAccounts(d.maxAccounts);
+    }).catch(() => {}).finally(() => setAccountsLoading(false));
   };
 
   const deleteAccount = async (licenseKey, id) => {
@@ -471,6 +475,15 @@ export default function Dashboard() {
                   <h2 style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)', margin: 0 }}>
                     {lang === 'zh' ? 'MT5 账户' : 'MT5 Accounts'}
                   </h2>
+                  {/* Slot counter */}
+                  <span style={{
+                    fontSize: 11, fontWeight: 700, padding: '2px 9px', borderRadius: 20,
+                    background: accounts.length >= maxAccounts ? 'rgba(224,82,82,0.12)' : 'rgba(62,207,142,0.1)',
+                    color:      accounts.length >= maxAccounts ? '#E05252' : '#3ECF8E',
+                    border:     `1px solid ${accounts.length >= maxAccounts ? '#E0525240' : 'rgba(62,207,142,0.25)'}`,
+                  }}>
+                    {accounts.length} / {maxAccounts} {lang === 'zh' ? '个账户' : 'slots used'}
+                  </span>
                   <button onClick={loadAccounts} style={{ marginLeft: 'auto', background: 'none', border: '1px solid var(--border)', borderRadius: 6, color: 'var(--text-dim)', fontSize: 11, padding: '3px 10px', cursor: 'pointer' }}>
                     {lang === 'zh' ? '刷新' : 'Refresh'}
                   </button>
