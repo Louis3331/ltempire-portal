@@ -469,24 +469,43 @@ export default function Dashboard() {
 
             {/* ── Accounts (merged into licenses tab) ── */}
             {tab === 'licenses' && !error && (
-              <div style={{ marginTop: 28 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+              <div style={{ marginTop: 36 }}>
+                {/* Section divider */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+                  <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+                  <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-dim)', letterSpacing: 1.5, textTransform: 'uppercase' }}>MT5 Accounts</span>
+                  <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
                   <MonitorIcon />
                   <h2 style={{ fontSize: 15, fontWeight: 700, color: 'var(--text)', margin: 0 }}>
-                    {lang === 'zh' ? 'MT5 账户' : 'MT5 Accounts'}
+                    {lang === 'zh' ? 'MT5 账户' : 'Connected Accounts'}
                   </h2>
-                  {/* Slot counter */}
+                  {/* Slot counter badge */}
                   <span style={{
                     fontSize: 11, fontWeight: 700, padding: '2px 9px', borderRadius: 20,
                     background: accounts.length >= maxAccounts ? 'rgba(224,82,82,0.12)' : 'rgba(62,207,142,0.1)',
                     color:      accounts.length >= maxAccounts ? '#E05252' : '#3ECF8E',
                     border:     `1px solid ${accounts.length >= maxAccounts ? '#E0525240' : 'rgba(62,207,142,0.25)'}`,
                   }}>
-                    {accounts.length} / {maxAccounts} {lang === 'zh' ? '个账户' : 'slots used'}
+                    {accounts.length} / {maxAccounts} {lang === 'zh' ? '个账户' : 'slots'}
                   </span>
-                  <button onClick={loadAccounts} style={{ marginLeft: 'auto', background: 'none', border: '1px solid var(--border)', borderRadius: 6, color: 'var(--text-dim)', fontSize: 11, padding: '3px 10px', cursor: 'pointer' }}>
-                    {lang === 'zh' ? '刷新' : 'Refresh'}
+                  <button onClick={loadAccounts} style={{ marginLeft: 'auto', background: 'none', border: '1px solid var(--border)', borderRadius: 6, color: 'var(--text-dim)', fontSize: 11, padding: '4px 12px', cursor: 'pointer', transition: 'color 0.15s, border-color 0.15s' }}>
+                    {lang === 'zh' ? '刷新' : '↻ Refresh'}
                   </button>
+                </div>
+                {/* Slot progress bar */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+                  <div style={{ flex: 1, height: 4, background: 'var(--border)', borderRadius: 4, overflow: 'hidden' }}>
+                    <div style={{
+                      height: '100%', borderRadius: 4, transition: 'width 0.4s ease',
+                      width: `${(accounts.length / maxAccounts) * 100}%`,
+                      background: accounts.length >= maxAccounts ? '#E05252' : 'var(--gold)',
+                    }} />
+                  </div>
+                  <span style={{ fontSize: 10, color: 'var(--text-dim)', flexShrink: 0 }}>
+                    {maxAccounts - accounts.length} {lang === 'zh' ? '个空位' : accounts.length >= maxAccounts ? 'full — delete one to add new' : 'slot open'}
+                  </span>
                 </div>
                 <div className="table-wrap">
                   <div className="table-scroll">
@@ -512,18 +531,27 @@ export default function Dashboard() {
                               <span style={{ fontSize: 12, color: 'var(--text-dimmer)', marginTop: 6, display: 'block' }}>{t('accounts.emptyHint')}</span>
                             </td>
                           </tr>
-                        ) : accounts.map(a => (
+                        ) : accounts.map(a => {
+                          const isOnline = a.lastUpdate && (Date.now() - a.lastUpdate) < 24 * 60 * 60 * 1000;
+                          return (
                           <tr key={a.id} className="tr">
-                            <td className="td" style={{ color: 'var(--gold)', fontWeight: 600 }}>{a.accountNumber}</td>
+                            <td className="td">
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                                <span title={isOnline ? 'Active in last 24h' : 'Not seen in 24h+'} style={{ width: 7, height: 7, borderRadius: '50%', flexShrink: 0, background: isOnline ? '#3ECF8E' : '#555', boxShadow: isOnline ? '0 0 5px #3ECF8E80' : 'none' }} />
+                                <span style={{ color: 'var(--gold)', fontWeight: 600 }}>{a.accountNumber}</span>
+                              </div>
+                            </td>
                             <td className="td">{a.accountName || t('label.none')}</td>
-                            <td className="td">{a.accountServer || t('label.none')}</td>
+                            <td className="td" style={{ color: 'var(--text-muted)' }}>{a.accountServer || t('label.none')}</td>
                             <td className="td" style={{ color: 'var(--text-muted)', fontSize: 12 }}>{fmtMs(a.registeredAt)}</td>
-                            <td className="td" style={{ color: 'var(--text-muted)', fontSize: 12 }}>{fmtMs(a.lastUpdate)}</td>
+                            <td className="td" style={{ fontSize: 12 }}>
+                              <span style={{ color: isOnline ? '#3ECF8E' : 'var(--text-muted)' }}>{fmtMs(a.lastUpdate)}</span>
+                            </td>
                             <td className="td">
                               <button className="del-btn" onClick={() => deleteAccount(a.licenseKey, a.id)}>{t('btn.delete')}</button>
                             </td>
                           </tr>
-                        ))}
+                        );})}
                       </tbody>
                     </table>
                   </div>
@@ -531,11 +559,16 @@ export default function Dashboard() {
                   {/* Mobile cards */}
                   {!accountsLoading && accounts.length > 0 && (
                     <div className="mobile-cards">
-                      {accounts.map(a => (
+                      {accounts.map(a => {
+                        const isOnline = a.lastUpdate && (Date.now() - a.lastUpdate) < 24 * 60 * 60 * 1000;
+                        return (
                         <div key={a.id} className="mobile-card tilt-card" {...tilt}>
                           <div className="mc-row">
                             <span className="mc-label">{t('th.accountNo')}</span>
-                            <span style={{ color: 'var(--gold)', fontWeight: 700 }}>{a.accountNumber}</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                              <span style={{ width: 7, height: 7, borderRadius: '50%', background: isOnline ? '#3ECF8E' : '#555', boxShadow: isOnline ? '0 0 5px #3ECF8E80' : 'none' }} />
+                              <span style={{ color: 'var(--gold)', fontWeight: 700 }}>{a.accountNumber}</span>
+                            </div>
                           </div>
                           <div className="mc-row">
                             <span className="mc-label">{t('th.name')}</span>
@@ -553,7 +586,7 @@ export default function Dashboard() {
                             {t('btn.deleteAccount')}
                           </button>
                         </div>
-                      ))}
+                      );})}
                     </div>
                   )}
                   {accountsLoading && (
@@ -864,7 +897,7 @@ export default function Dashboard() {
         .table-wrap, .tilt-card { transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.25s, border-color 0.25s; will-change: transform; }
 
         /* ── Table ── */
-        .table-wrap   { background: var(--bg-table); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+        .table-wrap   { background: var(--bg-table); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; border-top: 2px solid var(--gold); }
         .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
         .table        { width: 100%; border-collapse: collapse; min-width: 600px; }
         .th {
