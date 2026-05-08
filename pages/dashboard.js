@@ -574,18 +574,19 @@ export default function Dashboard() {
                             <div key={j} className="mc-row">
                               <div className="skeleton" style={{ height: 11, width: 60, borderRadius: 3 }} />
                               <div className="skeleton" style={{ height: 13, width: 100, borderRadius: 3 }} />
-                          </div>
-                        ))}
-                      </div>
-                    ))}
-                  </div>
-                )}
-                {!accountsLoading && accounts.length === 0 && (
-                  <div className="mobile-cards" style={{ padding: '40px 16px', textAlign: 'center', color: 'var(--text-dim)', fontSize: 14 }}>
-                    {t('accounts.empty')}<br />
-                    <span style={{ fontSize: 12, color: 'var(--text-dimmer)', marginTop: 6, display: 'block' }}>{t('accounts.emptyHint')}</span>
-                  </div>
-                )}
+                            </div>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {!accountsLoading && accounts.length === 0 && (
+                    <div className="mobile-cards" style={{ padding: '40px 16px', textAlign: 'center', color: 'var(--text-dim)', fontSize: 14 }}>
+                      {t('accounts.empty')}<br />
+                      <span style={{ fontSize: 12, color: 'var(--text-dimmer)', marginTop: 6, display: 'block' }}>{t('accounts.emptyHint')}</span>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
